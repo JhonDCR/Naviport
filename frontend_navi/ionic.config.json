@@ -1,0 +1,7 @@
+{
+  "name": "frontend_navi",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
