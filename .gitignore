@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+*/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment & Credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Build & Dist
+dist/
+*/dist/
+www/
+*/www/
+out-tsc/
+.angular/
+*/.angular/
+.ionic/
+*/.ionic/
+
+# Testing & Coverage
+coverage/
+*/coverage/
+*.lcov
+.nyc_output
+
+# Operating System & Editors
+.DS_Store
+Thumbs.db
+$RECYCLE.BIN/
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+*.sublime-*
+*.swp
+*.swo
+
+# Docker volumes / local data
+.docker-data/
+mongo_data/
+redis_data/
+
+# Mobile platforms compiled assets (Capacitor handles these)
+android/.gradle/
+android/app/build/
+ios/App/build/
+ios/App/Pods/

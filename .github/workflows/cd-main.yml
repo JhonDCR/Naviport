@@ -1,0 +1,49 @@
+name: Release & Quality Gate - Main
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-verification:
+    name: Production Release Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify Frontend Production Build
+        working-directory: frontend_navi
+        run: |
+          npm ci
+          npm run lint --if-present
+          npm run build -- --configuration production
+
+      - name: Verify Backend Production Build
+        working-directory: backend_navi
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+          npm run lint --if-present
+          npm run build --if-present
+
+      - name: Release Status Notification
+        run: |
+          echo "Release verification completed successfully for commit ${{ github.sha }} on main branch."

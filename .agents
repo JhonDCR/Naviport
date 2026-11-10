@@ -1,0 +1,29 @@
+# Contexto y Reglas para Agentes de IA — Naviport
+# Este archivo contiene las instrucciones esenciales para los asistentes inteligentes.
+# Para la guía completa y detallada, consultar AGENTS.md.
+
+[PROJECT]
+name = Naviport
+description = Aplicacion movil multiplataforma con Ionic/Angular y backend NestJS (MongoDB + Redis).
+team = 3 integrantes (2 Frontend, 1 Backend)
+
+[STACK]
+frontend = Ionic 9 + Angular 22 + Capacitor 8 (ubicado en ./frontend_navi)
+backend = NestJS + Mongoose (MongoDB) + Redis (ubicado en ./backend_navi)
+infrastructure = Docker Compose (MongoDB, Redis)
+
+[GIT_WORKFLOW]
+main = Releases de produccion
+develop = Rama base de integracion
+branch_naming = feature/front/*, feature/back/*, fix/front/*, fix/back/*, chore/*
+base_branch_for_features = develop
+commit_convention = Conventional Commits (feat, fix, docs, refactor, chore)
+
+[RULES_FOR_AGENTS]
+1. Respeta el diseno de Figma en el Frontend (colores, espaciados, tipografias, atomic design).
+2. TypeScript estricto: prohibido el uso de `any`.
+3. Backend: Arquitectura modular NestJS, DTOs con class-validator, Swagger en todos los endpoints.
+4. Frontend: Componentes Standalone de Angular, Signals para reactividad, servicios dedicados para Capacitor.
+5. Base de Datos & Cache: MongoDB para persistencia transaccional, Redis para cache y sesiones rapidas.
+6. CI/CD: Asegura que el codigo pase lint y build antes de generar PRs.
+7. Nunca subir credenciales ni archivos .env; usar .env.example.
