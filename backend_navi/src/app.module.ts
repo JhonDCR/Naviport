@@ -5,6 +5,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RedisModule } from './redis/redis.module';
 import { DatabaseModule } from './database/database.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { TrackingModule } from './modules/tracking/tracking.module';
+import { ScannerModule } from './modules/scanner/scanner.module';
+import { IncidentsModule } from './modules/incidents/incidents.module';
+import { KpisModule } from './modules/kpis/kpis.module';
+import { FleetModule } from './modules/fleet/fleet.module';
 
 @Module({
   imports: [
@@ -24,6 +30,12 @@ import { DatabaseModule } from './database/database.module';
     }),
     RedisModule,
     DatabaseModule,
+    AuthModule,
+    TrackingModule,
+    ScannerModule,
+    IncidentsModule,
+    KpisModule,
+    FleetModule,
   ],
   controllers: [AppController],
   providers: [AppService],
