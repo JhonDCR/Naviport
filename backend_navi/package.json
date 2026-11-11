@@ -5,6 +5,8 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "echo \"Build placeholder for NestJS\" && exit 0",
+    "lint": "echo \"Lint placeholder for NestJS\" && exit 0",
+    "test": "echo \"Test placeholder for NestJS\" && exit 0"
   }
 }
