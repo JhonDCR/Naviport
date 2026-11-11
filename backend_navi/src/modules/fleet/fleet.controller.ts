@@ -4,6 +4,8 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -18,6 +20,8 @@ import {
   CreateBuqueDto,
   CreateMantenimientoDto,
   CreatePuertoDto,
+  UpdateEstadoBuqueDto,
+  UpdateEstadoMantenimientoDto,
 } from './dto/fleet.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -57,6 +61,24 @@ export class FleetController {
     const data = await this.fleetService.crearBuque(dto);
     return {
       message: 'Buque registrado correctamente',
+      data,
+    };
+  }
+
+  @Patch('buques/:id/estado')
+  @Roles(RolUsuario.GERENTE, RolUsuario.ADMIN)
+  @ApiOperation({
+    summary:
+      'Cambiar el estado operativo de un buque (activo, mantenimiento, inactivo)',
+  })
+  @ApiResponse({ status: 200, description: 'Estado del buque actualizado' })
+  async actualizarEstadoBuque(
+    @Param('id') id: string,
+    @Body() dto: UpdateEstadoBuqueDto,
+  ) {
+    const data = await this.fleetService.actualizarEstadoBuque(id, dto);
+    return {
+      message: 'Estado del buque actualizado correctamente',
       data,
     };
   }
@@ -117,4 +139,26 @@ export class FleetController {
       data,
     };
   }
+
+  @Patch('mantenimientos/:id/estado')
+  @Roles(RolUsuario.GERENTE, RolUsuario.ADMIN)
+  @ApiOperation({
+    summary:
+      'Completar o actualizar estado de mantenimiento y limpiar alerta vencida en Redis',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Mantenimiento actualizado correctamente',
+  })
+  async actualizarEstadoMantenimiento(
+    @Param('id') id: string,
+    @Body() dto: UpdateEstadoMantenimientoDto,
+  ) {
+    const data = await this.fleetService.actualizarEstadoMantenimiento(id, dto);
+    return {
+      message: 'Estado de mantenimiento actualizado correctamente',
+      data,
+    };
+  }
 }
+

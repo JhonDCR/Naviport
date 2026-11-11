@@ -66,14 +66,30 @@ Este documento define los endpoints RESTful, contratos de datos (DTOs), esquemas
 - **Seguridad**: Bearer Token
 - **Descripción**: Invalida inmediatamente la clave `sesion:{idUsuario}` en Redis.
 
+#### `POST /auth/registro`
+- **Público**: Sí
+- **Descripción**: Registra un nuevo usuario (`cliente`, `operador`, `gerente` o `admin`) con contraseña encriptada con `bcryptjs`.
+
+#### `GET /auth/perfil` / `PATCH /auth/perfil` / `PATCH /auth/preferencias`
+- **Seguridad**: Bearer Token
+- **Descripción**: Obtiene o actualiza los datos del perfil (`nombre`, `detallesPerfil`) y preferencias de aplicación (`notificacionesPush`, `modoOscuro`) para la vista **`Perfil`**.
+
+#### `PATCH /auth/turno`
+- **Roles permitidos**: `operador`, `admin`
+- **Descripción**: Permite al operador iniciar o finalizar su turno operativo (`turnoActivo: boolean`, `turno?: string`) para la vista **`Inicio Empleado`**.
+
+#### `GET /auth/usuarios` y `PATCH /auth/usuarios/:id/estado`
+- **Roles permitidos**: `admin`
+- **Descripción**: Lista usuarios y permite activar/suspender cuentas revocando inmediatamente `sesion:{idUsuario}` en Redis.
+
 ---
 
 ### 2.2 Módulo de Cargas y Seguimiento (`/cargas` y `/viajes`)
 
 #### `GET /cargas/mis-cargas`
 - **Roles permitidos**: `cliente`, `gerente`, `admin`
-- **Query Params**: `?estado=en_curso | completados`
-- **Respuesta (200 OK)**: Lista de cargas asociadas al `clienteId` extraído del token JWT.
+- **Query Params**: `?estado=en_curso | completados` y `?q=<texto>` (búsqueda por contenedor, buque, viaje o puerto)
+- **Respuesta (200 OK)**: Lista de cargas asociadas al `clienteId` extraído del token JWT, incluyendo `progreso` (`0` a `1`) y `ultimaPosicion` GeoJSON.
   ```json
   {
     "success": true,
@@ -86,6 +102,7 @@ Este documento define los endpoints RESTful, contratos de datos (DTOs), esquemas
         "tipo": "Seco",
         "pesoToneladas": 24.5,
         "viaje": {
+          "id": "672f0a...",
           "codigo": "#BU-1234XYZ",
           "buque": "Maersk Horizon",
           "origen": "Shanghai (Terminal Yangshan - CHN)",
@@ -93,13 +110,22 @@ Este documento define los endpoints RESTful, contratos de datos (DTOs), esquemas
           "salida": "2026-03-12T08:00:00.000Z",
           "llegadaEstimada": "2026-07-03T18:00:00.000Z",
           "estado": "en_ruta",
-          "diasRestantes": 5
+          "diasRestantes": 5,
+          "progreso": 0.85,
+          "ultimaPosicion": {
+            "type": "Point",
+            "coordinates": [-110.5, 8.2]
+          }
         }
       }
     ],
     "timestamp": "2026-11-10T23:50:00.000Z"
   }
   ```
+
+#### `GET /cargas/:id`
+- **Roles permitidos**: `cliente`, `operador`, `gerente`, `admin`
+- **Descripción**: Obtiene el detalle técnico completo de un contenedor (por ObjectId o código `#CN-9823`) para la vista **`Detalle Pedido`**, aplicando aislamiento de seguridad por `clienteId`.
 
 #### `GET /cargas/:id/timeline`
 - **Roles permitidos**: `cliente`, `operador`, `gerente`, `admin`
@@ -123,16 +149,24 @@ Este documento define los endpoints RESTful, contratos de datos (DTOs), esquemas
   }
   ```
 
+#### `POST /cargas` y `POST /cargas/:id/eventos`
+- **Roles permitidos**: `operador` (eventos), `gerente`, `admin`
+- **Descripción**: Registra nuevos contenedores (actualizando `resumenCarga` del viaje e invalidando `kpi:resumen` en Redis) y añade nuevos hitos al `historialEventos` del contenedor.
+
+#### `GET /viajes`, `GET /viajes/:id`, `POST /viajes` y `PATCH /viajes/:id/estado`
+- **Descripción**: Consulta, programa y actualiza el estado o posición GeoJSON (`ultimaPosicion`) de los viajes marítimos, sincronizando automáticamente alertas de retraso en Redis (`alertas:activas`).
+
 ---
 
 ### 2.3 Módulo de Escáner IA con Cámara (`/escaner`)
 
 #### `POST /escaner/inspeccion-optica`
 - **Roles permitidos**: `operador`, `admin`
-- **Content-Type**: `multipart/form-data`
+- **Content-Type**: `multipart/form-data` o `application/json`
 - **Form Data**:
   - `foto`: Archivo binario (JPEG/PNG capturado por la cámara de Ionic/Capacitor).
   - `viajeId`: ID opcional del viaje asignado.
+  - `codigoContenedor`: Código opcional si se envía manual/simulado.
 - **Respuesta (201 Created)**:
   ```json
   {
@@ -146,19 +180,23 @@ Este documento define los endpoints RESTful, contratos de datos (DTOs), esquemas
       "origen": "Shanghai (CHN)",
       "destino": "Guayaquil (ECU)",
       "estadoRuta": "En Tránsito - Océano Pacífico",
-      "fechaEstimada": "6 días (18 Octubre)",
+      "fechaEstimada": "5 días (16 de noviembre)",
       "imagenId": "672f0fa..."
     },
     "timestamp": "2026-11-10T23:50:00.000Z"
   }
   ```
 
+#### `GET /escaner/historial` y `GET /escaner/resumen-operador`
+- **Roles permitidos**: `operador`, `gerente`, `admin`
+- **Descripción**: Provee las métricas de rendimiento diario (`escaneosHoy: 32`, `totalEscaneos`) y la lista de `"Últimos Registros"` con estado `OK` / `ALERTA` para la vista **`Inicio Empleado`**.
+
 ---
 
 ### 2.4 Módulo de Incidentes (`/incidentes`)
 
-#### `POST /incidentes/reportar`
-- **Roles permitidos**: `operador`, `admin`
+#### `POST /incidentes/reportar` y `GET /incidentes`
+- **Roles permitidos**: `operador`, `gerente` (lectura), `admin`
 - **Body**:
   ```typescript
   class CreateIncidenteDto {
@@ -206,9 +244,9 @@ Este documento define los endpoints RESTful, contratos de datos (DTOs), esquemas
   }
   ```
 
-#### `GET /kpis/alertas-activas`
+#### `GET /kpis/alertas-activas` y `DELETE /kpis/alertas-activas/:id`
 - **Roles permitidos**: `gerente`, `admin`
-- **Fuente**: Set de Redis `alertas:activas`.
+- **Fuente**: Set de Redis `alertas:activas` (`SMEMBERS` / `SREM`).
 - **Respuesta (200 OK)**:
   ```json
   {
@@ -222,3 +260,12 @@ Este documento define los endpoints RESTful, contratos de datos (DTOs), esquemas
     "timestamp": "2026-11-10T23:50:00.000Z"
   }
   ```
+
+---
+
+### 2.6 Módulo de Flota, Puertos y Mantenimientos (`/buques`, `/puertos`, `/mantenimientos`)
+
+- **`GET /buques`**, **`POST /buques`**, **`PATCH /buques/:id/estado`**: Gestión de barcos de la flota naviera e invalidación de caché de KPIs en Redis.
+- **`GET /puertos`**, **`POST /puertos`**: Gestión de terminales portuarias con coordenadas GeoJSON (`2dsphere`).
+- **`GET /mantenimientos`**, **`POST /mantenimientos`**, **`PATCH /mantenimientos/:id/estado`**: Programación y finalización de mantenimientos preventivos/correctivos con limpieza automática de alertas `mantenimiento_vencido:{imo}` en Redis.
+

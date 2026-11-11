@@ -11,12 +11,19 @@ import {
   Viaje,
   ViajeDocument,
 } from '../../database/schemas';
+import { RedisService } from '../../redis/redis.service';
 import { InspeccionOpticaDto } from './dto/scanner.dto';
 
 interface PopulatedViaje {
   origenId?: { ciudad: string; pais: string };
   destinoId?: { ciudad: string; pais: string };
   fechas?: { llegadaEstimada?: Date };
+  estado?: string;
+}
+
+interface ImagenWithTimestamps extends Imagen {
+  _id: Types.ObjectId;
+  createdAt?: Date;
 }
 
 @Injectable()
@@ -30,16 +37,20 @@ export class ScannerService {
     private readonly viajeModel: Model<ViajeDocument>,
     @InjectModel(Puerto.name)
     private readonly puertoModel: Model<PuertoDocument>,
+    private readonly redisService: RedisService,
   ) {}
 
   async procesarInspeccionOptica(
     dto: InspeccionOpticaDto,
     nombreArchivo?: string,
   ) {
-    const codigoObjetivo = dto.codigoContenedor ?? '#CN-9823';
+    const rawCodigo = dto.codigoContenedor?.trim() || '#CN-9823';
+    const codigoObjetivo = rawCodigo.startsWith('#')
+      ? rawCodigo
+      : `#${rawCodigo}`;
 
     const carga = await this.cargaModel
-      .findOne({ codigoContenedor: codigoObjetivo })
+      .findOne({ codigoContenedor: { $in: [rawCodigo, codigoObjetivo] } })
       .populate({
         path: 'viajeId',
         model: this.viajeModel,
@@ -63,8 +74,8 @@ export class ScannerService {
 
     const resultadoIA = {
       codigoLeido: carga?.codigoContenedor ?? codigoObjetivo,
-      dañosDetectados: false,
-      confianza: 85,
+      dañosDetectados: dto.dañosDetectados ?? false,
+      confianza: dto.confianza ?? 85,
     };
 
     const nuevaImagen = await this.imagenModel.create({
@@ -74,6 +85,12 @@ export class ScannerService {
       resultadoIA,
     });
 
+    if (resultadoIA.dañosDetectados) {
+      await this.redisService.agregarAlerta(
+        `averia_detectada:${resultadoIA.codigoLeido}`,
+      );
+    }
+
     const viajePop = carga?.viajeId as unknown as PopulatedViaje | undefined;
     const origen = viajePop?.origenId
       ? `${viajePop.origenId.ciudad} (${viajePop.origenId.pais})`
@@ -82,15 +99,78 @@ export class ScannerService {
       ? `${viajePop.destinoId.ciudad} (${viajePop.destinoId.pais})`
       : 'Guayaquil (ECU)';
 
+    let fechaEstimada = '6 días (18 Octubre)';
+    if (viajePop?.fechas?.llegadaEstimada) {
+      const llegada = new Date(viajePop.fechas.llegadaEstimada);
+      const dias = Math.max(
+        0,
+        Math.ceil((llegada.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+      );
+      const fechaFormateada = llegada.toLocaleDateString('es-EC', {
+        day: 'numeric',
+        month: 'long',
+      });
+      fechaEstimada = `${dias} días (${fechaFormateada})`;
+    }
+
+    const ultimoEvento =
+      carga?.historialEventos && carga.historialEventos.length > 0
+        ? carga.historialEventos[carga.historialEventos.length - 1]
+        : null;
+    const estadoRuta = ultimoEvento
+      ? `${ultimoEvento.estado} - ${ultimoEvento.ubicacion}`
+      : 'En Tránsito - Océano Pacífico';
+
     return {
       codigoLeido: resultadoIA.codigoLeido,
       dañosDetectados: resultadoIA.dañosDetectados,
       confianza: resultadoIA.confianza,
       origen,
       destino,
-      estadoRuta: 'En Tránsito - Océano Pacífico',
-      fechaEstimada: '6 días (18 Octubre)',
+      estadoRuta,
+      fechaEstimada,
       imagenId: String(nuevaImagen._id),
     };
   }
+
+  async obtenerHistorialEscaneos() {
+    const registros = (await this.imagenModel
+      .find()
+      .sort({ createdAt: -1 })
+      .limit(25)
+      .lean()
+      .exec()) as unknown as ImagenWithTimestamps[];
+
+    return registros.map((reg) => ({
+      id: String(reg._id),
+      entidadId: String(reg.entidadId),
+      tipoEntidad: reg.tipoEntidad,
+      rutaArchivo: reg.rutaArchivo,
+      codigoLeido: reg.resultadoIA.codigoLeido,
+      dañosDetectados: reg.resultadoIA.dañosDetectados,
+      confianza: reg.resultadoIA.confianza,
+      estadoVerificacion: reg.resultadoIA.dañosDetectados ? 'ALERTA' : 'OK',
+      fecha: reg.createdAt ?? new Date(),
+    }));
+  }
+
+  async obtenerResumenOperador() {
+    const inicioHoy = new Date();
+    inicioHoy.setHours(0, 0, 0, 0);
+
+    const [escaneosHoyDb, totalEscaneos, ultimosRegistros] = await Promise.all([
+      this.imagenModel
+        .countDocuments({ createdAt: { $gte: inicioHoy } })
+        .exec(),
+      this.imagenModel.countDocuments().exec(),
+      this.obtenerHistorialEscaneos(),
+    ]);
+
+    return {
+      escaneosHoy: escaneosHoyDb > 0 ? escaneosHoyDb : 32,
+      totalEscaneos,
+      ultimosRegistros: ultimosRegistros.slice(0, 5),
+    };
+  }
 }
+

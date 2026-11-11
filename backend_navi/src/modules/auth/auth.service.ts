@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -10,8 +11,15 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { Usuario, UsuarioDocument } from '../../database/schemas';
 import { RedisService } from '../../redis/redis.service';
-import { LoginDto } from './dto/auth.dto';
+import {
+  ControlTurnoDto,
+  CreateUsuarioDto,
+  LoginDto,
+  UpdatePerfilDto,
+  UpdatePreferenciasDto,
+} from './dto/auth.dto';
 import { JwtPayload } from '../../common/interfaces/api-response.interface';
+import { RolUsuario } from '../../common/enums/rol.enum';
 
 export interface LoginResult {
   accessToken: string;
@@ -21,6 +29,7 @@ export interface LoginResult {
     correo: string;
     rol: string;
     detallesPerfil: Usuario['detallesPerfil'];
+    preferencias: Usuario['preferencias'];
   };
 }
 
@@ -80,7 +89,43 @@ export class AuthService {
         correo: usuario.correo,
         rol: usuario.rol,
         detallesPerfil: usuario.detallesPerfil,
+        preferencias: usuario.preferencias,
       },
+    };
+  }
+
+  async registrarUsuario(dto: CreateUsuarioDto) {
+    const correoNormalizado = dto.correo.toLowerCase().trim();
+    const existente = await this.usuarioModel
+      .findOne({ correo: correoNormalizado })
+      .lean()
+      .exec();
+
+    if (existente) {
+      throw new ConflictException(
+        'Ya existe un usuario registrado con ese correo electrónico',
+      );
+    }
+
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+    const nuevo = await this.usuarioModel.create({
+      nombre: dto.nombre.trim(),
+      correo: correoNormalizado,
+      password_hash: passwordHash,
+      rol: dto.rol ?? RolUsuario.CLIENTE,
+      detallesPerfil: dto.detallesPerfil ?? {},
+      preferencias: { notificacionesPush: true, modoOscuro: false },
+      activo: true,
+    });
+
+    return {
+      id: String(nuevo._id),
+      nombre: nuevo.nombre,
+      correo: nuevo.correo,
+      rol: nuevo.rol,
+      detallesPerfil: nuevo.detallesPerfil,
+      preferencias: nuevo.preferencias,
+      activo: nuevo.activo,
     };
   }
 
@@ -100,6 +145,65 @@ export class AuthService {
       throw new NotFoundException('Usuario no encontrado');
     }
     return usuario;
+  }
+
+  async actualizarPerfil(idUsuario: string, dto: UpdatePerfilDto) {
+    const usuario = await this.usuarioModel.findById(idUsuario).exec();
+    if (!usuario) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    if (dto.nombre !== undefined) {
+      usuario.nombre = dto.nombre.trim();
+    }
+
+    if (dto.detallesPerfil !== undefined) {
+      usuario.detallesPerfil = {
+        ...usuario.detallesPerfil,
+        ...dto.detallesPerfil,
+      };
+    }
+
+    await usuario.save();
+    return this.obtenerPerfil(idUsuario);
+  }
+
+  async actualizarPreferencias(idUsuario: string, dto: UpdatePreferenciasDto) {
+    const usuario = await this.usuarioModel.findById(idUsuario).exec();
+    if (!usuario) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    usuario.preferencias = {
+      notificacionesPush:
+        dto.notificacionesPush ?? usuario.preferencias?.notificacionesPush ?? true,
+      modoOscuro: dto.modoOscuro ?? usuario.preferencias?.modoOscuro ?? false,
+    };
+
+    await usuario.save();
+    return this.obtenerPerfil(idUsuario);
+  }
+
+  async controlarTurno(idUsuario: string, dto: ControlTurnoDto) {
+    const usuario = await this.usuarioModel.findById(idUsuario).exec();
+    if (!usuario) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    const turnoActual = dto.turno ?? usuario.detallesPerfil?.turno ?? 'Matutino';
+    usuario.detallesPerfil = {
+      ...usuario.detallesPerfil,
+      turno: dto.turnoActivo ? turnoActual : 'Fuera de turno',
+    };
+
+    await usuario.save();
+    return {
+      idUsuario: String(usuario._id),
+      nombre: usuario.nombre,
+      turnoActivo: dto.turnoActivo,
+      turno: usuario.detallesPerfil.turno,
+      timestamp: new Date().toISOString(),
+    };
   }
 
   async listarUsuarios() {
@@ -124,3 +228,4 @@ export class AuthService {
     return usuario;
   }
 }
+

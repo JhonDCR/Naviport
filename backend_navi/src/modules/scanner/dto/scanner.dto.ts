@@ -1,5 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class InspeccionOpticaDto {
   @ApiPropertyOptional({
@@ -17,4 +25,25 @@ export class InspeccionOpticaDto {
   @IsOptional()
   @IsString()
   codigoContenedor?: string;
+
+  @ApiPropertyOptional({
+    example: false,
+    description: 'Indica si la inspección óptica detectó daños o precinto roto',
+  })
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  dañosDetectados?: boolean;
+
+  @ApiPropertyOptional({
+    example: 85,
+    description: 'Porcentaje de confianza del modelo OCR/IA (0 - 100)',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  confianza?: number;
 }
+

@@ -16,7 +16,14 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { LoginDto, UpdateEstadoUsuarioDto } from './dto/auth.dto';
+import {
+  ControlTurnoDto,
+  CreateUsuarioDto,
+  LoginDto,
+  UpdateEstadoUsuarioDto,
+  UpdatePerfilDto,
+  UpdatePreferenciasDto,
+} from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -40,6 +47,21 @@ export class AuthController {
     const data = await this.authService.login(dto);
     return {
       message: 'Autenticación satisfactoria',
+      data,
+    };
+  }
+
+  @Post('registro')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Registrar un nuevo usuario en la plataforma NaviPort',
+  })
+  @ApiResponse({ status: 201, description: 'Usuario registrado exitosamente' })
+  @ApiResponse({ status: 409, description: 'El correo ya está registrado' })
+  async registrar(@Body() dto: CreateUsuarioDto) {
+    const data = await this.authService.registrarUsuario(dto);
+    return {
+      message: 'Usuario registrado exitosamente',
       data,
     };
   }
@@ -69,6 +91,67 @@ export class AuthController {
     const data = await this.authService.obtenerPerfil(user.sub);
     return {
       message: 'Perfil de usuario obtenido',
+      data,
+    };
+  }
+
+  @Patch('perfil')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Actualizar datos del perfil del usuario autenticado',
+  })
+  @ApiResponse({ status: 200, description: 'Perfil actualizado correctamente' })
+  async actualizarPerfil(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdatePerfilDto,
+  ) {
+    const data = await this.authService.actualizarPerfil(user.sub, dto);
+    return {
+      message: 'Perfil actualizado correctamente',
+      data,
+    };
+  }
+
+  @Patch('preferencias')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary:
+      'Actualizar preferencias de aplicación (notificacionesPush, modoOscuro)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Preferencias actualizadas correctamente',
+  })
+  async actualizarPreferencias(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdatePreferenciasDto,
+  ) {
+    const data = await this.authService.actualizarPreferencias(user.sub, dto);
+    return {
+      message: 'Preferencias actualizadas correctamente',
+      data,
+    };
+  }
+
+  @Patch('turno')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RolUsuario.OPERADOR, RolUsuario.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Iniciar o finalizar turno operativo del empleado (Operador)',
+  })
+  @ApiResponse({ status: 200, description: 'Estado de turno actualizado' })
+  async controlarTurno(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: ControlTurnoDto,
+  ) {
+    const data = await this.authService.controlarTurno(user.sub, dto);
+    return {
+      message: dto.turnoActivo
+        ? 'Turno operativo iniciado'
+        : 'Turno operativo finalizado',
       data,
     };
   }
@@ -109,3 +192,4 @@ export class AuthController {
     };
   }
 }
+

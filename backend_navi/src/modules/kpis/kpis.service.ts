@@ -119,4 +119,17 @@ export class KpisService {
       };
     });
   }
+
+  async resolverAlertaActiva(alertaId: string): Promise<{
+    id: string;
+    resuelta: boolean;
+  }> {
+    await this.redisService.eliminarAlerta(alertaId);
+    await this.redisService.invalidarKpiResumen();
+    return {
+      id: alertaId,
+      resuelta: true,
+    };
+  }
 }
+

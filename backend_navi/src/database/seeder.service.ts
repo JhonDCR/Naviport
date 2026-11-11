@@ -15,6 +15,8 @@ import {
   CargaDocument,
   Incidente,
   IncidenteDocument,
+  Imagen,
+  ImagenDocument,
   Mantenimiento,
   MantenimientoDocument,
 } from './schemas';
@@ -38,6 +40,8 @@ export class SeederService implements OnApplicationBootstrap {
     private readonly cargaModel: Model<CargaDocument>,
     @InjectModel(Incidente.name)
     private readonly incidenteModel: Model<IncidenteDocument>,
+    @InjectModel(Imagen.name)
+    private readonly imagenModel: Model<ImagenDocument>,
     @InjectModel(Mantenimiento.name)
     private readonly mantenimientoModel: Model<MantenimientoDocument>,
     private readonly redisService: RedisService,
@@ -179,7 +183,7 @@ export class SeederService implements OnApplicationBootstrap {
       ]);
 
       // 5. Cargas
-      await this.cargaModel.insertMany([
+      const [cargaPrincipal, cargaSecundaria] = await this.cargaModel.insertMany([
         {
           viajeId: viajePrincipal._id,
           clienteId: cliente._id,
@@ -242,7 +246,7 @@ export class SeederService implements OnApplicationBootstrap {
         },
       ]);
 
-      // 6. Incidentes y Mantenimientos
+      // 6. Incidentes, Imágenes (IA) y Mantenimientos
       await this.incidenteModel.create({
         viajeId: viajeRetrasado._id,
         buqueId: pacificStar._id,
@@ -252,6 +256,29 @@ export class SeederService implements OnApplicationBootstrap {
         gravedad: 'alta',
         fecha: new Date(),
       });
+
+      await this.imagenModel.insertMany([
+        {
+          entidadId: cargaPrincipal._id,
+          tipoEntidad: 'carga',
+          rutaArchivo: '/uploads/scans/seed-scan-cn9823.jpg',
+          resultadoIA: {
+            codigoLeido: '#CN-9823',
+            dañosDetectados: false,
+            confianza: 85,
+          },
+        },
+        {
+          entidadId: cargaSecundaria._id,
+          tipoEntidad: 'carga',
+          rutaArchivo: '/uploads/scans/seed-scan-cn7741.jpg',
+          resultadoIA: {
+            codigoLeido: '#CN-7741',
+            dañosDetectados: false,
+            confianza: 92,
+          },
+        },
+      ]);
 
       await this.mantenimientoModel.create({
         buqueId: pacificStar._id,
@@ -275,3 +302,4 @@ export class SeederService implements OnApplicationBootstrap {
     await this.redisService.agregarAlerta('mantenimiento_vencido:IMO-9876543');
   }
 }
+

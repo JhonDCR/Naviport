@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -56,4 +57,41 @@ export class ScannerController {
       data,
     };
   }
+
+  @Get('historial')
+  @Roles(RolUsuario.OPERADOR, RolUsuario.GERENTE, RolUsuario.ADMIN)
+  @ApiOperation({
+    summary:
+      'Obtener historial de últimos registros de contenedores escaneados con IA',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Historial de inspecciones ópticas obtenido',
+  })
+  async obtenerHistorial() {
+    const data = await this.scannerService.obtenerHistorialEscaneos();
+    return {
+      message: 'Historial de inspecciones ópticas obtenido',
+      data,
+    };
+  }
+
+  @Get('resumen-operador')
+  @Roles(RolUsuario.OPERADOR, RolUsuario.GERENTE, RolUsuario.ADMIN)
+  @ApiOperation({
+    summary:
+      'Obtener métricas de rendimiento diario (Escaneos hoy) y últimos registros para Inicio Empleado',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Resumen operativo del empleado obtenido',
+  })
+  async obtenerResumenOperador() {
+    const data = await this.scannerService.obtenerResumenOperador();
+    return {
+      message: 'Resumen operativo del empleado obtenido',
+      data,
+    };
+  }
 }
+

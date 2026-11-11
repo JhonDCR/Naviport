@@ -1,7 +1,8 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Delete, Get, Param, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiParam,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -47,4 +48,25 @@ export class KpisController {
       data,
     };
   }
+
+  @Delete('alertas-activas/:id')
+  @Roles(RolUsuario.GERENTE, RolUsuario.ADMIN)
+  @ApiOperation({
+    summary:
+      'Resolver y eliminar una alerta crítica del Set de Redis (SREM alertas:activas)',
+  })
+  @ApiParam({
+    name: 'id',
+    example: 'viaje_retrasado:V-2026-014',
+    description: 'Identificador completo de la alerta en Redis',
+  })
+  @ApiResponse({ status: 200, description: 'Alerta resuelta y eliminada' })
+  async resolverAlerta(@Param('id') id: string) {
+    const data = await this.kpisService.resolverAlertaActiva(id);
+    return {
+      message: 'Alerta crítica resuelta y eliminada de Redis',
+      data,
+    };
+  }
 }
+

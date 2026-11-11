@@ -1,17 +1,21 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
+  IsDateString,
   IsIn,
   IsMongoId,
-  IsDateString,
   IsNumber,
+  IsOptional,
   IsString,
   Min,
 } from 'class-validator';
 import { EstadoBuque } from '../../../database/schemas/buque.schema';
-import { TipoMantenimiento } from '../../../database/schemas/mantenimiento.schema';
+import {
+  EstadoMantenimiento,
+  TipoMantenimiento,
+} from '../../../database/schemas/mantenimiento.schema';
 
 export class CreateBuqueDto {
   @ApiProperty({ example: 'MSC Gülsün' })
@@ -35,6 +39,15 @@ export class CreateBuqueDto {
   @IsString()
   bandera: string;
 
+  @ApiProperty({
+    enum: ['activo', 'mantenimiento', 'inactivo'],
+    example: 'activo',
+  })
+  @IsIn(['activo', 'mantenimiento', 'inactivo'])
+  estado: EstadoBuque;
+}
+
+export class UpdateEstadoBuqueDto {
   @ApiProperty({
     enum: ['activo', 'mantenimiento', 'inactivo'],
     example: 'activo',
@@ -80,3 +93,21 @@ export class CreateMantenimientoDto {
   @IsDateString()
   fechaProgramada: string;
 }
+
+export class UpdateEstadoMantenimientoDto {
+  @ApiProperty({
+    enum: ['pendiente', 'completado'],
+    example: 'completado',
+  })
+  @IsIn(['pendiente', 'completado'])
+  estado: EstadoMantenimiento;
+
+  @ApiPropertyOptional({
+    example: '2026-11-11T15:00:00.000Z',
+    description: 'Fecha real de finalización del mantenimiento',
+  })
+  @IsOptional()
+  @IsDateString()
+  fechaReal?: string;
+}
+
