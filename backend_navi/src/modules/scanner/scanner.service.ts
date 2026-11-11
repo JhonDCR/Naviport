@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { isValidObjectId, Model, Types } from 'mongoose';
+import { mkdir, writeFile } from 'fs/promises';
+import { join } from 'path';
 import {
   Carga,
   CargaDocument,
@@ -43,6 +45,7 @@ export class ScannerService {
   async procesarInspeccionOptica(
     dto: InspeccionOpticaDto,
     nombreArchivo?: string,
+    fileBuffer?: Buffer,
   ) {
     const rawCodigo = dto.codigoContenedor?.trim() || '#CN-9823';
     const codigoObjetivo = rawCodigo.startsWith('#')
@@ -68,9 +71,16 @@ export class ScannerService {
         ? new Types.ObjectId(dto.viajeId)
         : new Types.ObjectId();
 
-    const rutaArchivo = nombreArchivo
-      ? `/uploads/scans/${Date.now()}-${nombreArchivo}`
-      : `/uploads/scans/${Date.now()}-scan-cn9823.jpg`;
+    const safeFileName = nombreArchivo
+      ? `${Date.now()}-${nombreArchivo.replace(/[^a-zA-Z0-9._-]/g, '_')}`
+      : `${Date.now()}-scan-cn9823.jpg`;
+    const rutaArchivo = `/uploads/scans/${safeFileName}`;
+
+    if (fileBuffer) {
+      const dir = join(process.cwd(), 'uploads', 'scans');
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, safeFileName), fileBuffer);
+    }
 
     const resultadoIA = {
       codigoLeido: carga?.codigoContenedor ?? codigoObjetivo,

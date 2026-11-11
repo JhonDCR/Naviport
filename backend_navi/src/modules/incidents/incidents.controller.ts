@@ -5,10 +5,14 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
+  ApiConsumes,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -32,16 +36,23 @@ export class IncidentsController {
   @Post('reportar')
   @HttpCode(HttpStatus.CREATED)
   @Roles(RolUsuario.OPERADOR, RolUsuario.ADMIN)
+  @UseInterceptors(FileInterceptor('foto'))
+  @ApiConsumes('multipart/form-data', 'application/json')
   @ApiOperation({
     summary:
-      'Reportar incidente en puerto o ruta y registrar alerta crítica en Redis (alertas:activas)',
+      'Reportar incidente en puerto o ruta (con fotografía opcional) y registrar alerta crítica en Redis (alertas:activas)',
   })
   @ApiResponse({ status: 201, description: 'Incidente reportado exitosamente' })
   async reportar(
     @Body() dto: CreateIncidenteDto,
     @CurrentUser() user: JwtPayload,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
-    const data = await this.incidentsService.reportarIncidente(dto, user.sub);
+    const data = await this.incidentsService.reportarIncidente(
+      dto,
+      user.sub,
+      file,
+    );
     return {
       message: 'Incidente reportado y alerta registrada en Redis',
       data,

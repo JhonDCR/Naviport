@@ -123,6 +123,14 @@ Este documento define los endpoints RESTful, contratos de datos (DTOs), esquemas
   }
   ```
 
+#### `GET /cargas/resumen-cliente`
+- **Roles permitidos**: `cliente`, `gerente`, `admin`
+- **Descripción**: Obtiene métricas rápidas (`totalContenedores`, `enCurso`, `completados`, `toneladasTotales`, `proximoArriboDias`) y la `cargaDestacada` para la pantalla **`Inicio` (Home Cliente)**.
+
+#### `GET /cargas/notificaciones`
+- **Roles permitidos**: `cliente`, `gerente`, `admin`
+- **Descripción**: Obtiene la lista de notificaciones del cliente (`retraso`, `arribo_proximo`, `evento_timeline`) para la campana de notificaciones en **`Inicio`**.
+
 #### `GET /cargas/:id`
 - **Roles permitidos**: `cliente`, `operador`, `gerente`, `admin`
 - **Descripción**: Obtiene el detalle técnico completo de un contenedor (por ObjectId o código `#CN-9823`) para la vista **`Detalle Pedido`**, aplicando aislamiento de seguridad por `clienteId`.
@@ -197,6 +205,7 @@ Este documento define los endpoints RESTful, contratos de datos (DTOs), esquemas
 
 #### `POST /incidentes/reportar` y `GET /incidentes`
 - **Roles permitidos**: `operador`, `gerente` (lectura), `admin`
+- **Content-Type**: `multipart/form-data` (con campo opcional `foto`) o `application/json`
 - **Body**:
   ```typescript
   class CreateIncidenteDto {
@@ -215,9 +224,13 @@ Este documento define los endpoints RESTful, contratos de datos (DTOs), esquemas
 
     @IsIn(['alta', 'media', 'baja'])
     gravedad: string;
+
+    @IsOptional()
+    @IsString()
+    codigoContenedor?: string; // Ej: "#CN-9823"
   }
   ```
-- **Efecto Secundario**: Guarda en MongoDB y empuja a Redis (`SADD alertas:activas ...`).
+- **Efecto Secundario**: Guarda en MongoDB (`incidentes` y opcionalmente `imagenes` con `tipoEntidad: 'incidente'`), invalida `kpi:resumen` y empuja a Redis (`SADD alertas:activas ...`).
 
 ---
 

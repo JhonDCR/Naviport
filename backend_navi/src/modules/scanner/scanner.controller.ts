@@ -51,6 +51,7 @@ export class ScannerController {
     const data = await this.scannerService.procesarInspeccionOptica(
       dto,
       file?.originalname,
+      file?.buffer,
     );
     return {
       message: 'Inspección óptica procesada por IA',

@@ -1,5 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsIn, IsMongoId, IsString, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsIn,
+  IsMongoId,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 import {
   GravedadIncidente,
   TipoIncidente,
@@ -41,4 +47,12 @@ export class CreateIncidenteDto {
   })
   @IsIn(['alta', 'media', 'baja'])
   gravedad: GravedadIncidente;
+
+  @ApiPropertyOptional({
+    example: '#CN-9823',
+    description: 'Código opcional del contenedor afectado para vincular evidencia fotográfica',
+  })
+  @IsOptional()
+  @IsString()
+  codigoContenedor?: string;
 }

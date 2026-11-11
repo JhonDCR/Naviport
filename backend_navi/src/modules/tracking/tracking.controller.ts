@@ -71,6 +71,42 @@ export class TrackingController {
     };
   }
 
+  @Get('cargas/resumen-cliente')
+  @Roles(RolUsuario.CLIENTE, RolUsuario.GERENTE, RolUsuario.ADMIN)
+  @ApiOperation({
+    summary:
+      'Obtener resumen de métricas rápidas y envío destacado para la pantalla Inicio (Home Cliente)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Resumen del cliente obtenido correctamente',
+  })
+  async obtenerResumenCliente(@CurrentUser() user: JwtPayload) {
+    const data = await this.trackingService.obtenerResumenCliente(user);
+    return {
+      message: 'Resumen del cliente obtenido correctamente',
+      data,
+    };
+  }
+
+  @Get('cargas/notificaciones')
+  @Roles(RolUsuario.CLIENTE, RolUsuario.GERENTE, RolUsuario.ADMIN)
+  @ApiOperation({
+    summary:
+      'Obtener notificaciones de arribos, retrasos y eventos de timeline de los contenedores del cliente',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Notificaciones obtenidas correctamente',
+  })
+  async obtenerNotificacionesCliente(@CurrentUser() user: JwtPayload) {
+    const data = await this.trackingService.obtenerNotificacionesCliente(user);
+    return {
+      message: 'Notificaciones obtenidas correctamente',
+      data,
+    };
+  }
+
   @Get('cargas/:id')
   @Roles(
     RolUsuario.CLIENTE,

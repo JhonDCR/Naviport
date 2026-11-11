@@ -166,6 +166,113 @@ export class TrackingService {
     return resultado;
   }
 
+  async obtenerResumenCliente(user: JwtPayload) {
+    const todas = await this.obtenerMisCargas(user);
+    const enCurso = todas.filter((c) => c.viaje.estado !== 'finalizado');
+    const completados = todas.filter((c) => c.viaje.estado === 'finalizado');
+    const toneladasTotales = Number(
+      todas.reduce((acc, c) => acc + c.pesoToneladas, 0).toFixed(2),
+    );
+    const proximoArriboDias =
+      enCurso.length > 0
+        ? Math.min(...enCurso.map((c) => c.viaje.diasRestantes))
+        : 0;
+
+    return {
+      totalContenedores: todas.length,
+      enCurso: enCurso.length,
+      completados: completados.length,
+      toneladasTotales,
+      proximoArriboDias,
+      cargaDestacada: enCurso[0] ?? todas[0] ?? null,
+    };
+  }
+
+  async obtenerNotificacionesCliente(user: JwtPayload) {
+    const query: Record<string, unknown> = {};
+    if (user.rol === RolUsuario.CLIENTE && isValidObjectId(user.sub)) {
+      query.clienteId = new Types.ObjectId(user.sub);
+    }
+
+    const cargas = await this.cargaModel
+      .find(query)
+      .populate({
+        path: 'viajeId',
+        populate: [
+          { path: 'buqueId', model: this.buqueModel },
+          { path: 'origenId', model: this.puertoModel },
+          { path: 'destinoId', model: this.puertoModel },
+        ],
+      })
+      .lean()
+      .exec();
+
+    const notificaciones: Array<{
+      id: string;
+      tipo: 'retraso' | 'arribo_proximo' | 'evento_timeline';
+      titulo: string;
+      mensaje: string;
+      codigoContenedor: string;
+      fecha: Date;
+      leida: boolean;
+    }> = [];
+
+    for (const c of cargas) {
+      const viajePop = c.viajeId as unknown as PopulatedViaje | null;
+      if (viajePop?.estado === 'retrasado') {
+        notificaciones.push({
+          id: `notif-retraso-${String(c._id)}`,
+          tipo: 'retraso',
+          titulo: `Viaje retrasado (${viajePop.codigo})`,
+          mensaje: `El contenedor ${c.codigoContenedor} en el buque ${viajePop.buqueId?.nombre ?? 'asignado'} registra retraso en ruta.`,
+          codigoContenedor: c.codigoContenedor,
+          fecha: new Date(),
+          leida: false,
+        });
+      } else if (viajePop?.fechas?.llegadaEstimada) {
+        const diffDias = Math.max(
+          0,
+          Math.ceil(
+            (new Date(viajePop.fechas.llegadaEstimada).getTime() - Date.now()) /
+              (1000 * 60 * 60 * 24),
+          ),
+        );
+        if (diffDias <= 7) {
+          notificaciones.push({
+            id: `notif-arribo-${String(c._id)}`,
+            tipo: 'arribo_proximo',
+            titulo: `Arribo estimado en ${diffDias} días`,
+            mensaje: `Tu contenedor ${c.codigoContenedor} llegará pronto a ${viajePop.destinoId?.ciudad ?? 'puerto de destino'}.`,
+            codigoContenedor: c.codigoContenedor,
+            fecha: new Date(),
+            leida: false,
+          });
+        }
+      }
+
+      const eventosCompletados = c.historialEventos.filter(
+        (ev) => ev.completado !== false,
+      );
+      const ultimoEvento =
+        eventosCompletados[eventosCompletados.length - 1] ??
+        c.historialEventos[0];
+
+      if (ultimoEvento) {
+        notificaciones.push({
+          id: `notif-ev-${String(c._id)}`,
+          tipo: 'evento_timeline',
+          titulo: `${c.codigoContenedor}: ${ultimoEvento.estado}`,
+          mensaje: `Ubicación registrada: ${ultimoEvento.ubicacion}`,
+          codigoContenedor: c.codigoContenedor,
+          fecha: ultimoEvento.fecha,
+          leida: true,
+        });
+      }
+    }
+
+    return notificaciones;
+  }
+
   private async buscarCargaDocumento(idOrCodigo: string) {
     let carga: CargaDocument | null = null;
 
