@@ -1,127 +1,259 @@
-# Arquitectura del Sistema — Naviport
+# Arquitectura del Sistema — NaviPort (OceanTrack)
 
-Este documento describe la arquitectura global, patrones de diseño, flujo de datos y decisiones técnicas implementadas en **Naviport**.
+Plataforma integral basada en arquitectura NoSQL (**MongoDB + Redis**) para la gestión de flota naviera y rastreo de importaciones marítimas desde China (Shanghai - Terminal Yangshan) y EE.UU. (Miami) hacia Ecuador (Guayaquil - Puerto Marítimo).
 
 ---
 
-## 1. Diagrama de Alto Nivel
+## 1. Diagrama de Arquitectura Global
 
 ```mermaid
 flowchart TD
-    subgraph Cliente ["Capa Cliente (Móvil / Web)"]
-        UI["Ionic 9 + Angular 22 (Figma Design)"]
-        Capacitor["Capacitor Plugins (Haptics, Storage, Camera, etc.)"]
-        Signals["Angular Signals & State Management"]
-        HTTPClient["Angular HttpClient + Interceptors"]
-        UI --> Signals
-        Signals --> HTTPClient
-        UI --> Capacitor
-    end
-
-    subgraph API ["Capa de Backend (NestJS)"]
-        Gateway["REST API / Swagger OpenAPI"]
-        Guards["Auth Guards & Roles (JWT)"]
-        Pipes["Validation Pipes (class-validator)"]
-        Controllers["Controllers"]
-        Services["Domain Services (Lógica de Negocio)"]
+    subgraph Clientes ["Capa de Clientes (Frontend)"]
+        MobileClient["App Móvil Cliente (Ionic/Angular)
+        • Seguimiento en vivo
+        • Timeline de contenedor
+        • Notificaciones"]
         
-        Gateway --> Guards
-        Guards --> Pipes
-        Pipes --> Controllers
-        Controllers --> Services
+        MobileOperator["App Móvil Operador (Ionic/Angular)
+        • Escáner IA con Cámara
+        • Reporte de Incidentes
+        • Control de Turno"]
+
+        WebManager["Dashboard Web Gerente/Admin
+        • KPIs en tiempo real
+        • Gestión de buques y viajes
+        • Alertas críticas"]
     end
 
-    subgraph Cache ["Capa de Rendimiento"]
-        Redis[("Redis 7.2 (Caché, Rate Limit, Sesiones)")]
+    subgraph API ["Backend NestJS (Modular)"]
+        Gateway["REST API / Swagger (/api/v1)"]
+        AuthModule["Módulo Auth (JWT & Roles Guard)"]
+        TrackingModule["Módulo Viajes & Cargas"]
+        ScannerModule["Módulo Escáner IA & Imágenes"]
+        FleetModule["Módulo Buques & Puertos"]
+        KPIModule["Módulo Analítica & KPIs"]
     end
 
-    subgraph Persistencia ["Capa de Persistencia"]
-        MongoDB[("MongoDB 7.0 (Mongoose ODM)")]
+    subgraph FastStorage ["Capa de Caché y Sesiones (Redis)"]
+        RedisSession["sesion:{idUsuario}
+        (Tokens activos y revocación en tiempo real)"]
+        RedisKPI["kpi:resumen
+        (Caché de agregaciones con TTL: 300s)"]
+        RedisAlerts["alertas:activas
+        (Set de alertas operativas críticas)"]
     end
 
-    HTTPClient -->|HTTPS / JSON| Gateway
-    Services <-->|Read / Write Fast| Redis
-    Services <-->|Read / Write Persistente| MongoDB
+    subgraph Persistencia ["Capa de Datos Persistente (MongoDB)"]
+        MongoUsers[("usuarios")]
+        MongoShips[("buques")]
+        MongoPorts[("puertos")]
+        MongoTrips[("viajes")]
+        MongoCargo[("cargas")]
+        MongoIncidents[("incidentes")]
+        MongoMaintenance[("mantenimientos")]
+        MongoImages[("imagenes")]
+    end
+
+    MobileClient & MobileOperator & WebManager -->|HTTPS / JSON| Gateway
+    Gateway --> AuthModule & TrackingModule & ScannerModule & FleetModule & KPIModule
+    
+    AuthModule <--> RedisSession
+    KPIModule <--> RedisKPI
+    TrackingModule & FleetModule <--> RedisAlerts
+
+    TrackingModule --> MongoTrips & MongoCargo
+    FleetModule --> MongoShips & MongoPorts & MongoMaintenance
+    ScannerModule --> MongoImages & MongoIncidents
+    AuthModule --> MongoUsers
 ```
 
 ---
 
-## 2. Frontend: Ionic + Angular
+## 2. Roles del Sistema y Matriz de Acceso
 
-### 2.1 Principios Arquitectónicos
-- **Standalone Components**: Componentes autónomos de Angular para modularidad y carga optimizada.
-- **Signals y Reactividad Moderna**: Manejo de estado local y compartido con `signal()`, `computed()` y `effect()`.
-- **Enfoque Mobile-First**: Adaptación pixel-perfect desde Figma mediante variables CSS (`src/theme/variables.scss`).
-- **Encapsulación de Plugins Nativos**: Ningún componente consume Capacitor directamente; se utilizan servicios puente (ej. `NativeStorageService`, `CameraService`, `DeviceService`).
+| Rol | Entorno Principal | Capacidades Clave |
+| :--- | :--- | :--- |
+| **`cliente`** | App Móvil (Ionic) | Visualiza sus cargas activas, búsqueda de contenedores por código, timeline interactivo de eventos, consulta de fechas estimadas y notificaciones push. |
+| **`operador`** | App Móvil (Ionic) | Escáner de contenedores con cámara (IA), lectura óptica de dígitos, detección de precintos dañados, registro de incidentes en puerto con fotografía de evidencia. |
+| **`gerente`** | Web Dashboard / Móvil | Visualización de KPIs operacionales (puntualidad, toneladas transportadas), monitor de alertas urgentes, reportes agregados. |
+| **`admin`** | Web Dashboard | Control maestro de usuarios (activación/suspensión inmediata vía Redis), registro de buques, puertos y programación de rutas y viajes. |
 
-### 2.2 Estructura de Directorios Propuesta en `frontend_navi/src/app`
-```text
-src/app/
-├── core/                  # Singleton: servicios globales, interceptores, guards
-│   ├── guards/            # AuthGuard, RoleGuard
-│   ├── interceptors/      # AuthInterceptor, ErrorInterceptor
-│   └── services/          # Storage, Logger, Theme
-├── shared/                # Componentes reutilizables, directivas, pipes
-│   ├── components/        # Botones personalizados, headers, modales
-│   └── pipes/
-├── features/              # Módulos o dominios funcionales (Lazy-loaded)
-│   ├── auth/              # Login, registro, recuperación
-│   ├── home/              # Dashboard / Pantalla principal
-│   └── profile/           # Perfil de usuario, configuraciones
-└── theme/                 # Estilos globales y paleta de Figma
+---
+
+## 3. Modelo de Datos MongoDB (Mongoose Schemas)
+
+### 3.1 Colección: `usuarios`
+```typescript
+{
+  _id: ObjectId,
+  nombre: string,           // Ej: "Gary Industries" o "Javier Mendoza"
+  correo: string,           // Único, indexado
+  password_hash: string,
+  rol: 'cliente' | 'operador' | 'gerente' | 'admin',
+  detallesPerfil: {         // Incrustado según el rol
+    empresa?: string,       // Si rol === 'cliente'
+    ruc?: string,           // Si rol === 'cliente'
+    turno?: string,         // Si rol === 'operador' (ej: "Matutino")
+    idEmpleado?: string     // Si rol === 'operador'
+  },
+  preferencias: {
+    notificacionesPush: boolean,
+    modoOscuro: boolean
+  },
+  activo: boolean           // Si pasa a false, la sesión en Redis se destruye de inmediato
+}
+```
+
+### 3.2 Colección: `puertos`
+```typescript
+{
+  _id: ObjectId,
+  nombre: string,           // Ej: "Puerto Marítimo de Guayaquil", "Terminal Yangshan"
+  pais: string,             // "ECU", "CHN", "USA"
+  ciudad: string,           // "Guayaquil", "Shanghai", "Miami"
+  ubicacion: {              // GeoJSON para cálculo de rutas y render en mapa
+    type: "Point",
+    coordinates: [number, number] // [longitud, latitud] Ej: [-79.9, -2.2]
+  }
+}
+```
+
+### 3.3 Colección: `buques`
+```typescript
+{
+  _id: ObjectId,
+  nombre: string,           // Ej: "Maersk Horizon"
+  imo: string,              // Identificador internacional único del barco
+  tipo: string,             // "Portacontenedores", "Granelero", etc.
+  capacidadToneladas: number,
+  bandera: string,          // Ej: "Panamá", "Liberia"
+  estado: 'activo' | 'mantenimiento' | 'inactivo'
+}
+```
+
+### 3.4 Colección: `viajes`
+```typescript
+{
+  _id: ObjectId,
+  codigo: string,           // Ej: "V-2026-014", "#BU-1234XYZ"
+  buqueId: ObjectId,        // Ref -> buques
+  origenId: ObjectId,       // Ref -> puertos
+  destinoId: ObjectId,      // Ref -> puertos
+  fechas: {
+    salida: Date,
+    llegadaEstimada: Date,
+    llegadaReal?: Date
+  },
+  estado: 'programado' | 'en_ruta' | 'finalizado' | 'retrasado',
+  ultimaPosicion: {         // GeoJSON (Pin amarillo en mapa de la app)
+    type: "Point",
+    coordinates: [number, number]
+  },
+  resumenCarga: {           // Incrustado para evitar joins costosos en Dashboard
+    contenedores: number,   // Ej: 120
+    toneladas: number       // Ej: 2400
+  }
+}
+```
+
+### 3.5 Colección: `cargas`
+```typescript
+{
+  _id: ObjectId,
+  viajeId: ObjectId,        // Ref -> viajes
+  clienteId: ObjectId,      // Ref -> usuarios (Filtro clave para aislamiento y seguridad)
+  codigoContenedor: string, // Ej: "#CN-9823"
+  tipo: 'Seco' | 'Refrigerado',
+  pesoToneladas: number,
+  historialEventos: [       // Array incrustado que genera el Timeline vertical
+    {
+      estado: string,       // "Recogido en fábrica", "En patio", "A bordo", "En tránsito", "En aduana"
+      fecha: Date,
+      ubicacion: string     // "Terminal Yangshan (CHN)"
+    }
+  ]
+}
+```
+
+### 3.6 Colección: `incidentes`
+```typescript
+{
+  _id: ObjectId,
+  viajeId: ObjectId,        // Ref -> viajes
+  buqueId: ObjectId,        // Ref -> buques
+  operadorId: ObjectId,     // Ref -> usuarios
+  tipo: 'retraso' | 'averia' | 'clima',
+  descripcion: string,      // Ej: "Precinto roto / Avería en contenedor refrigerado"
+  gravedad: 'alta' | 'media' | 'baja',
+  fecha: Date
+}
+```
+
+### 3.7 Colección: `imagenes` (Evidencia y Procesamiento IA)
+```typescript
+{
+  _id: ObjectId,
+  entidadId: ObjectId,      // Ref -> incidenteId o cargaId
+  tipoEntidad: 'incidente' | 'carga',
+  rutaArchivo: string,      // URL de la imagen en almacenamiento seguro o S3
+  resultadoIA: {
+    codigoLeido: string,    // Ej: "#CN-9823"
+    dañosDetectados: boolean,
+    confianza: number       // Ej: 85 (porcentaje)
+  }
+}
+```
+
+### 3.8 Colección: `mantenimientos`
+```typescript
+{
+  _id: ObjectId,
+  buqueId: ObjectId,        // Ref -> buques
+  tipo: 'preventivo' | 'correctivo',
+  fechas: {
+    programada: Date,
+    real?: Date
+  },
+  estado: 'pendiente' | 'completado'
+}
 ```
 
 ---
 
-## 3. Backend: NestJS Modular
+## 4. Estrategia de Redis en Detalle
 
-### 3.1 Estructura por Dominios (DDD Ligero)
-Cada entidad funcional se aísla en su propio módulo:
-```text
-backend_navi/src/
-├── app.module.ts
-├── main.ts
-├── common/                # Elementos transversales
-│   ├── decorators/        # @CurrentUser(), @Public()
-│   ├── filters/           # AllExceptionsFilter
-│   ├── guards/            # JwtAuthGuard, RolesGuard
-│   └── interceptors/      # TransformResponseInterceptor, LoggingInterceptor
-├── config/                # Carga de variables de entorno (MongoDB, Redis, JWT)
-└── modules/               # Módulos de dominio
-    ├── auth/              # Autenticación, JWT, hashing argon2/bcrypt
-    ├── users/             # Gestión de usuarios y perfiles
-    └── ...                # Módulos específicos del negocio (a definir)
-```
+### 4.1 Caché de KPIs (Dashboard del Gerente)
+- **Clave**: `kpi:resumen`
+- **Tipo de Dato**: `String` (JSON serializado) o `Hash`
+- **TTL**: `300` segundos (5 minutos)
+- **Flujo de Ejecución**:
+  ```text
+  GET /api/v1/kpis/resumen
+     ├── 1. Consultar clave 'kpi:resumen' en Redis.
+     ├── 2. ¿Existe? -> Retornar inmediatamente (<5ms).
+     └── 3. ¿No existe / Expiró? ->
+               - Ejecutar Pipeline de Agregación en MongoDB ($group, $avg, $sum).
+               - Guardar resultado en Redis con SETEX kpi:resumen 300 '{...}'.
+               - Retornar respuesta al cliente.
+  ```
 
----
+### 4.2 Gestión de Alertas Críticas
+- **Clave**: `alertas:activas`
+- **Tipo de Dato**: `Set` (`SADD`, `SMEMBERS`, `SREM`)
+- **Valores**: Strings únicos con identificador de entidad:
+  - `"viaje_retrasado:V-2026-014"`
+  - `"mantenimiento_vencido:IMO-9876543"`
+- **Flujo de Alerta**:
+  Cuando un operador reporta un incidente grave o un viaje cambia a `retrasado`, el backend guarda en MongoDB e inserta el evento en el Set de Redis (`SADD alertas:activas viaje_retrasado:V-2026-014`), permitiendo al Dashboard reflejar la alerta instantáneamente.
 
-## 4. Estrategia de Base de Datos y Caché
-
-### 4.1 MongoDB (Mongoose)
-- **Rol**: Almacén persistente principal para datos estructurados del dominio (usuarios, transacciones, registros de actividad).
-- **Convenciones**:
-  - Índices explícitos en campos consultados con frecuencia (`email`, `status`, `createdAt`).
-  - Timestamps automáticos (`timestamps: true`).
-  - Esquemas definidos con `@Schema()` y tipados estrictos con TypeScript.
-
-### 4.2 Redis
-- **Rol**: Almacenamiento clave-valor ultrarrápido en memoria RAM.
-- **Casos de Uso en Naviport**:
-  1. **Caché de Consultas Frecuentes**: Respuestas de endpoints de alta lectura con tiempo de expiración (TTL).
-  2. **Listas Negras de Tokens / Sesiones**: Revocación instantánea de JWTs al cerrar sesión.
-  3. **Rate Limiting**: Protección contra abuso de endpoints sensibles (login, envío de códigos).
-  4. **Patrón Cache-Aside**:
-     ```text
-     Consulta -> ¿Existe en Redis?
-       SI -> Retornar dato de Redis (latencia < 5ms)
-       NO -> Consultar MongoDB -> Guardar en Redis con TTL -> Retornar dato
-     ```
-
----
-
-## 5. Seguridad y Comunicación
-
-1. **Autenticación**: JSON Web Tokens (JWT) transmitidos en el encabezado `Authorization: Bearer <token>`.
-2. **Validación de Entrada**: `ValidationPipe` en NestJS rechaza automáticamente payloads que contengan propiedades no declaradas en los DTOs (`whitelist: true`, `forbidNonWhitelisted: true`).
-3. **CORS**: Habilitado en desarrollo para el puerto de Ionic (`http://localhost:8100`).
-4. **Documentación Swagger**: Disponible en `/api/docs` con esquema OpenAPI para autogenerar o verificar interfaces entre frontend y backend.
+### 4.3 Control de Accesos y Revocación en Tiempo Real
+- **Clave**: `sesion:{idUsuario}` (Ej: `sesion:652b4c89f1a2`)
+- **Tipo de Dato**: `Hash`
+- **Campos**:
+  ```text
+  token: "eyJhbGciOi..."
+  rol: "operador"
+  activo: "true"
+  ```
+- **Flujo de Seguridad**:
+  En cada petición protegida por `JwtAuthGuard`, el backend no solo verifica la firma criptográfica del JWT, sino que consulta si la clave `sesion:{idUsuario}` existe en Redis. Si el administrador desactiva a un usuario en MongoDB, la API elimina la clave de Redis (`DEL sesion:{idUsuario}`), revocando el acceso en tiempo real sin esperar a que el JWT expire.

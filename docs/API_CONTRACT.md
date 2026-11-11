@@ -1,86 +1,224 @@
-# Contrato de API y Estándares de Comunicación — Naviport
+# Contrato de API y Estándares de Comunicación — NaviPort (OceanTrack)
 
-Este documento establece el contrato formal de comunicación entre el **Frontend (Ionic/Angular)** y el **Backend (NestJS)**.
-
----
-
-## 1. Convenciones REST
-
-- **URL Base en Desarrollo**: `http://localhost:3000/api/v1`
-- **Prefijo Global de Endpoints**: `/api/v1`
-- **Formato de Comunicación**: `application/json` (UTF-8)
-- **Autenticación**: Encabezado HTTP `Authorization: Bearer <jwt-token>`
+Este documento define los endpoints RESTful, contratos de datos (DTOs), esquemas de respuesta y seguridad entre el **Frontend (Ionic/Angular)** y el **Backend (NestJS)**.
 
 ---
 
-## 2. Estructura Estándar de Respuesta (JSON Envelope)
+## 1. Convenciones Globales
 
-### 2.1 Respuesta Exitosa (`200 OK`, `201 Created`)
-```json
-{
-  "success": true,
-  "statusCode": 200,
-  "message": "Operación completada con éxito",
-  "data": {
-    "id": "672f0b9f91a2...",
-    "name": "Ejemplo"
-  },
-  "timestamp": "2026-11-10T23:45:00.000Z"
-}
-```
-
-### 2.2 Respuesta de Error (`400`, `401`, `403`, `404`, `500`)
-```json
-{
-  "success": false,
-  "statusCode": 400,
-  "error": "Bad Request",
-  "message": [
-    "email must be an email",
-    "password must be longer than or equal to 8 characters"
-  ],
-  "timestamp": "2026-11-10T23:45:00.000Z"
-}
-```
+- **Base URL**: `http://localhost:3000/api/v1`
+- **Swagger UI**: `http://localhost:3000/api/docs`
+- **Encabezado de Autenticación**: `Authorization: Bearer <jwt-token>`
+- **Envoltorio Estándar de Respuesta**:
+  ```typescript
+  export interface ApiResponse<T> {
+    success: boolean;
+    statusCode: number;
+    message: string;
+    data: T;
+    timestamp: string;
+  }
+  ```
 
 ---
 
-## 3. Códigos de Estado HTTP Utilizados
+## 2. Endpoints Principales por Módulo
 
-| Código | Significado | Caso de Uso |
-| :--- | :--- | :--- |
-| `200 OK` | Petición exitosa | Consultas (`GET`), actualizaciones exitosas (`PUT`/`PATCH`) |
-| `201 Created` | Recurso creado | Creación exitosa (`POST`) |
-| `204 No Content` | Sin contenido | Eliminación exitosa (`DELETE`) |
-| `400 Bad Request` | Petición inválida | Error de validación en DTO |
-| `401 Unauthorized` | No autenticado | Token ausente, inválido o expirado |
-| `403 Forbidden` | No autorizado | Usuario autenticado pero sin permisos |
-| `404 Not Found` | No encontrado | Recurso solicitado no existe en la base de datos |
-| `409 Conflict` | Conflicto | Registro duplicado (ej. email ya registrado) |
-| `429 Too Many Requests`| Límite excedido | Excedido el rate limit en Redis |
-| `500 Internal Error` | Error de servidor | Excepción no controlada en el backend |
+### 2.1 Módulo de Autenticación (`/auth`)
+
+#### `POST /auth/login`
+- **Público**: Sí
+- **Body**:
+  ```typescript
+  class LoginDto {
+    @IsEmail()
+    correo: string;
+
+    @IsString()
+    @MinLength(6)
+    password: string;
+  }
+  ```
+- **Respuesta Exitosa (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "statusCode": 200,
+    "message": "Autenticación satisfactoria",
+    "data": {
+      "accessToken": "eyJhbGciOiJIUzI1Ni...",
+      "usuario": {
+        "id": "672f0b9f91a24d0012ab34cd",
+        "nombre": "Gary Industries",
+        "correo": "contacto@garyindustries.com",
+        "rol": "cliente",
+        "detallesPerfil": {
+          "empresa": "Gary Industries",
+          "ruc": "0992345678001"
+        }
+      }
+    },
+    "timestamp": "2026-11-10T23:50:00.000Z"
+  }
+  ```
+
+#### `POST /auth/logout`
+- **Seguridad**: Bearer Token
+- **Descripción**: Invalida inmediatamente la clave `sesion:{idUsuario}` en Redis.
 
 ---
 
-## 4. Estrategia de Claves en Redis
+### 2.2 Módulo de Cargas y Seguimiento (`/cargas` y `/viajes`)
 
-Para evitar colisiones entre cachés y sesiones, las claves en Redis deben seguir este patrón:
-```text
-naviport:<dominio>:<entidad_o_id>[:subclave]
-```
-Ejemplos:
-- `naviport:users:profile:672f0b9f91a2` (TTL: 3600 segundos)
-- `naviport:sessions:blacklist:<jwt-id>` (TTL: tiempo restante del token)
-- `naviport:ratelimit:login:<ip>` (TTL: 60 segundos)
+#### `GET /cargas/mis-cargas`
+- **Roles permitidos**: `cliente`, `gerente`, `admin`
+- **Query Params**: `?estado=en_curso | completados`
+- **Respuesta (200 OK)**: Lista de cargas asociadas al `clienteId` extraído del token JWT.
+  ```json
+  {
+    "success": true,
+    "statusCode": 200,
+    "message": "Cargas obtenidas correctamente",
+    "data": [
+      {
+        "id": "672f0b...",
+        "codigoContenedor": "#CN-9823",
+        "tipo": "Seco",
+        "pesoToneladas": 24.5,
+        "viaje": {
+          "codigo": "#BU-1234XYZ",
+          "buque": "Maersk Horizon",
+          "origen": "Shanghai (Terminal Yangshan - CHN)",
+          "destino": "Guayaquil (Puerto Marítimo - ECU)",
+          "salida": "2026-03-12T08:00:00.000Z",
+          "llegadaEstimada": "2026-07-03T18:00:00.000Z",
+          "estado": "en_ruta",
+          "diasRestantes": 5
+        }
+      }
+    ],
+    "timestamp": "2026-11-10T23:50:00.000Z"
+  }
+  ```
+
+#### `GET /cargas/:id/timeline`
+- **Roles permitidos**: `cliente`, `operador`, `gerente`, `admin`
+- **Respuesta (200 OK)**: Historial vertical de eventos para la pantalla de detalle.
+  ```json
+  {
+    "success": true,
+    "statusCode": 200,
+    "message": "Timeline obtenido",
+    "data": {
+      "codigoContenedor": "#CN-9823",
+      "eventos": [
+        { "estado": "Recogido en fábrica", "fecha": "2026-03-10T10:00:00.000Z", "ubicacion": "Suzhou, CHN", "completado": true },
+        { "estado": "En patio de contenedores", "fecha": "2026-03-11T16:00:00.000Z", "ubicacion": "Terminal Yangshan (CHN)", "completado": true },
+        { "estado": "A bordo de buque", "fecha": "2026-03-12T08:00:00.000Z", "ubicacion": "Maersk Horizon", "completado": true },
+        { "estado": "En tránsito marítimo", "fecha": "2026-03-15T00:00:00.000Z", "ubicacion": "Océano Pacífico", "completado": true },
+        { "estado": "Desembarque en puerto", "fecha": "2026-07-03T18:00:00.000Z", "ubicacion": "Puerto Marítimo (ECU)", "completado": false }
+      ]
+    },
+    "timestamp": "2026-11-10T23:50:00.000Z"
+  }
+  ```
 
 ---
 
-## 5. Documentación Interactiva (Swagger OpenAPI)
+### 2.3 Módulo de Escáner IA con Cámara (`/escaner`)
 
-En el backend NestJS, Swagger estará habilitado en:
-`http://localhost:3000/api/docs`
+#### `POST /escaner/inspeccion-optica`
+- **Roles permitidos**: `operador`, `admin`
+- **Content-Type**: `multipart/form-data`
+- **Form Data**:
+  - `foto`: Archivo binario (JPEG/PNG capturado por la cámara de Ionic/Capacitor).
+  - `viajeId`: ID opcional del viaje asignado.
+- **Respuesta (201 Created)**:
+  ```json
+  {
+    "success": true,
+    "statusCode": 201,
+    "message": "Inspección óptica procesada por IA",
+    "data": {
+      "codigoLeido": "#CN-9823",
+      "dañosDetectados": false,
+      "confianza": 85,
+      "origen": "Shanghai (CHN)",
+      "destino": "Guayaquil (ECU)",
+      "estadoRuta": "En Tránsito - Océano Pacífico",
+      "fechaEstimada": "6 días (18 Octubre)",
+      "imagenId": "672f0fa..."
+    },
+    "timestamp": "2026-11-10T23:50:00.000Z"
+  }
+  ```
 
-Los desarrolladores Frontend pueden consultar esta URL para:
-1. Ver todos los endpoints disponibles.
-2. Ver la estructura de los payloads (DTOs de entrada y respuesta).
-3. Probar peticiones directamente desde la interfaz web.
+---
+
+### 2.4 Módulo de Incidentes (`/incidentes`)
+
+#### `POST /incidentes/reportar`
+- **Roles permitidos**: `operador`, `admin`
+- **Body**:
+  ```typescript
+  class CreateIncidenteDto {
+    @IsMongoId()
+    viajeId: string;
+
+    @IsMongoId()
+    buqueId: string;
+
+    @IsIn(['retraso', 'averia', 'clima'])
+    tipo: string;
+
+    @IsString()
+    @MinLength(10)
+    descripcion: string; // Ej: "Avería, precinto o sello roto"
+
+    @IsIn(['alta', 'media', 'baja'])
+    gravedad: string;
+  }
+  ```
+- **Efecto Secundario**: Guarda en MongoDB y empuja a Redis (`SADD alertas:activas ...`).
+
+---
+
+### 2.5 Módulo de KPIs y Analítica (`/kpis`)
+
+#### `GET /kpis/resumen`
+- **Roles permitidos**: `gerente`, `admin`
+- **Fuente**: Caché Redis `kpi:resumen` (TTL: 300 segundos).
+- **Respuesta (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "statusCode": 200,
+    "message": "Resumen de KPIs obtenido",
+    "data": {
+      "puntualidad": 94,
+      "toneladasMes": 14500,
+      "buquesActivos": 8,
+      "viajesEnRuta": 12,
+      "incidentesPendientes": 2,
+      "origenCache": true
+    },
+    "timestamp": "2026-11-10T23:50:00.000Z"
+  }
+  ```
+
+#### `GET /kpis/alertas-activas`
+- **Roles permitidos**: `gerente`, `admin`
+- **Fuente**: Set de Redis `alertas:activas`.
+- **Respuesta (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "statusCode": 200,
+    "message": "Alertas críticas activas",
+    "data": [
+      { "id": "viaje_retrasado:V-2026-014", "tipo": "viaje_retrasado", "referencia": "V-2026-014" },
+      { "id": "mantenimiento_vencido:IMO-9876543", "tipo": "mantenimiento_vencido", "referencia": "IMO-9876543" }
+    ],
+    "timestamp": "2026-11-10T23:50:00.000Z"
+  }
+  ```

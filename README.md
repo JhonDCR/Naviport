@@ -1,117 +1,85 @@
-# Naviport — Plataforma Móvil y Backend
+# NaviPort Tracking — Plataforma Logística OceanTrack
 
-Bienvenido al repositorio oficial de **Naviport**, un sistema multiplataforma desarrollado como proyecto para la materia de **Aplicaciones Móviles**.
+Plataforma integral basada en arquitectura NoSQL (**MongoDB + Redis**) para la gestión de flota naviera y rastreo en tiempo real de importaciones marítimas desde **China (Shanghai)** y **EE.UU. (Miami)** hacia **Ecuador (Guayaquil)**.
 
 ---
 
-## 👥 Equipo de Desarrollo
+## 👥 Equipo de Desarrollo y Responsabilidades
 
-| Rol | Miembro(s) | Responsabilidades Principales |
+| Rol | Miembro(s) | Alcance Principal |
 | :--- | :--- | :--- |
-| **Frontend Dev 1** | Integrante 1 | Maquetación Figma, navegación, vistas core Ionic/Angular |
-| **Frontend Dev 2** | Integrante 2 | Vistas complementarias, consumo de APIs REST, Capacitor |
-| **Backend Dev** | Integrante 3 | API NestJS, esquemas Mongoose (MongoDB), caché Redis, Docker |
+| **Frontend Dev 1** | Integrante 1 | Maquetación Figma, navegación core, vistas de cliente (`Introduccion`, `Inicio`, `Seguimiento`), floating navbar y diseño adaptable |
+| **Frontend Dev 2** | Integrante 2 | Vistas de operador (`Inicio Empleado`, `Scan Camara` con IA, `Detalle Pedido`, `Perfil`), servicios Capacitor (cámara, almacenamiento) y consumo de APIs |
+| **Backend Dev** | Integrante 3 | API NestJS modular, esquemas Mongoose (8 colecciones), capa de caché/sesiones Redis (`kpi:resumen`, `alertas:activas`, `sesion:{id}`), Docker y Swagger |
 
 ---
 
 ## 🛠️ Stack Tecnológico
 
-- **Frontend Móvil**: [Ionic Framework](https://ionicframework.com/) (v9+) + [Angular](https://angular.dev/) (v22+) + [Capacitor](https://capacitorjs.com/) (v8+)
-- **Backend API**: [NestJS](https://nestjs.com/) (Node.js framework progresivo)
-- **Base de Datos**: [MongoDB](https://www.mongodb.com/) (NoSQL transaccional con Mongoose)
-- **Caché / Fast Store**: [Redis](https://redis.io/) (Almacenamiento clave-valor en memoria)
-- **Contenedores**: [Docker](https://www.docker.com/) & Docker Compose
-- **Control de Versiones & CI/CD**: Git, GitHub Actions
+- **Frontend Móvil**: [Ionic Framework 9+](https://ionicframework.com/) + [Angular 22+](https://angular.dev/) + [Capacitor 8+](https://capacitorjs.com/)
+- **Backend API**: [NestJS](https://nestjs.com/) (Node.js con TypeScript estricto)
+- **Base de Datos NoSQL**: [MongoDB 7.0](https://www.mongodb.com/) (ODM Mongoose)
+- **Caché y Fast Storage**: [Redis 7.2](https://redis.io/)
+- **Infraestructura**: Docker & Docker Compose (MongoDB, Redis, Mongo Express)
+- **Diseño**: Figma ([Ver archivo de diseño](https://www.figma.com/design/vu7SLGvtwRZf1CMBkQt0sA/NaviPort?node-id=33-1073))
 
 ---
 
-## 📁 Estructura del Repositorio
+## 📁 Estructura del Proyecto y Documentación
 
 ```text
 Naviport/
-├── .github/                  # Flujos de CI/CD (GitHub Actions) y plantillas
+├── .github/
 │   ├── workflows/
-│   │   ├── ci-develop.yml    # CI automático en PRs/push a develop
+│   │   ├── ci-develop.yml    # Validación automática en PRs a develop
 │   │   └── cd-main.yml       # Release & Quality Gate a main
 │   └── pull_request_template.md
-├── docs/                     # Documentación técnica
-│   ├── API_CONTRACT.md       # Convenciones de API y comunicación
-│   └── DESIGN_SYSTEM.md      # Mapeo de diseño Figma a Ionic
-├── backend_navi/             # Proyecto Backend NestJS
-├── frontend_navi/            # Proyecto Frontend Ionic/Angular
-├── docker-compose.yml        # Orquestación de MongoDB, Redis y Mongo Express
-├── .agents                   # Reglas esenciales para agentes de IA
-├── AGENTS.md                 # Guía maestra y reglas de desarrollo para agentes IA
-├── ARCHITECTURE.md           # Arquitectura de software y flujo de datos
-├── CONTRIBUTING.md           # Guía de ramas, commits y revisiones
-└── .env.example              # Variables de entorno de ejemplo
+├── docs/
+│   ├── API_CONTRACT.md       # Endpoints REST, DTOs y claves de Redis
+│   └── DESIGN_SYSTEM.md      # Tokens de Figma, colores, tipografía Poppins y pantallas
+├── backend_navi/             # Backend NestJS
+├── frontend_navi/            # Frontend Ionic/Angular
+├── docker-compose.yml        # MongoDB + Redis + Mongo Express
+├── .agents                   # Reglas esenciales para asistentes de IA
+├── AGENTS.md                 # Guía maestra de arquitectura para agentes
+├── ARCHITECTURE.md           # 8 esquemas MongoDB, Redis TTL, 4 roles de usuario
+├── CONTRIBUTING.md           # Flujo de ramas develop/feature y Conventional Commits
+└── .env.example              # Variables de entorno
 ```
 
 ---
 
 ## 🚀 Inicio Rápido (Quickstart)
 
-### 1. Requisitos Previos
-- [Node.js](https://nodejs.org/) (v20 o v22 LTS recomendado)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado y en ejecución
-- [Ionic CLI](https://ionicframework.com/docs/intro/cli) global (`npm install -g @ionic/cli`)
-- [Git](https://git-scm.com/)
-
-### 2. Clonar el repositorio y preparar ramas
+### 1. Clonar y cambiar a rama `develop`
 ```bash
 git clone https://github.com/JhonDCR/Naviport.git
 cd Naviport
 git checkout develop
 ```
 
-### 3. Levantar la Infraestructura (MongoDB + Redis)
-Para no lidiar con instalaciones manuales de bases de datos:
+### 2. Levantar Servicios con Docker (MongoDB + Redis + Mongo Express)
 ```bash
-# Copiar variables de entorno
 cp .env.example .env
-
-# Levantar contenedores en segundo plano
 docker compose up -d
 ```
-Servicios disponibles tras levantar:
 - **MongoDB**: `localhost:27017`
 - **Redis**: `localhost:6379`
-- **Mongo Express (GUI web)**: `http://localhost:8081` (Usuario: `admin`, Password: `admin`)
+- **Mongo Express (GUI web)**: `http://localhost:8081` (User: `admin`, Password: `admin`)
 
-### 4. Ejecutar el Backend (NestJS)
+### 3. Levantar Backend (NestJS)
 ```bash
 cd backend_navi
 npm install
 npm run start:dev
 ```
-La API estará disponible en `http://localhost:3000` (y Swagger en `http://localhost:3000/api/docs`).
+- API REST: `http://localhost:3000/api/v1`
+- Swagger UI: `http://localhost:3000/api/docs`
 
-### 5. Ejecutar el Frontend Móvil (Ionic + Angular)
+### 4. Levantar Frontend Móvil (Ionic + Angular)
 ```bash
 cd frontend_navi
 npm install
 ionic serve
 ```
-La aplicación abrirá en `http://localhost:8100` con recarga en vivo.
-
----
-
-## 🌿 Flujo de Trabajo Git (GitFlow)
-
-1. **`main`**: Solo código estable para entrega/evaluación.
-2. **`develop`**: Rama activa de integración del equipo.
-3. **Sub-ramas de desarrollo**: Se crean a partir de `develop`:
-   - `feature/front/<nombre>`
-   - `feature/back/<nombre>`
-   - `fix/front/<nombre>`
-   - `fix/back/<nombre>`
-4. **Pull Requests**: Siempre contra `develop`. Una vez verificado el release, se hace merge de `develop` a `main`.
-
-Consulta [`CONTRIBUTING.md`](./CONTRIBUTING.md) para más detalles.
-
----
-
-## 🤖 Desarrollo Asistido por Agentes de IA
-
-Este proyecto está optimizado para trabajar con agentes de IA (Cursor, Copilot, Antigravity, Claude Code).
-- Consulta [`AGENTS.md`](./AGENTS.md) y [`.agents`](./.agents) para conocer las pautas de estilo, tipado, patrones arquitectónicos y validaciones requeridas.
+- Vista web de la app: `http://localhost:8100`

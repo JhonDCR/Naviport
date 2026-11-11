@@ -1,2 +1,61 @@
-// For information on how to create your own theme, please refer to:
-// https://ionicframework.com/docs/theming/
+// NaviPort Design System - Paleta extraída fielmente de Figma (OceanTrack)
+// Basado en variables del archivo de diseño NaviPort
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+:root {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  /** Color Primario: Azul Eléctrico Marítimo **/
+  --ion-color-primary: #005cff;
+  --ion-color-primary-rgb: 0, 92, 255;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #0051e0;
+  --ion-color-primary-tint: #1a6cff;
+
+  /** Color Secundario / Acento: Amarillo Ámbar (Alertas, Tags EN RUTA, Días restantes) **/
+  --ion-color-secondary: #ffb703;
+  --ion-color-secondary-rgb: 255, 183, 3;
+  --ion-color-secondary-contrast: #1f2937;
+  --ion-color-secondary-contrast-rgb: 31, 41, 55;
+  --ion-color-secondary-shade: #e0a103;
+  --ion-color-secondary-tint: #ffbe1c;
+
+  /** Superficies y Fondos **/
+  --ion-background-color: #f3f6f8;
+  --ion-background-color-rgb: 243, 246, 248;
+
+  --ion-card-background: #ffffff;
+  --ion-item-background: #ffffff;
+
+  /** Tipografía **/
+  --ion-text-color: #1f2937;
+  --ion-text-color-rgb: 31, 41, 55;
+
+  /** Colores Semánticos Personalizados NaviPort **/
+  --navi-color-primary: #005cff;
+  --navi-color-accent: #ffb703;
+  --navi-text-principal: #1f2937;
+  --navi-text-secundario: #6b7280;
+  --navi-bg-app: #f3f6f8;
+  --navi-surface-card: #ffffff;
+  --navi-navbar-dark: #111827;
+  --navi-progress-track: #c3c4c7;
+
+  /* Estados de IA y Calidad */
+  --navi-good-bg: #defde2;
+  --navi-good-text: #418e4a;
+  --navi-danger-bg: #fee2e2;
+  --navi-danger-text: #dc2626;
+
+  /** Radios de Borde Figma **/
+  --navi-radius-card: 24px;
+  --navi-radius-pill: 99px;
+  --navi-radius-badge: 12px;
+  --navi-radius-container: 16px;
+
+  /** Sombras **/
+  --navi-shadow-card: 0px 4px 4px 0px rgba(0, 0, 0, 0.1);
+  --navi-shadow-pill: 0px 3px 4.6px 0px rgba(0, 0, 0, 0.25);
+}
