@@ -17,6 +17,14 @@ import {
   ImagenSchema,
   Mantenimiento,
   MantenimientoSchema,
+  Notificacion,
+  NotificacionSchema,
+  TicketSoporte,
+  TicketSoporteSchema,
+  Turno,
+  TurnoSchema,
+  AuditoriaLog,
+  AuditoriaLogSchema,
 } from './schemas';
 import { SeederService } from './seeder.service';
 
@@ -29,6 +37,10 @@ const MODELS = [
   { name: Incidente.name, schema: IncidenteSchema },
   { name: Imagen.name, schema: ImagenSchema },
   { name: Mantenimiento.name, schema: MantenimientoSchema },
+  { name: Notificacion.name, schema: NotificacionSchema },
+  { name: TicketSoporte.name, schema: TicketSoporteSchema },
+  { name: Turno.name, schema: TurnoSchema },
+  { name: AuditoriaLog.name, schema: AuditoriaLogSchema },
 ];
 
 @Global()

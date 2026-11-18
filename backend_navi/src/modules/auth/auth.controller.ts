@@ -7,16 +7,27 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { LoginDto, UpdateEstadoUsuarioDto } from './dto/auth.dto';
+import {
+  CambiarPasswordDto,
+  ControlTurnoDto,
+  CreateUsuarioDto,
+  LoginDto,
+  UpdateEstadoUsuarioDto,
+  UpdatePerfilDto,
+  UpdatePreferenciasDto,
+  UpdateUsuarioAdminDto,
+} from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -40,6 +51,22 @@ export class AuthController {
     const data = await this.authService.login(dto);
     return {
       message: 'Autenticación satisfactoria',
+      data,
+    };
+  }
+
+  @Post('registro')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary:
+      'Registrar un nuevo cliente en la plataforma NaviPort (el registro público asigna rol cliente por seguridad)',
+  })
+  @ApiResponse({ status: 201, description: 'Usuario registrado exitosamente' })
+  @ApiResponse({ status: 409, description: 'El correo ya está registrado' })
+  async registrar(@Body() dto: CreateUsuarioDto) {
+    const data = await this.authService.registrarUsuario(dto, false);
+    return {
+      message: 'Usuario registrado exitosamente',
       data,
     };
   }
@@ -73,6 +100,122 @@ export class AuthController {
     };
   }
 
+  @Patch('perfil')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Actualizar datos del perfil del usuario autenticado',
+  })
+  @ApiResponse({ status: 200, description: 'Perfil actualizado correctamente' })
+  async actualizarPerfil(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdatePerfilDto,
+  ) {
+    const data = await this.authService.actualizarPerfil(user.sub, dto);
+    return {
+      message: 'Perfil actualizado correctamente',
+      data,
+    };
+  }
+
+  @Patch('preferencias')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary:
+      'Actualizar preferencias de aplicación (notificacionesPush, modoOscuro, idioma)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Preferencias actualizadas correctamente',
+  })
+  async actualizarPreferencias(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdatePreferenciasDto,
+  ) {
+    const data = await this.authService.actualizarPreferencias(user.sub, dto);
+    return {
+      message: 'Preferencias actualizadas correctamente',
+      data,
+    };
+  }
+
+  @Patch('cambiar-password')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Cambiar contraseña del usuario autenticado verificando la actual',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Contraseña actualizada correctamente',
+  })
+  async cambiarPassword(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: CambiarPasswordDto,
+  ) {
+    const data = await this.authService.cambiarPassword(user.sub, dto);
+    return {
+      message: 'Contraseña actualizada correctamente',
+      data,
+    };
+  }
+
+  @Patch('turno')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RolUsuario.OPERADOR, RolUsuario.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary:
+      'Iniciar o finalizar turno operativo del empleado (persiste en colección turnos y caché Redis)',
+  })
+  @ApiResponse({ status: 200, description: 'Estado de turno actualizado' })
+  async controlarTurno(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: ControlTurnoDto,
+  ) {
+    const data = await this.authService.controlarTurno(user.sub, dto);
+    return {
+      message: dto.turnoActivo
+        ? 'Turno operativo iniciado'
+        : 'Turno operativo finalizado',
+      data,
+    };
+  }
+
+  @Get('turnos/mi-historial')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RolUsuario.OPERADOR, RolUsuario.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary:
+      'Obtener el turno activo actual e historial laboral de turnos del operador autenticado',
+  })
+  @ApiResponse({ status: 200, description: 'Historial de turnos obtenido' })
+  async obtenerMisTurnos(@CurrentUser() user: JwtPayload) {
+    const data = await this.authService.obtenerMisTurnos(user.sub);
+    return {
+      message: 'Historial de turnos obtenido correctamente',
+      data,
+    };
+  }
+
+  @Get('turnos')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RolUsuario.GERENTE, RolUsuario.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Listar todos los turnos operativos de empleados (Gerente/Admin)',
+  })
+  @ApiResponse({ status: 200, description: 'Turnos obtenidos' })
+  async listarTodosTurnos() {
+    const data = await this.authService.listarTodosTurnos();
+    return {
+      message: 'Turnos obtenidos correctamente',
+      data,
+    };
+  }
+
   @Get('usuarios')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RolUsuario.ADMIN)
@@ -87,6 +230,51 @@ export class AuthController {
     };
   }
 
+  @Post('usuarios')
+  @HttpCode(HttpStatus.CREATED)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RolUsuario.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Crear un usuario con cualquier rol desde el panel Admin',
+  })
+  @ApiResponse({ status: 201, description: 'Usuario creado por administrador' })
+  async crearUsuarioAdmin(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: CreateUsuarioDto,
+  ) {
+    const data = await this.authService.registrarUsuario(dto, true, user.sub);
+    return {
+      message: 'Usuario creado correctamente',
+      data,
+    };
+  }
+
+  @Patch('usuarios/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RolUsuario.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary:
+      'Editar nombre, rol, estado o detalles de perfil de un usuario (Admin)',
+  })
+  @ApiResponse({ status: 200, description: 'Usuario actualizado correctamente' })
+  async actualizarUsuarioAdmin(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Body() dto: UpdateUsuarioAdminDto,
+  ) {
+    const data = await this.authService.actualizarUsuarioAdmin(
+      id,
+      dto,
+      user.sub,
+    );
+    return {
+      message: 'Usuario actualizado correctamente',
+      data,
+    };
+  }
+
   @Patch('usuarios/:id/estado')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RolUsuario.ADMIN)
@@ -97,10 +285,15 @@ export class AuthController {
   })
   @ApiResponse({ status: 200, description: 'Estado de usuario actualizado' })
   async cambiarEstadoUsuario(
+    @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
     @Body() dto: UpdateEstadoUsuarioDto,
   ) {
-    const data = await this.authService.cambiarEstadoUsuario(id, dto.activo);
+    const data = await this.authService.cambiarEstadoUsuario(
+      id,
+      dto.activo,
+      user.sub,
+    );
     return {
       message: dto.activo
         ? 'Usuario activado correctamente'
@@ -108,4 +301,26 @@ export class AuthController {
       data,
     };
   }
+
+  @Get('auditoria')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RolUsuario.ADMIN)
+  @ApiBearerAuth()
+  @ApiQuery({ name: 'limite', required: false, example: 50 })
+  @ApiOperation({
+    summary:
+      'Consultar historial reciente de eventos de auditoría almacenados en Redis (Admin)',
+  })
+  @ApiResponse({ status: 200, description: 'Logs de auditoría obtenidos' })
+  async obtenerAuditoria(@Query('limite') limite?: string) {
+    const parsed = limite ? parseInt(limite, 10) : 50;
+    const data = await this.authService.obtenerAuditoria(
+      Number.isNaN(parsed) ? 50 : parsed,
+    );
+    return {
+      message: 'Eventos de auditoría obtenidos correctamente',
+      data,
+    };
+  }
 }
+

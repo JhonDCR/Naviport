@@ -46,6 +46,8 @@ $RECYCLE.BIN/
 .docker-data/
 mongo_data/
 redis_data/
+uploads/
+*/uploads/
 
 # Mobile platforms compiled assets (Capacitor handles these)
 android/.gradle/

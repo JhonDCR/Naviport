@@ -1,6 +1,13 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsIn, IsMongoId, IsString, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsIn,
+  IsMongoId,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
+import {
+  EstadoIncidente,
   GravedadIncidente,
   TipoIncidente,
 } from '../../../database/schemas/incidente.schema';
@@ -41,4 +48,21 @@ export class CreateIncidenteDto {
   })
   @IsIn(['alta', 'media', 'baja'])
   gravedad: GravedadIncidente;
+
+  @ApiPropertyOptional({
+    example: '#CN-9823',
+    description: 'Código opcional del contenedor afectado para vincular evidencia fotográfica',
+  })
+  @IsOptional()
+  @IsString()
+  codigoContenedor?: string;
+}
+
+export class UpdateEstadoIncidenteDto {
+  @ApiProperty({
+    enum: ['abierto', 'en_revision', 'resuelto'],
+    example: 'resuelto',
+  })
+  @IsIn(['abierto', 'en_revision', 'resuelto'])
+  estado: EstadoIncidente;
 }

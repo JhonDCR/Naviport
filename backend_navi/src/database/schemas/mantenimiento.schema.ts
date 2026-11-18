@@ -27,6 +27,15 @@ export class Mantenimiento {
   })
   tipo: TipoMantenimiento;
 
+  @Prop({ trim: true })
+  descripcion?: string;
+
+  @Prop({ default: 0, min: 0 })
+  costoUSD: number;
+
+  @Prop({ trim: true })
+  responsable?: string;
+
   @Prop({ type: FechasMantenimiento, required: true })
   fechas: FechasMantenimiento;
 

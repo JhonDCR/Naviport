@@ -13,7 +13,19 @@ export class DetallesPerfil {
   ruc?: string;
 
   @Prop()
+  direccionLegal?: string;
+
+  @Prop()
+  telefono?: string;
+
+  @Prop()
   turno?: string;
+
+  @Prop()
+  horarioTurno?: string;
+
+  @Prop({ default: true })
+  turnoActivo?: boolean;
 
   @Prop()
   idEmpleado?: string;
@@ -26,6 +38,9 @@ export class PreferenciasUsuario {
 
   @Prop({ default: false })
   modoOscuro: boolean;
+
+  @Prop({ type: String, default: 'es', enum: ['es', 'en'] })
+  idioma: 'es' | 'en';
 }
 
 @Schema({ collection: 'usuarios', timestamps: true })
@@ -38,6 +53,9 @@ export class Usuario {
 
   @Prop({ required: true })
   password_hash: string;
+
+  @Prop()
+  avatarUrl?: string;
 
   @Prop({
     required: true,
@@ -52,7 +70,7 @@ export class Usuario {
 
   @Prop({
     type: PreferenciasUsuario,
-    default: () => ({ notificacionesPush: true, modoOscuro: false }),
+    default: () => ({ notificacionesPush: true, modoOscuro: false, idioma: 'es' }),
   })
   preferencias: PreferenciasUsuario;
 

@@ -1,7 +1,16 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiParam,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -33,6 +42,46 @@ export class KpisController {
     };
   }
 
+  @Get('reportes')
+  @Roles(RolUsuario.GERENTE, RolUsuario.ADMIN)
+  @ApiQuery({
+    name: 'periodo',
+    required: false,
+    enum: ['mes', 'trimestre', 'anio'],
+  })
+  @ApiOperation({
+    summary:
+      'Obtener analítica operativa y financiera para la vista Reportes (caché Redis kpi:reportes:{periodo})',
+  })
+  @ApiResponse({ status: 200, description: 'Reportes gerenciales obtenidos' })
+  async obtenerReportes(@Query('periodo') periodo?: string) {
+    const data = await this.kpisService.obtenerReportes(periodo);
+    return {
+      message: 'Reportes gerenciales obtenidos correctamente',
+      data,
+    };
+  }
+
+  @Get('reportes/exportar-csv')
+  @Roles(RolUsuario.GERENTE, RolUsuario.ADMIN)
+  @ApiQuery({
+    name: 'periodo',
+    required: false,
+    enum: ['mes', 'trimestre', 'anio'],
+  })
+  @ApiOperation({
+    summary:
+      'Exportar reporte financiero y de viajes en formato CSV para descarga desde Dashboard',
+  })
+  @ApiResponse({ status: 200, description: 'CSV de reporte generado' })
+  async exportarCsv(@Query('periodo') periodo?: string) {
+    const data = await this.kpisService.exportarReportesCsv(periodo);
+    return {
+      message: 'Reporte CSV generado correctamente',
+      data,
+    };
+  }
+
   @Get('alertas-activas')
   @Roles(RolUsuario.GERENTE, RolUsuario.ADMIN)
   @ApiOperation({
@@ -47,4 +96,25 @@ export class KpisController {
       data,
     };
   }
+
+  @Delete('alertas-activas/:id')
+  @Roles(RolUsuario.GERENTE, RolUsuario.ADMIN)
+  @ApiOperation({
+    summary:
+      'Resolver y eliminar una alerta crítica del Set de Redis (SREM alertas:activas)',
+  })
+  @ApiParam({
+    name: 'id',
+    example: 'viaje_retrasado:V-2026-014',
+    description: 'Identificador completo de la alerta en Redis',
+  })
+  @ApiResponse({ status: 200, description: 'Alerta resuelta y eliminada' })
+  async resolverAlerta(@Param('id') id: string) {
+    const data = await this.kpisService.resolverAlertaActiva(id);
+    return {
+      message: 'Alerta crítica resuelta y eliminada de Redis',
+      data,
+    };
+  }
 }
+

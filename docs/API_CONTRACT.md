@@ -28,6 +28,7 @@ Este documento define los endpoints RESTful, contratos de datos (DTOs), esquemas
 
 #### `POST /auth/login`
 - **Público**: Sí
+- **Seguridad (Redis)**: Protección Rate Limiting (`ratelimit:login:{correo}`): máximo 5 intentos cada 60 segundos (`429 Too Many Requests` si se excede).
 - **Body**:
   ```typescript
   class LoginDto {
@@ -66,14 +67,30 @@ Este documento define los endpoints RESTful, contratos de datos (DTOs), esquemas
 - **Seguridad**: Bearer Token
 - **Descripción**: Invalida inmediatamente la clave `sesion:{idUsuario}` en Redis.
 
+#### `POST /auth/registro`
+- **Público**: Sí
+- **Descripción**: Registra un nuevo cliente en la plataforma. Por seguridad contra escalación de privilegios, siempre asigna el rol `cliente` y encripta la contraseña con `bcryptjs`.
+
+#### `GET /auth/perfil` / `PATCH /auth/perfil` / `PATCH /auth/preferencias` / `PATCH /auth/cambiar-password`
+- **Seguridad**: Bearer Token
+- **Descripción**: Obtiene o actualiza los datos del perfil (`nombre`, `avatarUrl`, `detallesPerfil`: `empresa`, `ruc`, `direccionLegal`, `telefono`, `horarioTurno`, `turnoActivo`), preferencias (`notificacionesPush`, `modoOscuro`, `idioma`) y cambio seguro de contraseña verificando la actual.
+
+#### `PATCH /auth/turno`, `GET /auth/turnos/mi-historial` y `GET /auth/turnos`
+- **Roles permitidos**: `operador`, `admin` (mi-historial / controlar); `gerente`, `admin` (listar todos)
+- **Descripción**: Inicia o finaliza el turno operativo creando/cerrando un registro persistente en la colección `turnos` y actualizando `turno:activo:{idOperador}` en Redis. Permite consultar el historial laboral de escaneos e incidentes por turno.
+
+#### `GET /auth/usuarios`, `POST /auth/usuarios`, `PATCH /auth/usuarios/:id`, `PATCH /auth/usuarios/:id/estado` y `GET /auth/auditoria`
+- **Roles permitidos**: `admin`
+- **Descripción**: Gestión completa de usuarios (incluyendo creación con cualquier rol, edición de perfil/rol y activación/suspensión inmediata revocando `sesion:{idUsuario}` en Redis), además de consulta de logs de auditoría persistidos en MongoDB (`auditoria_logs`) con respaldo en Redis (`auditoria:eventos`).
+
 ---
 
 ### 2.2 Módulo de Cargas y Seguimiento (`/cargas` y `/viajes`)
 
 #### `GET /cargas/mis-cargas`
 - **Roles permitidos**: `cliente`, `gerente`, `admin`
-- **Query Params**: `?estado=en_curso | completados`
-- **Respuesta (200 OK)**: Lista de cargas asociadas al `clienteId` extraído del token JWT.
+- **Query Params**: `?estado=en_curso | completados` y `?q=<texto>` (búsqueda por contenedor, buque, viaje o puerto)
+- **Respuesta (200 OK)**: Lista de cargas asociadas al `clienteId` extraído del token JWT, incluyendo `progreso` (`0` a `1`) y `ultimaPosicion` GeoJSON.
   ```json
   {
     "success": true,
@@ -86,6 +103,7 @@ Este documento define los endpoints RESTful, contratos de datos (DTOs), esquemas
         "tipo": "Seco",
         "pesoToneladas": 24.5,
         "viaje": {
+          "id": "672f0a...",
           "codigo": "#BU-1234XYZ",
           "buque": "Maersk Horizon",
           "origen": "Shanghai (Terminal Yangshan - CHN)",
@@ -93,13 +111,35 @@ Este documento define los endpoints RESTful, contratos de datos (DTOs), esquemas
           "salida": "2026-03-12T08:00:00.000Z",
           "llegadaEstimada": "2026-07-03T18:00:00.000Z",
           "estado": "en_ruta",
-          "diasRestantes": 5
+          "diasRestantes": 5,
+          "progreso": 0.85,
+          "ultimaPosicion": {
+            "type": "Point",
+            "coordinates": [-110.5, 8.2]
+          }
         }
       }
     ],
     "timestamp": "2026-11-10T23:50:00.000Z"
   }
   ```
+
+#### `GET /cargas/resumen-cliente`
+- **Roles permitidos**: `cliente`, `gerente`, `admin`
+- **Descripción**: Obtiene métricas rápidas (`totalContenedores`, `enCurso`, `completados`, `toneladasTotales`, `proximoArriboDias`) y la `cargaDestacada` para la pantalla **`Inicio` (Home Cliente)**.
+
+#### `GET /cargas/notificaciones`, `PATCH /cargas/notificaciones/:id/leer` y `PATCH /cargas/notificaciones/leer-todas`
+- **Roles permitidos**: `cliente`, `operador`, `gerente`, `admin`
+- **Descripción**: Obtiene notificaciones persistidas en MongoDB (`notificaciones`) combinadas con alertas de seguimiento y sincroniza el estado `leida` tanto en MongoDB como en Redis (`notificaciones:leidas:{idUsuario}`).
+
+#### `GET /cargas`
+- **Roles permitidos**: `gerente`, `admin`
+- **Query Params**: `?viajeId=`, `?clienteId=`, `?q=`
+- **Descripción**: Listado maestro de contenedores para administración y programación de viajes.
+
+#### `GET /cargas/:id` y `GET /cargas/:id/manifiesto`
+- **Roles permitidos**: `cliente`, `operador`, `gerente`, `admin`
+- **Descripción**: Obtiene el detalle técnico completo de un contenedor (`numeroPrecinto`, `valorFleteUSD`, `manifiestoAduanero`, `velocidadNudos`) y la estructura completa del **Manifiesto Aduanero / Bill of Lading** para descarga en PDF desde **`Detalle Pedido`**, aplicando aislamiento estricto por `clienteId`.
 
 #### `GET /cargas/:id/timeline`
 - **Roles permitidos**: `cliente`, `operador`, `gerente`, `admin`
@@ -123,63 +163,41 @@ Este documento define los endpoints RESTful, contratos de datos (DTOs), esquemas
   }
   ```
 
+#### `POST /cargas` y `POST /cargas/:id/eventos`
+- **Roles permitidos**: `operador` (eventos), `gerente`, `admin`
+- **Descripción**: Registra nuevos contenedores (actualizando `resumenCarga` del viaje e invalidando `kpi:resumen` en Redis) y añade nuevos hitos al `historialEventos` del contenedor.
+
+#### `GET /viajes`, `GET /viajes/:id`, `POST /viajes`, `PATCH /viajes/:id`, `PATCH /viajes/:id/estado` y `DELETE /viajes/:id`
+- **Descripción**: Consulta, programa, edita (incluyendo `velocidadNudos`, `capitanAsignado` y `finanzas`), actualiza el estado o posición GeoJSON (`ultimaPosicion`) y elimina viajes sin cargas asociadas, sincronizando alertas de retraso en Redis (`alertas:activas`).
+
 ---
 
 ### 2.3 Módulo de Escáner IA con Cámara (`/escaner`)
 
 #### `POST /escaner/inspeccion-optica`
 - **Roles permitidos**: `operador`, `admin`
-- **Content-Type**: `multipart/form-data`
+- **Content-Type**: `multipart/form-data` o `application/json` (límite de imagen: `5 MB`, formatos `JPEG/PNG/WEBP`)
 - **Form Data**:
-  - `foto`: Archivo binario (JPEG/PNG capturado por la cámara de Ionic/Capacitor).
+  - `foto`: Archivo binario capturado por la cámara de Ionic/Capacitor.
   - `viajeId`: ID opcional del viaje asignado.
-- **Respuesta (201 Created)**:
-  ```json
-  {
-    "success": true,
-    "statusCode": 201,
-    "message": "Inspección óptica procesada por IA",
-    "data": {
-      "codigoLeido": "#CN-9823",
-      "dañosDetectados": false,
-      "confianza": 85,
-      "origen": "Shanghai (CHN)",
-      "destino": "Guayaquil (ECU)",
-      "estadoRuta": "En Tránsito - Océano Pacífico",
-      "fechaEstimada": "6 días (18 Octubre)",
-      "imagenId": "672f0fa..."
-    },
-    "timestamp": "2026-11-10T23:50:00.000Z"
-  }
-  ```
+  - `codigoContenedor`: Código opcional si se envía manual/simulado.
+  - `estadoSello`: `'ok' | 'sello_roto' | 'averia'`
+  - `observaciones`: Comentario opcional del operador.
+- **Efecto**: Guarda la evidencia en `imagenes` con el `operadorId` autenticado, `buqueNombre` y `resultadoIA.estadoSello`.
+
+#### `GET /escaner/historial` y `GET /escaner/resumen-operador`
+- **Roles permitidos**: `operador`, `gerente`, `admin`
+- **Query Params (`historial`)**: `?estado=ok|sello_roto|averia`, `?soloMios=true|false`, `?page=1&limit=25`
+- **Descripción**: Provee las métricas de rendimiento diario filtradas por el operador autenticado (`escaneosHoy`, `totalEscaneos`) y la lista de `"Últimos Registros"` con `estadoVerificacion`, `buqueNombre` y `tiempoRelativo`.
 
 ---
 
 ### 2.4 Módulo de Incidentes (`/incidentes`)
 
-#### `POST /incidentes/reportar`
-- **Roles permitidos**: `operador`, `admin`
-- **Body**:
-  ```typescript
-  class CreateIncidenteDto {
-    @IsMongoId()
-    viajeId: string;
-
-    @IsMongoId()
-    buqueId: string;
-
-    @IsIn(['retraso', 'averia', 'clima'])
-    tipo: string;
-
-    @IsString()
-    @MinLength(10)
-    descripcion: string; // Ej: "Avería, precinto o sello roto"
-
-    @IsIn(['alta', 'media', 'baja'])
-    gravedad: string;
-  }
-  ```
-- **Efecto Secundario**: Guarda en MongoDB y empuja a Redis (`SADD alertas:activas ...`).
+#### `POST /incidentes/reportar`, `GET /incidentes` y `PATCH /incidentes/:id/estado`
+- **Roles permitidos**: `operador`, `gerente` (lectura y cambio de estado), `admin`
+- **Content-Type**: `multipart/form-data` (foto máx. `5 MB`) o `application/json`
+- **Efecto Secundario**: Al crear guarda en MongoDB (`incidentes` con `estado: 'abierto'` y opcionalmente `imagenes`), invalida `kpi:resumen` y empuja a Redis (`SADD alertas:activas ...`). Al actualizar el estado a `resuelto` (`PATCH /incidentes/:id/estado`), limpia las alertas asociadas en Redis e invalida cachés de KPIs.
 
 ---
 
@@ -188,37 +206,35 @@ Este documento define los endpoints RESTful, contratos de datos (DTOs), esquemas
 #### `GET /kpis/resumen`
 - **Roles permitidos**: `gerente`, `admin`
 - **Fuente**: Caché Redis `kpi:resumen` (TTL: 300 segundos).
-- **Respuesta (200 OK)**:
-  ```json
-  {
-    "success": true,
-    "statusCode": 200,
-    "message": "Resumen de KPIs obtenido",
-    "data": {
-      "puntualidad": 94,
-      "toneladasMes": 14500,
-      "buquesActivos": 8,
-      "viajesEnRuta": 12,
-      "incidentesPendientes": 2,
-      "origenCache": true
-    },
-    "timestamp": "2026-11-10T23:50:00.000Z"
-  }
-  ```
+- **Datos**: Incluye `puntualidad`, `toneladasMes`, `buquesActivos`, `totalBuques`, `porcentajeFlotaOperativa`, `viajesEnRuta`, `incidentesPendientes`, `toneladasPorMes` (serie 6 meses), `distribucionEstadoViajes`, `enviosYAlertasRecientes` y `origenCache`.
 
-#### `GET /kpis/alertas-activas`
+#### `GET /kpis/reportes` y `GET /kpis/reportes/exportar-csv`
 - **Roles permitidos**: `gerente`, `admin`
-- **Fuente**: Set de Redis `alertas:activas`.
-- **Respuesta (200 OK)**:
-  ```json
-  {
-    "success": true,
-    "statusCode": 200,
-    "message": "Alertas críticas activas",
-    "data": [
-      { "id": "viaje_retrasado:V-2026-014", "tipo": "viaje_retrasado", "referencia": "V-2026-014" },
-      { "id": "mantenimiento_vencido:IMO-9876543", "tipo": "mantenimiento_vencido", "referencia": "IMO-9876543" }
-    ],
-    "timestamp": "2026-11-10T23:50:00.000Z"
-  }
-  ```
+- **Query Params**: `?periodo=mes | trimestre | anio`
+- **Fuente**: Caché Redis `kpi:reportes:{periodo}` (TTL: 300 segundos).
+- **Descripción**: Entrega las métricas financieras (`ingresosUSD`, `costoOperativoUSD`, `margenOperativoUSD`, `margenPorcentaje`, `viajesCompletados`), `evolucionIngresos`, `cargaPorRuta` y exportación en formato CSV (`Exportar CSV`).
+
+#### `GET /kpis/alertas-activas` y `DELETE /kpis/alertas-activas/:id`
+- **Roles permitidos**: `gerente`, `admin`
+- **Fuente**: Set de Redis `alertas:activas` (`SMEMBERS` / `SREM`).
+
+---
+
+### 2.6 Módulo de Flota, Puertos y Mantenimientos (`/buques`, `/puertos`, `/mantenimientos`)
+
+- **`GET /buques`**: Soporta `?q=`, `?estado=todos|en_ruta|en_puerto|retraso|mantenimiento`, `?page=` y `?limit=`. Enriquece cada buque con `viajeActivo`, `capitan` y `estadoOperativo`.
+- **`GET /buques/resumen-flota`**: Totales agregados para las tarjetas superiores (`flotaTotal`, `enTransito`, `enPuerto`, `enRetraso`, `enMantenimiento`, `capacidadNetaToneladas`).
+- **`GET /buques/exportar-csv`**: Exporta el directorio de buques en formato CSV.
+- **`POST /buques`**, **`PATCH /buques/:id`**, **`PATCH /buques/:id/estado`**, **`DELETE /buques/:id`**: Gestión completa de barcos e invalidación de caché en Redis.
+- **`GET /puertos`**, **`POST /puertos`**, **`PATCH /puertos/:id`**, **`DELETE /puertos/:id`**: Gestión completa de terminales portuarias con coordenadas GeoJSON (`2dsphere`).
+- **`GET /mantenimientos`**, **`POST /mantenimientos`**, **`PATCH /mantenimientos/:id/estado`**, **`DELETE /mantenimientos/:id`**: Programación, costos y finalización de mantenimientos con limpieza automática de alertas `mantenimiento_vencido:{imo}` en Redis.
+
+---
+
+### 2.7 Módulo de Soporte Técnico y Asistencia (`/soporte`)
+
+- **`POST /soporte`** (`cliente`, `operador`, `gerente`, `admin`): Crea un ticket en `tickets_soporte` (`agente_aduanas`, `supervisor`, `fallo_app`, `consulta_general`), notifica al rol encargado en `notificaciones` y registra auditoría.
+- **`GET /soporte/mis-tickets`** (todos los roles): Devuelve los tickets enviados por el usuario autenticado junto con su respuesta y estado.
+- **`GET /soporte`** (`gerente`, `admin`): Lista todos los tickets con filtros `?estado=` y `?tipo=`.
+- **`PATCH /soporte/:id/responder`** (`gerente`, `admin`): Responde un ticket, cambia su estado (`en_proceso`, `resuelto`, `cerrado`) y genera notificación automática al usuario solicitante.
+
