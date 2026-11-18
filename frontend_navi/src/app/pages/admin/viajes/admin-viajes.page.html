@@ -1,0 +1,36 @@
+<article class="navi-surface-panel">
+  <div class="navi-table-scroll">
+    <table class="navi-data-table">
+      <thead>
+        <tr>
+          <th>Viaje / Código</th>
+          <th>Buque</th>
+          <th>Ruta</th>
+          <th>ETA</th>
+          <th>Responsable</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (v of voyages(); track v.code) {
+          <tr>
+            <td class="code-cell">{{ v.code }}</td>
+            <td><strong>{{ v.vessel }}</strong></td>
+            <td>{{ v.route }}</td>
+            <td>{{ v.eta }}</td>
+            <td>{{ v.operator }}</td>
+            <td>
+              <ion-badge
+                class="navi-badge"
+                [class.badge-ok]="v.status === 'ACTIVO'"
+                [class.badge-ruta-soft]="v.status === 'MANTENIMIENTO'"
+              >
+                {{ v.status }}
+              </ion-badge>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</article>

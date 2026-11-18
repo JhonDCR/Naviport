@@ -1,0 +1,35 @@
+<header class="navi-mobile-header">
+  <div class="navi-user-info">
+    <div class="navi-avatar-circle">
+      @if (avatarImage(); as imgSrc) {
+        <img [src]="imgSrc" [alt]="title()" />
+      } @else {
+        <span>{{ avatarLetter() }}</span>
+      }
+    </div>
+
+    <div>
+      @if (shiftMode()) {
+        <button type="button" class="shift-toggle-pill" (click)="shiftToggle.emit()">
+          <span class="status-dot" [class.is-paused]="!shiftActive()"></span>
+          <span>{{ shiftActive() ? 'Turno activo' : 'Turno en pausa' }}</span>
+        </button>
+      } @else {
+        <p class="navi-greeting-sub">{{ subtitle() }}</p>
+      }
+      <h1 class="navi-greeting-name">{{ title() }}</h1>
+    </div>
+  </div>
+
+  <button
+    type="button"
+    class="navi-bell-btn"
+    aria-label="Ver notificaciones"
+    (click)="bellClick.emit()"
+  >
+    <ion-icon name="notifications"></ion-icon>
+    @if (showUnreadDot()) {
+      <span class="bell-dot" aria-hidden="true"></span>
+    }
+  </button>
+</header>

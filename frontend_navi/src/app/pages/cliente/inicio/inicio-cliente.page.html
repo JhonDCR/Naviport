@@ -1,0 +1,136 @@
+<app-mobile-header
+  avatarLetter="G"
+  subtitle="Bienvenido de nuevo"
+  title="Hola, Gary Industries"
+  [showUnreadDot]="hasUnreadNotifications()"
+  (bellClick)="openNotifications()"
+/>
+
+<ion-card class="navi-card featured-card" button="true" (click)="openDetail(primaryShipment().id)">
+  <ion-card-content>
+    <div class="card-top-row">
+      <ion-badge class="navi-badge badge-ruta">{{ primaryShipment().status }}</ion-badge>
+      <span class="shipment-code">{{ primaryShipment().code }}</span>
+    </div>
+
+    <div class="route-columns">
+      <div class="route-col">
+        <span class="route-caption">Origen</span>
+        <strong class="route-city">{{ primaryShipment().originCity }}</strong>
+        <span class="route-terminal">{{ primaryShipment().originTerminal }}</span>
+      </div>
+
+      <div class="route-col is-right">
+        <span class="route-caption">Destino</span>
+        <strong class="route-city">{{ primaryShipment().destinationCity }}</strong>
+        <span class="route-terminal">{{ primaryShipment().destinationTerminal }}</span>
+      </div>
+    </div>
+
+    <div class="navi-progress-track-wrapper">
+      <ion-progress-bar
+        class="navi-progress"
+        [value]="primaryShipment().progress"
+      ></ion-progress-bar>
+      <div
+        class="navi-ship-pin"
+        [style.left.%]="primaryShipment().progress * 100"
+        aria-hidden="true"
+      >
+        <ion-icon name="boat"></ion-icon>
+      </div>
+    </div>
+
+    <div class="dates-row">
+      <span class="date-item muted">
+        <ion-icon name="calendar-outline"></ion-icon>
+        Salida: {{ primaryShipment().departureDate }}
+      </span>
+      <span class="date-item strong">
+        <ion-icon name="calendar" class="blue-icon"></ion-icon>
+        Llegada: {{ primaryShipment().arrivalDate }}
+      </span>
+    </div>
+  </ion-card-content>
+</ion-card>
+
+<div class="kpi-grid">
+  <ion-card class="navi-card kpi-card" button="true" (click)="openDetail('BU-1234XYZ')">
+    <ion-card-content>
+      <div class="kpi-head">
+        <div class="kpi-icon-box is-blue">
+          <ion-icon name="cube-outline"></ion-icon>
+        </div>
+        <ion-badge class="kpi-mini-pill">Activos</ion-badge>
+      </div>
+      <strong class="kpi-value">04</strong>
+      <h2 class="kpi-title">Contenedores</h2>
+      <p class="kpi-sub">Terminal Yangshan (CHN) &amp; Miami</p>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card class="navi-card kpi-card" button="true" (click)="openDetail('BU-1234XYZ')">
+    <ion-card-content>
+      <div class="kpi-head">
+        <div class="kpi-icon-box is-amber">
+          <ion-icon name="time-outline"></ion-icon>
+        </div>
+        <ion-badge class="kpi-mini-pill is-amber">GYE</ion-badge>
+      </div>
+      <strong class="kpi-value">6 días</strong>
+      <h2 class="kpi-title">Próximo Arribo</h2>
+      <p class="kpi-sub">Puerto Marítimo (ECU)</p>
+    </ion-card-content>
+  </ion-card>
+</div>
+
+<section class="vessel-highlight">
+  <div class="section-head">
+    <h3>Buque Asignado</h3>
+    <span>En tiempo real</span>
+  </div>
+  <ion-card class="navi-card mini-vessel-card" button="true" (click)="openDetail(primaryShipment().id)">
+    <ion-card-content>
+      <div class="mini-vessel-row">
+        <div class="vessel-badge-icon">
+          <ion-icon name="boat-outline"></ion-icon>
+        </div>
+        <div class="vessel-meta">
+          <strong>{{ primaryShipment().vessel }}</strong>
+          <span>{{ primaryShipment().stageLabel }} · {{ primaryShipment().weightTons }} Tn</span>
+        </div>
+        <ion-icon name="chevron-forward" class="chevron-muted"></ion-icon>
+      </div>
+    </ion-card-content>
+  </ion-card>
+</section>
+
+<ion-modal [isOpen]="notificationsOpen()" (didDismiss)="closeNotifications()">
+  <ng-template>
+    <div class="modal-sheet">
+      <div class="modal-head">
+        <h2>Notificaciones de Carga</h2>
+        <button type="button" class="close-btn" (click)="closeNotifications()">
+          <ion-icon name="close"></ion-icon>
+        </button>
+      </div>
+
+      <div class="notif-list">
+        @for (item of notifications(); track item.id) {
+          <div class="notif-row" [class.is-unread]="item.unread">
+            <div class="notif-dot" [class]="'tone-' + item.tone"></div>
+            <div class="notif-body">
+              <strong>{{ item.title }}</strong>
+              <p>{{ item.detail }}</p>
+              <span>{{ item.time }}</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <ion-button expand="block" class="mark-read-btn" (click)="markAllRead()">
+        Marcar todas como leídas
+      </ion-button>
+    </div>
+  </ng-template>
+</ion-modal>

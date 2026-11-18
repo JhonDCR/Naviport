@@ -1,0 +1,78 @@
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 36px;
+}
+
+.brand-emblem {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: var(--navi-color-primary);
+  color: var(--navi-color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.brand-sub {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #a6a6a6;
+}
+
+.brand-main {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.05;
+  color: #ffffff;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.side-link {
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: transparent;
+  color: #e5e7eb;
+  text-decoration: none;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+
+  ion-icon {
+    font-size: 20px;
+  }
+
+  &.is-active {
+    background: var(--navi-color-primary);
+    color: #ffffff;
+    font-weight: 600;
+  }
+}
+
+.side-logout {
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid #ff6b70;
+  background: transparent;
+  color: #ff6b70;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}

@@ -1,0 +1,18 @@
+<header class="desktop-topbar">
+  <div>
+    <h1 class="page-title">{{ title() }}</h1>
+    <p class="page-subtitle">{{ subtitle() }}</p>
+  </div>
+
+  <div class="topbar-right">
+    <ng-content />
+
+    <div class="user-pill">
+      <div class="user-avatar">{{ avatarLetter() }}</div>
+      <div>
+        <strong>{{ userName() }}</strong>
+        <span>{{ userRole() }}</span>
+      </div>
+    </div>
+  </div>
+</header>

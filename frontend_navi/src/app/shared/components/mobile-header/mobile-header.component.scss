@@ -1,0 +1,22 @@
+.shift-toggle-pill {
+  border: none;
+  background: transparent;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--navi-text-secundario);
+  cursor: pointer;
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+
+    &.is-paused {
+      background: var(--navi-color-accent);
+    }
+  }
+}

@@ -1,0 +1,52 @@
+<ion-content class="navi-mobile-backdrop" [fullscreen]="true">
+  <div class="intro-shell">
+    <div class="hero-ocean">
+      <div class="brand-chip">
+        <ion-icon name="boat"></ion-icon>
+        <span>NaviPort · OceanTrack</span>
+      </div>
+      <img
+        src="assets/figma/ship-intro.png"
+        alt="Buque portacontenedores NaviPort OceanTrack"
+        class="hero-ship-img"
+      />
+    </div>
+
+    <div class="intro-body">
+      <div class="dots-row" role="tablist" aria-label="Diapositivas de bienvenida">
+        @for (slide of slides; track slide.highlight; let i = $index) {
+          <button
+            type="button"
+            class="dot-pill"
+            [class.is-active]="activeSlideIndex() === i"
+            [attr.aria-label]="'Ir a diapositiva ' + (i + 1)"
+            (click)="selectSlide(i)"
+          ></button>
+        }
+      </div>
+
+      <h1 class="intro-title">
+        <span>{{ currentSlide().prefix }}</span>
+        <span class="highlight">{{ currentSlide().highlight }}</span>
+      </h1>
+
+      <p class="intro-subtitle">
+        {{ currentSlide().description }}
+      </p>
+
+      <ion-button class="start-pill-btn" expand="block" (click)="startApp()">
+        <span class="btn-inner">
+          <span class="leading-circle">
+            <ion-icon name="boat"></ion-icon>
+          </span>
+          <span class="btn-label">Empezar</span>
+          <span class="chevrons" aria-hidden="true">
+            <ion-icon name="chevron-forward"></ion-icon>
+            <ion-icon name="chevron-forward"></ion-icon>
+            <ion-icon name="chevron-forward"></ion-icon>
+          </span>
+        </span>
+      </ion-button>
+    </div>
+  </div>
+</ion-content>

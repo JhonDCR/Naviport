@@ -1,0 +1,83 @@
+<ion-content class="navi-mobile-backdrop" [fullscreen]="true">
+  <div class="login-shell">
+    <div class="login-top">
+      <button type="button" class="back-pill" (click)="backToIntro()" aria-label="Volver a introducción">
+        <ion-icon name="arrow-back"></ion-icon>
+      </button>
+
+      <div class="brand-lockup">
+        <div class="logo-badge">
+          <ion-icon name="boat"></ion-icon>
+        </div>
+        <div>
+          <span class="brand-over">OceanTrack Logistics</span>
+          <h1 class="brand-title">NaviPort Tracker</h1>
+        </div>
+      </div>
+    </div>
+
+    <ion-card class="navi-card login-card">
+      <ion-card-content>
+        <h2 class="card-heading">Iniciar Sesión</h2>
+        <p class="card-sub">Selecciona un perfil de acceso para previsualizar el flujo o ingresa tus credenciales.</p>
+
+        <div class="role-grid">
+          @for (item of roleOptions; track item.role) {
+            <button
+              type="button"
+              class="role-chip"
+              [class.is-selected]="selectedRole() === item.role"
+              (click)="selectRole(item)"
+            >
+              <ion-icon [name]="item.icon"></ion-icon>
+              <div class="role-text">
+                <strong>{{ item.label }}</strong>
+                <span>{{ item.subtitle }}</span>
+              </div>
+            </button>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="login-email">Correo electrónico</label>
+          <ion-input
+            id="login-email"
+            type="email"
+            [(ngModel)]="email"
+            placeholder="correo@naviport.ec"
+            class="navi-input"
+          ></ion-input>
+        </div>
+
+        <div class="form-group">
+          <label for="login-pass">Contraseña</label>
+          <ion-input
+            id="login-pass"
+            type="password"
+            [(ngModel)]="password"
+            placeholder="••••••••"
+            class="navi-input"
+          ></ion-input>
+        </div>
+
+        <ion-button expand="block" class="login-cta" (click)="login()">
+          <span>Entrar como {{ activeRoleConfig().label }}</span>
+          <ion-icon slot="end" name="arrow-forward"></ion-icon>
+        </ion-button>
+
+        <div class="quick-links">
+          <span class="quick-caption">Accesos rápidos de maquetado:</span>
+          <div class="quick-pills">
+            @for (item of roleOptions; track item.role) {
+              <button type="button" class="mini-pill" (click)="goDirect(item.route)">
+                {{ item.label }}
+              </button>
+            }
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <p class="footer-note">NaviPort Platform · Shanghai / Miami → Guayaquil</p>
+  </div>
+</ion-content>

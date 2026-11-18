@@ -1,0 +1,149 @@
+<section class="profile-hero">
+      <div class="avatar-large">
+        <img src="assets/figma/operator-avatar.png" alt="Gary Barreiro" />
+        <button
+          type="button"
+          class="edit-badge"
+          aria-label="Editar perfil de operador"
+          (click)="showInfo('Edición de operador disponible en etapa API.')"
+        >
+          <ion-icon name="create-outline"></ion-icon>
+        </button>
+      </div>
+      <h1 class="profile-name">Gary Barreiro</h1>
+      <p class="profile-email">garyba&#64;gmail.com</p>
+    </section>
+
+    <div class="section-label">LABORAL</div>
+    <ion-card class="navi-card menu-group">
+      <button
+        type="button"
+        class="menu-row"
+        (click)="showInfo('Turno asignado en Muelle Sur 3: 08:00 - 16:00')"
+      >
+        <span class="row-icon">
+          <ion-icon name="time-outline"></ion-icon>
+        </span>
+        <span class="row-copy">
+          <strong>Mi Turno Actual</strong>
+          <span>Horario asignado</span>
+        </span>
+        <ion-badge class="shift-badge">08:00 - 16:00</ion-badge>
+      </button>
+
+      <div class="row-divider"></div>
+
+      <button
+        type="button"
+        class="menu-row"
+        (click)="showInfo('32 códigos ISO validados en la jornada de hoy.')"
+      >
+        <span class="row-icon">
+          <ion-icon name="qr-code-outline"></ion-icon>
+        </span>
+        <span class="row-copy">
+          <strong>Historial de Escaneos</strong>
+          <span>Últimos códigos validados</span>
+        </span>
+        <ion-icon name="chevron-forward" class="row-arrow"></ion-icon>
+      </button>
+    </ion-card>
+
+    <div class="section-label">PREFERENCIAS</div>
+    <ion-card class="navi-card menu-group">
+      <div class="menu-row">
+        <span class="row-icon">
+          <ion-icon name="notifications-outline"></ion-icon>
+        </span>
+        <span class="row-copy">
+          <strong>Notificaciones Push</strong>
+          <span>Alertas de atraque y desvíos</span>
+        </span>
+        <ion-toggle
+          class="navi-toggle"
+          [checked]="pushEnabled()"
+          (ionChange)="togglePush($event)"
+        ></ion-toggle>
+      </div>
+
+      <div class="row-divider"></div>
+
+      <button type="button" class="menu-row" (click)="showInfo('Idioma actual: Español (ECU)')">
+        <span class="row-icon">
+          <ion-icon name="globe-outline"></ion-icon>
+        </span>
+        <span class="row-copy">
+          <strong>Idioma</strong>
+          <span>Región e informes portuarios</span>
+        </span>
+        <ion-icon name="chevron-forward" class="row-arrow"></ion-icon>
+      </button>
+    </ion-card>
+
+    <div class="section-label">SOPORTE INTERNO</div>
+    <ion-card class="navi-card menu-group">
+      <button type="button" class="menu-row" (click)="openAppBugModal()">
+        <span class="row-icon">
+          <ion-icon name="headset-outline"></ion-icon>
+        </span>
+        <span class="row-copy">
+          <strong>Contactar Supervisor</strong>
+          <span>Asistencia técnica y aduanas...</span>
+        </span>
+        <ion-icon name="chevron-forward" class="row-arrow"></ion-icon>
+      </button>
+
+      <div class="row-divider"></div>
+
+      <button type="button" class="menu-row" (click)="openAppBugModal()">
+        <span class="row-icon is-danger">
+          <ion-icon name="bug-outline"></ion-icon>
+        </span>
+        <span class="row-copy">
+          <strong>Reportar fallo de la App</strong>
+          <span>Incidencias técnicas en terminal</span>
+        </span>
+        <ion-icon name="chevron-forward" class="row-arrow"></ion-icon>
+      </button>
+    </ion-card>
+
+    <button type="button" class="logout-pill" (click)="logout()">Cerrar Sesión</button>
+
+    <footer class="app-version">
+      <strong>NaviPort Mobile - v1.0</strong>
+      <span>Desarrollado por: Insaniza G3</span>
+    </footer>
+
+  <ion-modal [isOpen]="supportModalOpen()" (didDismiss)="supportModalOpen.set(false)">
+    <ng-template>
+      <div class="support-modal">
+        <div class="modal-head">
+          <h2>Soporte Interno de Terminal</h2>
+          <button type="button" class="close-btn" (click)="supportModalOpen.set(false)">
+            <ion-icon name="close"></ion-icon>
+          </button>
+        </div>
+        <ion-input
+          [(ngModel)]="bugSubject"
+          placeholder="Asunto (ej. Error cámara en grúa 03)"
+          class="modal-input"
+        ></ion-input>
+        <ion-textarea
+          [(ngModel)]="bugDescription"
+          placeholder="Describe el problema o solicitud al supervisor..."
+          [rows]="5"
+          class="modal-textarea"
+        ></ion-textarea>
+        <ion-button expand="block" class="send-btn" (click)="sendReport()">Enviar Ticket</ion-button>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <ion-toast
+    [isOpen]="toastMessage() !== null"
+    [message]="toastMessage() ?? ''"
+    [duration]="2200"
+    position="top"
+    color="primary"
+    (didDismiss)="toastMessage.set(null)"
+  ></ion-toast>

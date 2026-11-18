@@ -1,37 +1,427 @@
 /*
- * App Global CSS
- * ----------------------------------------------------------------------------
- * Put style rules here that you want to apply globally. These styles are for
- * the entire app and not just one component. Additionally, this file can be
- * used as an entry point to import other CSS/Sass files to be included in the
- * output CSS.
- * For more information on global stylesheets, visit the documentation:
- * https://ionicframework.com/docs/layout/global-stylesheets
+ * App Global CSS - NaviPort Design System (OceanTrack)
  */
 
-/* Core CSS required for Ionic components to work properly */
 @import "@ionic/angular/css/core.css";
-
-/* Basic CSS for apps built with Ionic */
 @import "@ionic/angular/css/normalize.css";
 @import "@ionic/angular/css/structure.css";
 @import "@ionic/angular/css/typography.css";
 @import "@ionic/angular/css/display.css";
 
-/* Optional CSS utils that can be commented out */
 @import "@ionic/angular/css/padding.css";
 @import "@ionic/angular/css/float-elements.css";
 @import "@ionic/angular/css/text-alignment.css";
 @import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
 
-/**
- * Ionic Dark Mode
- * -----------------------------------------------------
- * For more info, please see:
- * https://ionicframework.com/docs/theming/dark-mode
- */
+/* NaviPort usa paleta clara oficial #f3f6f8 en todas las vistas */
 
-/* @import "@ionic/angular/css/palettes/dark.always.css"; */
-/* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import '@ionic/angular/css/palettes/dark.system.css';
+* {
+  box-sizing: border-box;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body,
+ion-app,
+ion-content {
+  --background: var(--navi-bg-app);
+  background: var(--navi-bg-app);
+  color: var(--navi-text-principal);
+}
+
+/* Contenedor Móvil centrado en Desktop */
+.navi-mobile-shell {
+  width: 100%;
+  max-width: 430px;
+  min-height: 100%;
+  margin: 0 auto;
+  padding: 20px 20px 116px;
+  background: var(--navi-bg-app);
+  position: relative;
+}
+
+.navi-mobile-fullbleed {
+  width: 100%;
+  max-width: 430px;
+  min-height: 100%;
+  margin: 0 auto;
+  background: var(--navi-bg-app);
+  position: relative;
+}
+
+@media (min-width: 520px) {
+  .navi-mobile-backdrop {
+    --background: #e5ebf1;
+  }
+
+  .navi-mobile-shell,
+  .navi-mobile-fullbleed {
+    min-height: 100vh;
+    box-shadow: 0 18px 48px rgba(17, 24, 39, 0.08);
+  }
+}
+
+/* Tarjetas oficiales NaviPort (24px) */
+ion-card.navi-card {
+  margin: 0;
+  border-radius: var(--navi-radius-card);
+  background: var(--navi-surface-card);
+  box-shadow: var(--navi-shadow-card);
+  --background: var(--navi-surface-card);
+  --color: var(--navi-text-principal);
+}
+
+/* Badges oficiales (12px / 99px pills) */
+ion-badge.navi-badge {
+  border-radius: var(--navi-radius-pill);
+  padding: 6px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 6px;
+  --padding-bottom: 6px;
+}
+
+ion-badge.badge-ruta {
+  --background: var(--navi-color-accent);
+  --color: var(--navi-text-principal);
+}
+
+ion-badge.badge-ruta-soft {
+  --background: var(--navi-warning-bg);
+  --color: var(--navi-warning-text);
+}
+
+ion-badge.badge-ok {
+  --background: var(--navi-good-bg);
+  --color: var(--navi-good-text);
+}
+
+ion-badge.badge-sello {
+  --background: #f9d163;
+  --color: var(--navi-text-principal);
+}
+
+ion-badge.badge-retraso {
+  --background: var(--navi-danger-bg);
+  --color: var(--navi-danger-text);
+}
+
+ion-badge.badge-mantenimiento {
+  --background: var(--navi-purple-bg);
+  --color: var(--navi-purple-text);
+}
+
+ion-badge.badge-puerto {
+  --background: var(--navi-blue-soft-bg);
+  --color: var(--navi-color-primary);
+}
+
+/* Barra de progreso con pin circular ámbar */
+.navi-progress-track-wrapper {
+  position: relative;
+  padding: 8px 0;
+}
+
+ion-progress-bar.navi-progress {
+  height: 7px;
+  border-radius: var(--navi-radius-pill);
+  --background: var(--navi-progress-track);
+  --progress-background: var(--navi-color-primary);
+}
+
+.navi-ship-pin {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--navi-color-accent);
+  color: var(--navi-text-principal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(255, 183, 3, 0.45);
+  border: 2px solid #ffffff;
+  z-index: 2;
+
+  ion-icon {
+    font-size: 13px;
+  }
+}
+
+/* Header móvil usuario + notificaciones */
+.navi-mobile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.navi-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.navi-avatar-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #005cff 0%, #5ca9ff 100%);
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.navi-greeting-sub {
+  margin: 0;
+  font-size: 13px;
+  color: var(--navi-text-secundario);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.navi-greeting-name {
+  margin: 2px 0 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--navi-text-principal);
+}
+
+.navi-bell-btn {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: none;
+  box-shadow: 0 4px 12px rgba(17, 24, 39, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--navi-navbar-dark);
+  font-size: 20px;
+  cursor: pointer;
+
+  .bell-dot {
+    position: absolute;
+    top: 10px;
+    right: 11px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--navi-color-accent);
+    border: 1.5px solid #ffffff;
+  }
+}
+
+/* Searchbar Ionic redondeada */
+ion-searchbar.navi-searchbar {
+  --background: #ffffff;
+  --color: var(--navi-text-principal);
+  --placeholder-color: #9ca3af;
+  --icon-color: #6b7280;
+  --border-radius: 99px;
+  --box-shadow: 0 4px 14px rgba(17, 24, 39, 0.05);
+  padding: 0;
+  height: 46px;
+}
+
+/* Layout Web Desktop (Gerente & Admin) */
+.navi-desktop-shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--navi-bg-app);
+}
+
+.navi-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  background: var(--navi-navbar-dark);
+  color: #ffffff;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.navi-main-canvas {
+  flex: 1;
+  min-width: 0;
+  padding: 28px 36px;
+  background: var(--navi-bg-app);
+  overflow-x: hidden;
+}
+
+@media (max-width: 960px) {
+  .navi-desktop-shell {
+    flex-direction: column;
+  }
+
+  .navi-sidebar {
+    position: static;
+    height: auto;
+    width: 100%;
+    padding: 16px 20px;
+    gap: 12px;
+  }
+
+  .navi-main-canvas {
+    padding: 20px 16px;
+  }
+}
+
+/* Clases utilitarias compartidas de módulos Web Desktop (Gerente & Admin) */
+.navi-kpi-4-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+@media (max-width: 1180px) {
+  .navi-kpi-4-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .navi-kpi-4-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.navi-surface-panel {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 22px 24px;
+  box-shadow: var(--navi-shadow-card);
+}
+
+.navi-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+
+  h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--navi-text-principal);
+  }
+
+  p {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: var(--navi-text-secundario);
+  }
+}
+
+.navi-table-scroll {
+  overflow-x: auto;
+}
+
+.navi-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+
+  th {
+    text-align: left;
+    padding: 12px 10px;
+    font-weight: 700;
+    color: var(--navi-text-principal);
+    border-bottom: 1.5px solid #e5e7eb;
+  }
+
+  td {
+    padding: 15px 10px;
+    color: var(--navi-text-principal);
+    border-bottom: 1px solid #f1f5f9;
+  }
+}
+
+.navi-primary-pill-btn,
+.navi-white-pill-btn,
+.navi-outline-pill-btn {
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 24px;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.navi-primary-pill-btn {
+  background: var(--navi-color-primary);
+  color: #ffffff;
+}
+
+.navi-white-pill-btn {
+  background: #ffffff;
+  color: var(--navi-text-secundario);
+  box-shadow: var(--navi-shadow-card);
+}
+
+.navi-outline-pill-btn {
+  background: var(--navi-bg-app);
+  color: var(--navi-text-principal);
+}
+
+.navi-search-pill-box {
+  width: min(390px, 100%);
+  height: 42px;
+  border-radius: 24px;
+  background: #ffffff;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: var(--navi-shadow-card);
+
+  &.is-soft {
+    background: var(--navi-bg-app);
+    box-shadow: none;
+  }
+
+  ion-icon {
+    font-size: 18px;
+    color: #9ca3af;
+  }
+
+  input {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    font-size: 13.5px;
+    color: var(--navi-text-principal);
+  }
+}

@@ -1,0 +1,28 @@
+<article class="navi-surface-panel">
+  <div class="navi-table-scroll">
+    <table class="navi-data-table">
+      <thead>
+        <tr>
+          <th>Código UN/LOCODE</th>
+          <th>Terminal Portuaria</th>
+          <th>País / Ciudad</th>
+          <th>Grúas Pórtico</th>
+          <th>Capacidad</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (port of ports(); track port.code) {
+          <tr>
+            <td class="code-cell">{{ port.code }}</td>
+            <td><strong>{{ port.name }}</strong></td>
+            <td>{{ port.country }}</td>
+            <td>{{ port.cranes }}</td>
+            <td>{{ port.capacityTeu }}</td>
+            <td><ion-badge class="navi-badge badge-ok">{{ port.status }}</ion-badge></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</article>

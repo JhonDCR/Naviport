@@ -1,0 +1,155 @@
+.toolbar-panel {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 12px 16px;
+  box-shadow: var(--navi-shadow-card);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.toolbar-buttons {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.imo-cell {
+  font-weight: 600;
+  color: var(--navi-color-primary) !important;
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.act-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+
+  &.is-edit {
+    background: var(--navi-blue-soft-bg);
+    color: var(--navi-color-primary);
+  }
+
+  &.is-delete {
+    background: var(--navi-danger-bg);
+    color: var(--navi-danger-text);
+  }
+}
+
+.pagination-bar {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--navi-text-secundario);
+}
+
+.pager-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pager-btn {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid #dbe4f0;
+  background: #ffffff;
+  color: var(--navi-text-principal);
+  font-size: 12.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+
+  &.is-next {
+    background: var(--navi-color-primary);
+    border-color: var(--navi-color-primary);
+    color: #ffffff;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+}
+
+.ship-modal {
+  padding: 24px 20px;
+  background: var(--navi-bg-app);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+
+  h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+  }
+}
+
+.close-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.field-lbl {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--navi-text-principal);
+}
+
+.modal-in {
+  --background: #ffffff;
+  --padding-start: 14px;
+  --padding-end: 14px;
+  background: #ffffff;
+  border-radius: 16px;
+}
+
+ion-button.save-ship-btn {
+  margin-top: 10px;
+  --background: var(--navi-color-primary);
+  --border-radius: 99px;
+  height: 48px;
+  text-transform: none;
+  font-weight: 600;
+}

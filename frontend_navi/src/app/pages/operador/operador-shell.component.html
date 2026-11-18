@@ -1,0 +1,8 @@
+<ion-content class="navi-mobile-backdrop" [fullscreen]="true">
+  <div [class]="isScannerView() ? 'navi-mobile-fullbleed' : 'navi-mobile-shell'">
+    <router-outlet />
+    @if (!isScannerView()) {
+      <app-mobile-navbar mode="operador" />
+    }
+  </div>
+</ion-content>

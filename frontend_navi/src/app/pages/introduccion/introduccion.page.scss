@@ -1,0 +1,158 @@
+.intro-shell {
+  width: 100%;
+  max-width: 430px;
+  min-height: 100%;
+  margin: 0 auto;
+  background: var(--navi-bg-app);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-bottom: 34px;
+}
+
+@media (min-width: 520px) {
+  .intro-shell {
+    min-height: 100vh;
+    box-shadow: 0 18px 48px rgba(17, 24, 39, 0.08);
+  }
+}
+
+.hero-ocean {
+  position: relative;
+  width: 100%;
+  min-height: 410px;
+  padding: 28px 24px 16px;
+  background: linear-gradient(180deg, #005cff 0%, #3d87ff 62%, #f3f6f8 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.brand-chip {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--navi-radius-pill);
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+
+  ion-icon {
+    font-size: 16px;
+    color: var(--navi-color-accent);
+  }
+}
+
+.hero-ship-img {
+  width: min(330px, 88%);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 18px 26px rgba(0, 34, 102, 0.28));
+}
+
+.intro-body {
+  padding: 8px 24px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dots-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.dot-pill {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: var(--navi-radius-pill);
+  background: #9ca3af;
+  cursor: pointer;
+  transition: all 0.25s ease;
+
+  &.is-active {
+    width: 30px;
+    background: var(--navi-color-primary);
+  }
+}
+
+.intro-title {
+  margin: 0 0 12px;
+  font-size: 30px;
+  line-height: 1.25;
+  font-weight: 700;
+  color: var(--navi-text-principal);
+
+  .highlight {
+    color: var(--navi-color-accent);
+  }
+}
+
+.intro-subtitle {
+  margin: 0 0 32px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--navi-text-secundario);
+}
+
+ion-button.start-pill-btn {
+  --background: var(--navi-color-primary);
+  --background-activated: var(--ion-color-primary-shade);
+  --border-radius: 99px;
+  --padding-start: 8px;
+  --padding-end: 20px;
+  --box-shadow: 0 10px 24px rgba(0, 92, 255, 0.3);
+  height: 64px;
+  margin: 0;
+  text-transform: none;
+}
+
+.btn-inner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.leading-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--navi-color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  ion-icon {
+    font-size: 22px;
+  }
+}
+
+.btn-label {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.chevrons {
+  display: flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 16px;
+
+  ion-icon + ion-icon {
+    margin-left: -8px;
+  }
+}
