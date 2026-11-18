@@ -11,6 +11,7 @@ import { ScannerModule } from './modules/scanner/scanner.module';
 import { IncidentsModule } from './modules/incidents/incidents.module';
 import { KpisModule } from './modules/kpis/kpis.module';
 import { FleetModule } from './modules/fleet/fleet.module';
+import { SupportModule } from './modules/support/support.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { FleetModule } from './modules/fleet/fleet.module';
     IncidentsModule,
     KpisModule,
     FleetModule,
+    SupportModule,
   ],
   controllers: [AppController],
   providers: [AppService],

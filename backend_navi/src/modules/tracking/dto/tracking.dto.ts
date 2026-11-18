@@ -85,6 +85,99 @@ export class CreateViajeDto {
   @IsNumber()
   @Min(0)
   toneladas?: number;
+
+  @ApiPropertyOptional({ example: 21.4, default: 21.4 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  velocidadNudos?: number;
+
+  @ApiPropertyOptional({ example: 'Luis Andrade' })
+  @IsOptional()
+  @IsString()
+  capitanAsignado?: string;
+
+  @ApiPropertyOptional({ example: 185000, default: 0 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  ingresosEstimadosUSD?: number;
+
+  @ApiPropertyOptional({ example: 112000, default: 0 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  costoOperativoUSD?: number;
+}
+
+export class UpdateViajeDto {
+  @ApiPropertyOptional({ example: '672f0b9f91a24d0012ab34ce' })
+  @IsOptional()
+  @IsMongoId()
+  buqueId?: string;
+
+  @ApiPropertyOptional({ example: '672f0b9f91a24d0012ab34cf' })
+  @IsOptional()
+  @IsMongoId()
+  origenId?: string;
+
+  @ApiPropertyOptional({ example: '672f0b9f91a24d0012ab34d0' })
+  @IsOptional()
+  @IsMongoId()
+  destinoId?: string;
+
+  @ApiPropertyOptional({ example: '2026-11-15T08:00:00.000Z' })
+  @IsOptional()
+  @IsDateString()
+  fechaSalida?: string;
+
+  @ApiPropertyOptional({ example: '2026-12-10T18:00:00.000Z' })
+  @IsOptional()
+  @IsDateString()
+  fechaLlegadaEstimada?: string;
+
+  @ApiPropertyOptional({ example: '2026-12-10T16:30:00.000Z' })
+  @IsOptional()
+  @IsDateString()
+  fechaLlegadaReal?: string;
+
+  @ApiPropertyOptional({
+    enum: ['programado', 'en_ruta', 'finalizado', 'retrasado'],
+  })
+  @IsOptional()
+  @IsIn(['programado', 'en_ruta', 'finalizado', 'retrasado'])
+  estado?: EstadoViaje;
+
+  @ApiPropertyOptional({ example: [-95.4, 5.2] })
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(2)
+  @ArrayMaxSize(2)
+  @IsNumber({}, { each: true })
+  coordenadas?: [number, number];
+
+  @ApiPropertyOptional({ example: 21.4 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  velocidadNudos?: number;
+
+  @ApiPropertyOptional({ example: 'Luis Andrade' })
+  @IsOptional()
+  @IsString()
+  capitanAsignado?: string;
+
+  @ApiPropertyOptional({ example: 190000 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  ingresosEstimadosUSD?: number;
+
+  @ApiPropertyOptional({ example: 115000 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  costoOperativoUSD?: number;
 }
 
 export class UpdateEstadoViajeDto {
@@ -107,6 +200,15 @@ export class UpdateEstadoViajeDto {
   @ArrayMaxSize(2)
   @IsNumber({}, { each: true })
   coordenadas?: [number, number];
+
+  @ApiPropertyOptional({
+    example: 21.4,
+    description: 'Velocidad actual del buque en nudos',
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  velocidadNudos?: number;
 
   @ApiPropertyOptional({
     example: '2026-12-10T16:30:00.000Z',
@@ -153,6 +255,31 @@ export class CreateCargaDto {
   pesoToneladas: number;
 
   @ApiPropertyOptional({
+    example: '#MSK-4409',
+    description: 'Número de sello o precinto aduanero del contenedor',
+  })
+  @IsOptional()
+  @IsString()
+  numeroPrecinto?: string;
+
+  @ApiPropertyOptional({
+    example: 4800,
+    description: 'Valor del flete marítimo en USD',
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  valorFleteUSD?: number;
+
+  @ApiPropertyOptional({
+    example: '8471.30.00.00',
+    description: 'Partida arancelaria para el manifiesto aduanero',
+  })
+  @IsOptional()
+  @IsString()
+  partidaArancelaria?: string;
+
+  @ApiPropertyOptional({
     example: 'Terminal Yangshan (CHN)',
     description: 'Ubicación inicial para el primer evento del timeline',
   })
@@ -177,6 +304,14 @@ export class AddEventoTimelineDto {
   @IsString()
   @MinLength(2)
   ubicacion: string;
+
+  @ApiPropertyOptional({
+    example: 'Contenedor sellado #MSK-4409 verificado en muelle terminal 3.',
+    description: 'Descripción técnica o detalle operativo del evento',
+  })
+  @IsOptional()
+  @IsString()
+  descripcion?: string;
 
   @ApiPropertyOptional({
     example: '2026-11-12T14:00:00.000Z',

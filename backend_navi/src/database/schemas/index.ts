@@ -6,3 +6,7 @@ export * from './carga.schema';
 export * from './incidente.schema';
 export * from './imagen.schema';
 export * from './mantenimiento.schema';
+export * from './notificacion.schema';
+export * from './ticket-soporte.schema';
+export * from './turno.schema';
+export * from './auditoria-log.schema';

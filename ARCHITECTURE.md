@@ -32,18 +32,19 @@ flowchart TD
         ScannerModule["Módulo Escáner IA & Imágenes"]
         FleetModule["Módulo Buques & Puertos"]
         KPIModule["Módulo Analítica & KPIs"]
+        SupportModule["Módulo Soporte & Tickets"]
     end
 
     subgraph FastStorage ["Capa de Caché y Sesiones (Redis)"]
         RedisSession["sesion:{idUsuario}
         (Tokens activos y revocación en tiempo real)"]
-        RedisKPI["kpi:resumen
+        RedisKPI["kpi:resumen / kpi:reportes:*
         (Caché de agregaciones con TTL: 300s)"]
-        RedisAlerts["alertas:activas
-        (Set de alertas operativas críticas)"]
+        RedisAlerts["alertas:activas / turno:activo:*
+        (Alertas críticas y turno en curso)"]
     end
 
-    subgraph Persistencia ["Capa de Datos Persistente (MongoDB)"]
+    subgraph Persistencia ["Capa de Datos Persistente (MongoDB - 12 Colecciones)"]
         MongoUsers[("usuarios")]
         MongoShips[("buques")]
         MongoPorts[("puertos")]
@@ -52,19 +53,24 @@ flowchart TD
         MongoIncidents[("incidentes")]
         MongoMaintenance[("mantenimientos")]
         MongoImages[("imagenes")]
+        MongoNotifs[("notificaciones")]
+        MongoSupport[("tickets_soporte")]
+        MongoShifts[("turnos")]
+        MongoAudit[("auditoria_logs")]
     end
 
     MobileClient & MobileOperator & WebManager -->|HTTPS / JSON| Gateway
-    Gateway --> AuthModule & TrackingModule & ScannerModule & FleetModule & KPIModule
+    Gateway --> AuthModule & TrackingModule & ScannerModule & FleetModule & KPIModule & SupportModule
     
     AuthModule <--> RedisSession
     KPIModule <--> RedisKPI
     TrackingModule & FleetModule <--> RedisAlerts
 
-    TrackingModule --> MongoTrips & MongoCargo
+    TrackingModule --> MongoTrips & MongoCargo & MongoNotifs
     FleetModule --> MongoShips & MongoPorts & MongoMaintenance
-    ScannerModule --> MongoImages & MongoIncidents
-    AuthModule --> MongoUsers
+    ScannerModule --> MongoImages & MongoIncidents & MongoShifts
+    AuthModule --> MongoUsers & MongoShifts & MongoAudit
+    SupportModule --> MongoSupport & MongoNotifs & MongoAudit
 ```
 
 ---
@@ -78,6 +84,8 @@ flowchart TD
 | **`gerente`** | Web Dashboard / Móvil | Visualización de KPIs operacionales (puntualidad, toneladas transportadas), monitor de alertas urgentes, reportes agregados. |
 | **`admin`** | Web Dashboard | Control maestro de usuarios (activación/suspensión inmediata vía Redis), registro de buques, puertos y programación de rutas y viajes. |
 
+> Ver el diagrama completo de flujo end-to-end por rol en [FLUJO_ROLES_DIAGRAMA.md](docs/FLUJO_ROLES_DIAGRAMA.md).
+
 ---
 
 ## 3. Modelo de Datos MongoDB (Mongoose Schemas)
@@ -89,16 +97,22 @@ flowchart TD
   nombre: string,           // Ej: "Gary Industries" o "Javier Mendoza"
   correo: string,           // Único, indexado
   password_hash: string,
+  avatarUrl?: string,
   rol: 'cliente' | 'operador' | 'gerente' | 'admin',
   detallesPerfil: {         // Incrustado según el rol
     empresa?: string,       // Si rol === 'cliente'
     ruc?: string,           // Si rol === 'cliente'
+    direccionLegal?: string,// Si rol === 'cliente'
+    telefono?: string,      // Si rol === 'cliente'
     turno?: string,         // Si rol === 'operador' (ej: "Matutino")
+    horarioTurno?: string,  // Ej: "08:00 - 16:00"
+    turnoActivo?: boolean,  // Estado del turno del operador
     idEmpleado?: string     // Si rol === 'operador'
   },
   preferencias: {
     notificacionesPush: boolean,
-    modoOscuro: boolean
+    modoOscuro: boolean,
+    idioma: 'es' | 'en'     // Idioma e informes portuarios
   },
   activo: boolean           // Si pasa a false, la sesión en Redis se destruye de inmediato
 }
@@ -111,31 +125,35 @@ flowchart TD
   nombre: string,           // Ej: "Puerto Marítimo de Guayaquil", "Terminal Yangshan"
   pais: string,             // "ECU", "CHN", "USA"
   ciudad: string,           // "Guayaquil", "Shanghai", "Miami"
-  ubicacion: {              // GeoJSON para cálculo de rutas y render en mapa
+  ubicacion: {              // GeoJSON con índice 2dsphere para cálculo de rutas y mapa
     type: "Point",
-    coordinates: [number, number] // [longitud, latitud] Ej: [-79.9, -2.2]
+    coordinates: [number, number] // [longitud, latitud] Ej: [-79.9, -2.28]
   }
 }
 ```
 
 ### 3.3 Colección: `buques`
+> Índice compuesto: `{ estado: 1, estadoOperativo: 1 }`
 ```typescript
 {
   _id: ObjectId,
-  nombre: string,           // Ej: "Maersk Horizon"
-  imo: string,              // Identificador internacional único del barco
-  tipo: string,             // "Portacontenedores", "Granelero", etc.
+  nombre: string,           // Ej: "Maersk Horizon", "MSC Irina"
+  imo: string,              // Identificador internacional único del barco (indexado)
+  tipo: string,             // "Portacontenedores", "Granelero", "Refrigerado"
   capacidadToneladas: number,
   bandera: string,          // Ej: "Panamá", "Liberia"
-  estado: 'activo' | 'mantenimiento' | 'inactivo'
+  capitan: string,          // Ej: "Luis Andrade"
+  estado: 'activo' | 'mantenimiento' | 'inactivo',
+  estadoOperativo: 'en_ruta' | 'en_puerto' | 'retraso' | 'mantenimiento' | 'inactivo'
 }
 ```
 
 ### 3.4 Colección: `viajes`
+> Índice compuesto: `{ estado: 1, 'fechas.salida': -1 }`
 ```typescript
 {
   _id: ObjectId,
-  codigo: string,           // Ej: "V-2026-014", "#BU-1234XYZ"
+  codigo: string,           // Ej: "V-2026-014", "#BU-1234XYZ" (único, indexado)
   buqueId: ObjectId,        // Ref -> buques
   origenId: ObjectId,       // Ref -> puertos
   destinoId: ObjectId,      // Ref -> puertos
@@ -149,57 +167,86 @@ flowchart TD
     type: "Point",
     coordinates: [number, number]
   },
+  velocidadNudos: number,   // Ej: 21.4
+  capitanAsignado?: string,
   resumenCarga: {           // Incrustado para evitar joins costosos en Dashboard
     contenedores: number,   // Ej: 120
     toneladas: number       // Ej: 2400
+  },
+  finanzas: {               // Incrustado para analítica de Reportes Gerenciales
+    ingresosEstimadosUSD: number,
+    costoOperativoUSD: number
   }
 }
 ```
 
 ### 3.5 Colección: `cargas`
+> Índice compuesto: `{ clienteId: 1, viajeId: 1 }`
 ```typescript
 {
   _id: ObjectId,
-  viajeId: ObjectId,        // Ref -> viajes
-  clienteId: ObjectId,      // Ref -> usuarios (Filtro clave para aislamiento y seguridad)
-  codigoContenedor: string, // Ej: "#CN-9823"
+  viajeId: ObjectId,        // Ref -> viajes (indexado)
+  clienteId: ObjectId,      // Ref -> usuarios (indexado - Filtro clave para aislamiento)
+  codigoContenedor: string, // Ej: "#CN-9823" (único, indexado)
   tipo: 'Seco' | 'Refrigerado',
   pesoToneladas: number,
+  numeroPrecinto?: string,  // Ej: "#MSK-4409"
+  valorFleteUSD: number,
+  manifiestoAduanero?: {
+    numeroDocumento: string,// Ej: "BL-CN-9823-2026"
+    fechaEmision: Date,
+    partidaArancelaria: string,
+    estadoAduana: 'pendiente' | 'declarado' | 'liberado'
+  },
   historialEventos: [       // Array incrustado que genera el Timeline vertical
     {
-      estado: string,       // "Recogido en fábrica", "En patio", "A bordo", "En tránsito", "En aduana"
+      estado: string,       // "Recogido en fábrica", "En patio", "A bordo", "En tránsito"
       fecha: Date,
-      ubicacion: string     // "Terminal Yangshan (CHN)"
+      ubicacion: string,    // "Terminal Yangshan (CHN)"
+      descripcion?: string, // Detalle operativo por hito
+      registradoPor?: ObjectId, // Ref -> usuarios (operador)
+      completado?: boolean
     }
   ]
 }
 ```
 
 ### 3.6 Colección: `incidentes`
+> Índice compuesto: `{ estado: 1, gravedad: 1, fecha: -1 }`
 ```typescript
 {
   _id: ObjectId,
-  viajeId: ObjectId,        // Ref -> viajes
-  buqueId: ObjectId,        // Ref -> buques
+  viajeId: ObjectId,        // Ref -> viajes (indexado)
+  buqueId: ObjectId,        // Ref -> buques (indexado)
   operadorId: ObjectId,     // Ref -> usuarios
+  codigoContenedor?: string,// Ej: "#CN-7741"
   tipo: 'retraso' | 'averia' | 'clima',
   descripcion: string,      // Ej: "Precinto roto / Avería en contenedor refrigerado"
   gravedad: 'alta' | 'media' | 'baja',
+  estado: 'abierto' | 'en_revision' | 'resuelto',
+  resueltoPor?: ObjectId,   // Ref -> usuarios (gerente/admin)
+  fechaResolucion?: Date,
   fecha: Date
 }
 ```
 
 ### 3.7 Colección: `imagenes` (Evidencia y Procesamiento IA)
+> Índice compuesto: `{ operadorId: 1, createdAt: -1 }`
 ```typescript
 {
   _id: ObjectId,
-  entidadId: ObjectId,      // Ref -> incidenteId o cargaId
+  entidadId: ObjectId,      // Ref -> incidenteId o cargaId (indexado)
   tipoEntidad: 'incidente' | 'carga',
-  rutaArchivo: string,      // URL de la imagen en almacenamiento seguro o S3
+  operadorId?: ObjectId,    // Ref -> usuarios (indexado)
+  viajeId?: ObjectId,       // Ref -> viajes
+  buqueNombre?: string,     // Ej: "Maersk Horizon"
+  observaciones?: string,
+  rutaArchivo: string,      // URL de la imagen en almacenamiento (/uploads/...)
   resultadoIA: {
     codigoLeido: string,    // Ej: "#CN-9823"
     dañosDetectados: boolean,
-    confianza: number       // Ej: 85 (porcentaje)
+    confianza: number,      // Ej: 85 (porcentaje)
+    estadoSello?: 'ok' | 'sello_roto' | 'averia'
   }
 }
 ```
@@ -208,13 +255,84 @@ flowchart TD
 ```typescript
 {
   _id: ObjectId,
-  buqueId: ObjectId,        // Ref -> buques
+  buqueId: ObjectId,        // Ref -> buques (indexado)
   tipo: 'preventivo' | 'correctivo',
+  descripcion?: string,
+  costoUSD: number,
+  responsable?: string,
   fechas: {
     programada: Date,
     real?: Date
   },
   estado: 'pendiente' | 'completado'
+}
+```
+
+### 3.9 Colección: `notificaciones`
+> Índices compuestos: `{ usuarioId: 1, leida: 1, createdAt: -1 }` y `{ rolDestino: 1, leida: 1, createdAt: -1 }`
+```typescript
+{
+  _id: ObjectId,
+  usuarioId?: ObjectId,     // Ref -> usuarios (destinatario específico)
+  rolDestino?: 'cliente' | 'operador' | 'gerente' | 'admin',
+  tipo: 'retraso' | 'arribo_proximo' | 'evento_timeline' | 'incidente' | 'escaner' | 'turno' | 'soporte' | 'sistema',
+  titulo: string,
+  mensaje: string,
+  codigoContenedor?: string,
+  referenciaId?: string,
+  leida: boolean,
+  fechaLectura?: Date
+}
+```
+
+### 3.10 Colección: `tickets_soporte`
+> Índices compuestos: `{ usuarioId: 1, estado: 1, createdAt: -1 }` y `{ estado: 1, prioridad: 1 }`
+```typescript
+{
+  _id: ObjectId,
+  codigo: string,           // Único, Ej: "TKT-2026-001"
+  usuarioId: ObjectId,      // Ref -> usuarios
+  rolUsuario: string,
+  tipo: 'agente_aduanas' | 'supervisor' | 'fallo_app' | 'consulta_general',
+  asunto: string,
+  mensaje: string,
+  codigoContenedor?: string,
+  prioridad: 'baja' | 'media' | 'alta',
+  estado: 'abierto' | 'en_proceso' | 'resuelto' | 'cerrado',
+  respuesta?: string,
+  atendidoPor?: ObjectId,   // Ref -> usuarios (gerente/admin)
+  fechaRespuesta?: Date
+}
+```
+
+### 3.11 Colección: `turnos`
+> Índice compuesto: `{ operadorId: 1, estado: 1, fechaInicio: -1 }`
+```typescript
+{
+  _id: ObjectId,
+  operadorId: ObjectId,     // Ref -> usuarios
+  tipoTurno: string,        // Ej: "Matutino"
+  horarioAsignado: string,  // Ej: "08:00 - 16:00"
+  fechaInicio: Date,
+  fechaFin?: Date,
+  estado: 'activo' | 'finalizado',
+  escaneosRealizados: number,
+  incidentesReportados: number,
+  observacionesCierre?: string
+}
+```
+
+### 3.12 Colección: `auditoria_logs`
+> Índice compuesto: `{ entidad: 1, accion: 1, fecha: -1 }`
+```typescript
+{
+  _id: ObjectId,
+  usuarioId: string,
+  accion: string,           // Ej: "LOGIN", "SUSPENDER_USUARIO", "INICIAR_TURNO"
+  entidad: string,          // Ej: "usuarios", "turnos", "incidentes", "tickets_soporte"
+  entidadId?: string,
+  detalle?: string,
+  fecha: Date
 }
 ```
 
@@ -224,7 +342,7 @@ flowchart TD
 
 ### 4.1 Caché de KPIs (Dashboard del Gerente)
 - **Clave**: `kpi:resumen`
-- **Tipo de Dato**: `String` (JSON serializado) o `Hash`
+- **Tipo de Dato**: `String` (JSON serializado)
 - **TTL**: `300` segundos (5 minutos)
 - **Flujo de Ejecución**:
   ```text
@@ -232,28 +350,55 @@ flowchart TD
      ├── 1. Consultar clave 'kpi:resumen' en Redis.
      ├── 2. ¿Existe? -> Retornar inmediatamente (<5ms).
      └── 3. ¿No existe / Expiró? ->
-               - Ejecutar Pipeline de Agregación en MongoDB ($group, $avg, $sum).
+               - Ejecutar Pipeline de Agregación en MongoDB ($group) y series de 6 meses.
                - Guardar resultado en Redis con SETEX kpi:resumen 300 '{...}'.
                - Retornar respuesta al cliente.
   ```
 
-### 4.2 Gestión de Alertas Críticas
+### 4.2 Caché de Reportes Financieros y por Ruta
+- **Claves**: `kpi:reportes:mes`, `kpi:reportes:trimestre`, `kpi:reportes:anio`
+- **Tipo de Dato**: `String` (JSON serializado)
+- **TTL**: `300` segundos (5 minutos)
+- **Invalidación**: Se eliminan en bloque junto con `kpi:resumen` cada vez que cambia un viaje, carga, buque, incidente o mantenimiento.
+
+### 4.3 Gestión de Alertas Críticas
 - **Clave**: `alertas:activas`
 - **Tipo de Dato**: `Set` (`SADD`, `SMEMBERS`, `SREM`)
 - **Valores**: Strings únicos con identificador de entidad:
   - `"viaje_retrasado:V-2026-014"`
   - `"mantenimiento_vencido:IMO-9876543"`
+  - `"averia_detectada:#CN-9823"`
 - **Flujo de Alerta**:
-  Cuando un operador reporta un incidente grave o un viaje cambia a `retrasado`, el backend guarda en MongoDB e inserta el evento en el Set de Redis (`SADD alertas:activas viaje_retrasado:V-2026-014`), permitiendo al Dashboard reflejar la alerta instantáneamente.
+  Cuando un operador reporta un incidente grave o un viaje cambia a `retrasado`, el backend guarda en MongoDB e inserta el evento en el Set de Redis (`SADD alertas:activas ...`). Al resolverse el incidente o el viaje, se remueve con `SREM`.
 
-### 4.3 Control de Accesos y Revocación en Tiempo Real
+### 4.4 Control de Accesos y Revocación en Tiempo Real
 - **Clave**: `sesion:{idUsuario}` (Ej: `sesion:652b4c89f1a2`)
-- **Tipo de Dato**: `Hash`
-- **Campos**:
-  ```text
-  token: "eyJhbGciOi..."
-  rol: "operador"
-  activo: "true"
-  ```
+- **Tipo de Dato**: `Hash` (`HSET`, `HGETALL`, `EXPIRE`, `DEL`)
+- **TTL**: `604800` segundos (7 días, alineado con el JWT)
+- **Campos**: `token`, `rol`, `activo`.
 - **Flujo de Seguridad**:
-  En cada petición protegida por `JwtAuthGuard`, el backend no solo verifica la firma criptográfica del JWT, sino que consulta si la clave `sesion:{idUsuario}` existe en Redis. Si el administrador desactiva a un usuario en MongoDB, la API elimina la clave de Redis (`DEL sesion:{idUsuario}`), revocando el acceso en tiempo real sin esperar a que el JWT expire.
+  En cada petición protegida por `JwtAuthGuard`, el backend verifica la firma criptográfica del JWT y valida que `sesion:{idUsuario}` exista en Redis, `activo === 'true'` y el `token` coincida. Si el administrador suspende al usuario o modifica su rol, la API ejecuta `DEL sesion:{idUsuario}` para revocar el acceso al instante.
+
+### 4.5 Estado de Lectura de Notificaciones
+- **Clave**: `notificaciones:leidas:{idUsuario}`
+- **Tipo de Dato**: `Set` (`SADD`, `SMEMBERS`, `EXPIRE`)
+- **TTL**: `2592000` segundos (30 días)
+- **Propósito**: Persistir qué notificaciones fueron marcadas como leídas por cada cliente desde la campana de `Inicio`.
+
+### 4.6 Protección contra Fuerza Bruta (Rate Limiting)
+- **Clave**: `ratelimit:login:{correo}`
+- **Tipo de Dato**: `String` / Contador atómico (`INCR`, `EXPIRE`, `DEL`)
+- **TTL**: `60` segundos
+- **Regla**: Máximo `5` intentos por ventana de 60 segundos; al superar el límite responde `429 Too Many Requests` y registra un evento de auditoría. Al hacer login exitoso se limpia con `DEL`.
+
+### 4.7 Registro de Auditoría en Tiempo Real
+- **Clave**: `auditoria:eventos`
+- **Tipo de Dato**: `List` (`LPUSH`, `LTRIM 0 99`, `LRANGE`)
+- **Propósito**: Mantener en caché rápida los últimos `100` eventos críticos de seguridad y operación, respaldados de forma permanente en la colección `auditoria_logs` de MongoDB.
+
+### 4.8 Turno Activo de Operadores
+- **Clave**: `turno:activo:{idOperador}`
+- **Tipo de Dato**: `Hash` (`HSET`, `HGETALL`, `EXPIRE`, `DEL`)
+- **TTL**: `43200` segundos (12 horas)
+- **Campos**: `turnoId`, `tipoTurno`, `horarioAsignado`, `fechaInicio`.
+- **Propósito**: Consultar instantáneamente el turno vigente de un empleado desde `Inicio Empleado` y sincronizar su cierre con la colección `turnos`.

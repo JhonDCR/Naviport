@@ -4,6 +4,7 @@ import {
   IsBoolean,
   IsEmail,
   IsEnum,
+  IsIn,
   IsOptional,
   IsString,
   MinLength,
@@ -39,10 +40,30 @@ export class DetallesPerfilDto {
   @IsString()
   ruc?: string;
 
+  @ApiPropertyOptional({ example: 'Av. 9 de Octubre 416, Guayaquil, Ecuador' })
+  @IsOptional()
+  @IsString()
+  direccionLegal?: string;
+
+  @ApiPropertyOptional({ example: '+593 99 123 4567' })
+  @IsOptional()
+  @IsString()
+  telefono?: string;
+
   @ApiPropertyOptional({ example: 'Matutino' })
   @IsOptional()
   @IsString()
   turno?: string;
+
+  @ApiPropertyOptional({ example: '08:00 - 16:00' })
+  @IsOptional()
+  @IsString()
+  horarioTurno?: string;
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  turnoActivo?: boolean;
 
   @ApiPropertyOptional({ example: 'OP-4021' })
   @IsOptional()
@@ -97,6 +118,11 @@ export class UpdatePerfilDto {
   @MinLength(2)
   nombre?: string;
 
+  @ApiPropertyOptional({ example: 'https://cdn.naviport.app/avatars/gary.png' })
+  @IsOptional()
+  @IsString()
+  avatarUrl?: string;
+
   @ApiPropertyOptional({ type: DetallesPerfilDto })
   @IsOptional()
   @ValidateNested()
@@ -120,6 +146,15 @@ export class UpdatePreferenciasDto {
   @IsOptional()
   @IsBoolean()
   modoOscuro?: boolean;
+
+  @ApiPropertyOptional({
+    enum: ['es', 'en'],
+    example: 'es',
+    description: 'Idioma preferido de la aplicación e informes portuarios',
+  })
+  @IsOptional()
+  @IsIn(['es', 'en'])
+  idioma?: 'es' | 'en';
 }
 
 export class ControlTurnoDto {
@@ -137,6 +172,22 @@ export class ControlTurnoDto {
   @IsOptional()
   @IsString()
   turno?: string;
+
+  @ApiPropertyOptional({
+    example: '08:00 - 16:00',
+    description: 'Franja horaria asignada del operador',
+  })
+  @IsOptional()
+  @IsString()
+  horarioTurno?: string;
+
+  @ApiPropertyOptional({
+    example: 'Turno completado sin novedades en muelle 3',
+    description: 'Observaciones opcionales al finalizar el turno',
+  })
+  @IsOptional()
+  @IsString()
+  observacionesCierre?: string;
 }
 
 export class UpdateEstadoUsuarioDto {
@@ -146,5 +197,41 @@ export class UpdateEstadoUsuarioDto {
   })
   @IsBoolean()
   activo: boolean;
+}
+
+export class UpdateUsuarioAdminDto {
+  @ApiPropertyOptional({ example: 'Javier Mendoza' })
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  nombre?: string;
+
+  @ApiPropertyOptional({ enum: RolUsuario, example: RolUsuario.OPERADOR })
+  @IsOptional()
+  @IsEnum(RolUsuario)
+  rol?: RolUsuario;
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  activo?: boolean;
+
+  @ApiPropertyOptional({ type: DetallesPerfilDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => DetallesPerfilDto)
+  detallesPerfil?: DetallesPerfilDto;
+}
+
+export class CambiarPasswordDto {
+  @ApiProperty({ example: 'naviport123' })
+  @IsString()
+  @MinLength(6)
+  passwordActual: string;
+
+  @ApiProperty({ example: 'NaviPort2026!' })
+  @IsString()
+  @MinLength(6)
+  passwordNueva: string;
 }
 

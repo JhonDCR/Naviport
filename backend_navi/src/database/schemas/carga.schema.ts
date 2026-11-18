@@ -16,8 +16,33 @@ export class EventoTimeline {
   @Prop({ required: true })
   ubicacion: string;
 
+  @Prop()
+  descripcion?: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'Usuario' })
+  registradoPor?: Types.ObjectId;
+
   @Prop({ default: true })
   completado?: boolean;
+}
+
+@Schema({ _id: false })
+export class ManifiestoAduanero {
+  @Prop({ required: true })
+  numeroDocumento: string;
+
+  @Prop({ default: () => new Date() })
+  fechaEmision: Date;
+
+  @Prop({ default: '8471.30.00.00' })
+  partidaArancelaria: string;
+
+  @Prop({
+    type: String,
+    enum: ['pendiente', 'declarado', 'liberado'],
+    default: 'declarado',
+  })
+  estadoAduana: 'pendiente' | 'declarado' | 'liberado';
 }
 
 @Schema({ collection: 'cargas', timestamps: true })
@@ -42,8 +67,18 @@ export class Carga {
   @Prop({ required: true, min: 0 })
   pesoToneladas: number;
 
+  @Prop({ trim: true })
+  numeroPrecinto?: string;
+
+  @Prop({ default: 0, min: 0 })
+  valorFleteUSD: number;
+
+  @Prop({ type: ManifiestoAduanero })
+  manifiestoAduanero?: ManifiestoAduanero;
+
   @Prop({ type: [EventoTimeline], default: [] })
   historialEventos: EventoTimeline[];
 }
 
 export const CargaSchema = SchemaFactory.createForClass(Carga);
+CargaSchema.index({ clienteId: 1, viajeId: 1 });

@@ -9,8 +9,30 @@ describe('KpisService', () => {
   const mockRedisService = {
     obtenerKpiResumen: jest.fn(),
     guardarKpiResumen: jest.fn(),
+    obtenerKpiReportes: jest.fn(),
+    guardarKpiReportes: jest.fn(),
     obtenerAlertasActivas: jest.fn(),
+    eliminarAlerta: jest.fn(),
+    invalidarKpiResumen: jest.fn(),
   };
+
+  const createViajeFindChain = (docs: unknown[]) => ({
+    populate: jest.fn().mockReturnThis(),
+    sort: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockReturnThis(),
+    lean: jest.fn().mockReturnValue({
+      exec: jest.fn().mockResolvedValue(docs),
+    }),
+  });
+
+  const createIncidenteFindChain = (docs: unknown[]) => ({
+    populate: jest.fn().mockReturnThis(),
+    sort: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockReturnThis(),
+    lean: jest.fn().mockReturnValue({
+      exec: jest.fn().mockResolvedValue(docs),
+    }),
+  });
 
   const mockViajeModel = {
     aggregate: jest.fn().mockReturnValue({
@@ -21,9 +43,26 @@ describe('KpisService', () => {
           viajesPuntuales: 9,
           toneladasMes: 15000,
           viajesEnRuta: 6,
+          viajesProgramados: 1,
+          viajesFinalizados: 2,
+          viajesRetrasados: 1,
         },
       ]),
     }),
+    find: jest.fn().mockImplementation(() =>
+      createViajeFindChain([
+        {
+          codigo: '#BU-1234XYZ',
+          estado: 'en_ruta',
+          fechas: { salida: new Date(), llegadaEstimada: new Date() },
+          buqueId: { nombre: 'Maersk Horizon' },
+          origenId: { ciudad: 'Shanghai' },
+          destinoId: { ciudad: 'Guayaquil' },
+          resumenCarga: { contenedores: 120, toneladas: 2400 },
+          finanzas: { ingresosEstimadosUSD: 420000, costoOperativoUSD: 255000 },
+        },
+      ]),
+    ),
   };
 
   const mockBuqueModel = {
@@ -36,6 +75,7 @@ describe('KpisService', () => {
     countDocuments: jest.fn().mockReturnValue({
       exec: jest.fn().mockResolvedValue(1),
     }),
+    find: jest.fn().mockImplementation(() => createIncidenteFindChain([])),
   };
 
   beforeEach(async () => {
@@ -58,8 +98,18 @@ describe('KpisService', () => {
       puntualidad: 94,
       toneladasMes: 14500,
       buquesActivos: 8,
+      totalBuques: 10,
+      porcentajeFlotaOperativa: 80,
       viajesEnRuta: 12,
       incidentesPendientes: 2,
+      toneladasPorMes: [],
+      distribucionEstadoViajes: {
+        en_ruta: 5,
+        programado: 2,
+        finalizado: 2,
+        retrasado: 1,
+      },
+      enviosYAlertasRecientes: [],
     });
 
     const res = await service.obtenerResumen();
@@ -75,8 +125,26 @@ describe('KpisService', () => {
     expect(res.origenCache).toBe(false);
     expect(res.puntualidad).toBe(90);
     expect(res.toneladasMes).toBe(15000);
+    expect(res.toneladasPorMes.length).toBe(6);
+    expect(res.distribucionEstadoViajes.en_ruta).toBe(6);
     expect(mockRedisService.guardarKpiResumen).toHaveBeenCalledWith(
       expect.objectContaining({ puntualidad: 90 }),
+      300,
+    );
+  });
+
+  it('should generate and cache managerial reports by period (kpi:reportes:{periodo})', async () => {
+    mockRedisService.obtenerKpiReportes.mockResolvedValueOnce(null);
+
+    const reporte = await service.obtenerReportes('mes');
+    expect(reporte.origenCache).toBe(false);
+    expect(reporte.periodo).toBe('mes');
+    expect(reporte.ingresosUSD).toBe(420000);
+    expect(reporte.costoOperativoUSD).toBe(255000);
+    expect(reporte.margenOperativoUSD).toBe(165000);
+    expect(mockRedisService.guardarKpiReportes).toHaveBeenCalledWith(
+      'mes',
+      expect.objectContaining({ ingresosUSD: 420000 }),
       300,
     );
   });

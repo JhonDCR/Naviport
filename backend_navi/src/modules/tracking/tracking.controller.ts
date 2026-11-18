@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -23,6 +24,7 @@ import {
   CreateCargaDto,
   CreateViajeDto,
   UpdateEstadoViajeDto,
+  UpdateViajeDto,
 } from './dto/tracking.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -90,10 +92,15 @@ export class TrackingController {
   }
 
   @Get('cargas/notificaciones')
-  @Roles(RolUsuario.CLIENTE, RolUsuario.GERENTE, RolUsuario.ADMIN)
+  @Roles(
+    RolUsuario.CLIENTE,
+    RolUsuario.OPERADOR,
+    RolUsuario.GERENTE,
+    RolUsuario.ADMIN,
+  )
   @ApiOperation({
     summary:
-      'Obtener notificaciones de arribos, retrasos y eventos de timeline de los contenedores del cliente',
+      'Obtener notificaciones persistidas (MongoDB) y de seguimiento para el usuario autenticado',
   })
   @ApiResponse({
     status: 200,
@@ -103,6 +110,107 @@ export class TrackingController {
     const data = await this.trackingService.obtenerNotificacionesCliente(user);
     return {
       message: 'Notificaciones obtenidas correctamente',
+      data,
+    };
+  }
+
+  @Patch('cargas/notificaciones/leer-todas')
+  @Roles(
+    RolUsuario.CLIENTE,
+    RolUsuario.OPERADOR,
+    RolUsuario.GERENTE,
+    RolUsuario.ADMIN,
+  )
+  @ApiOperation({
+    summary:
+      'Marcar todas las notificaciones del usuario como leídas en MongoDB y Redis (notificaciones:leidas:{idUsuario})',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Todas las notificaciones marcadas como leídas',
+  })
+  async marcarTodasLeidas(@CurrentUser() user: JwtPayload) {
+    const data =
+      await this.trackingService.marcarTodasNotificacionesLeidas(user);
+    return {
+      message: 'Notificaciones marcadas como leídas',
+      data,
+    };
+  }
+
+  @Patch('cargas/notificaciones/:id/leer')
+  @Roles(
+    RolUsuario.CLIENTE,
+    RolUsuario.OPERADOR,
+    RolUsuario.GERENTE,
+    RolUsuario.ADMIN,
+  )
+  @ApiOperation({
+    summary: 'Marcar una notificación específica como leída en MongoDB y Redis',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Notificación marcada como leída',
+  })
+  async marcarNotificacionLeida(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    const data = await this.trackingService.marcarNotificacionLeida(user, id);
+    return {
+      message: 'Notificación marcada como leída',
+      data,
+    };
+  }
+
+  @Get('cargas')
+  @Roles(RolUsuario.ADMIN, RolUsuario.GERENTE)
+  @ApiQuery({ name: 'viajeId', required: false })
+  @ApiQuery({ name: 'clienteId', required: false })
+  @ApiQuery({ name: 'q', required: false })
+  @ApiOperation({
+    summary:
+      'Listar todos los contenedores registrados con filtro por viaje, cliente o texto (Admin/Gerente)',
+  })
+  @ApiResponse({ status: 200, description: 'Lista de cargas obtenida' })
+  async listarTodasCargas(
+    @Query('viajeId') viajeId?: string,
+    @Query('clienteId') clienteId?: string,
+    @Query('q') q?: string,
+  ) {
+    const data = await this.trackingService.listarTodasCargas({
+      viajeId,
+      clienteId,
+      q,
+    });
+    return {
+      message: 'Cargas obtenidas correctamente',
+      data,
+    };
+  }
+
+  @Get('cargas/:id/manifiesto')
+  @Roles(
+    RolUsuario.CLIENTE,
+    RolUsuario.OPERADOR,
+    RolUsuario.GERENTE,
+    RolUsuario.ADMIN,
+  )
+  @ApiOperation({
+    summary:
+      'Obtener datos completos del Manifiesto Aduanero (BL) de un contenedor para descarga en PDF',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Manifiesto aduanero generado correctamente',
+  })
+  async obtenerManifiestoCarga(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    const data = await this.trackingService.obtenerManifiestoCarga(id, user);
+    return {
+      message: 'Manifiesto aduanero obtenido correctamente',
       data,
     };
   }
@@ -186,8 +294,13 @@ export class TrackingController {
   async agregarEventoTimeline(
     @Param('id') id: string,
     @Body() dto: AddEventoTimelineDto,
+    @CurrentUser() user: JwtPayload,
   ) {
-    const data = await this.trackingService.agregarEventoTimeline(id, dto);
+    const data = await this.trackingService.agregarEventoTimeline(
+      id,
+      dto,
+      user.sub,
+    );
     return {
       message: 'Evento agregado al timeline del contenedor',
       data,
@@ -247,6 +360,24 @@ export class TrackingController {
     };
   }
 
+  @Patch('viajes/:id')
+  @Roles(RolUsuario.GERENTE, RolUsuario.ADMIN)
+  @ApiOperation({
+    summary:
+      'Editar programación completa de un viaje marítimo (buque, rutas, fechas, finanzas)',
+  })
+  @ApiResponse({ status: 200, description: 'Viaje actualizado correctamente' })
+  async actualizarViaje(
+    @Param('id') id: string,
+    @Body() dto: UpdateViajeDto,
+  ) {
+    const data = await this.trackingService.actualizarViaje(id, dto);
+    return {
+      message: 'Viaje actualizado correctamente',
+      data,
+    };
+  }
+
   @Patch('viajes/:id/estado')
   @Roles(RolUsuario.OPERADOR, RolUsuario.GERENTE, RolUsuario.ADMIN)
   @ApiOperation({
@@ -261,6 +392,20 @@ export class TrackingController {
     const data = await this.trackingService.actualizarEstadoViaje(id, dto);
     return {
       message: 'Viaje actualizado correctamente',
+      data,
+    };
+  }
+
+  @Delete('viajes/:id')
+  @Roles(RolUsuario.ADMIN)
+  @ApiOperation({
+    summary: 'Eliminar un viaje programado sin cargas asignadas (Admin)',
+  })
+  @ApiResponse({ status: 200, description: 'Viaje eliminado correctamente' })
+  async eliminarViaje(@Param('id') id: string) {
+    const data = await this.trackingService.eliminarViaje(id);
+    return {
+      message: 'Viaje eliminado correctamente',
       data,
     };
   }

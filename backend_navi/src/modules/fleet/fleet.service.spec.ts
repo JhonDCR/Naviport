@@ -1,8 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
+import { ConflictException } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { FleetService } from './fleet.service';
-import { Buque, Mantenimiento, Puerto } from '../../database/schemas';
+import { Buque, Mantenimiento, Puerto, Viaje } from '../../database/schemas';
 import { RedisService } from '../../redis/redis.service';
 
 describe('FleetService', () => {
@@ -19,17 +20,26 @@ describe('FleetService', () => {
     create: jest.fn(),
     findById: jest.fn(),
     findByIdAndUpdate: jest.fn(),
+    findByIdAndDelete: jest.fn(),
   };
 
   const mockPuertoModel = {
     find: jest.fn(),
     create: jest.fn(),
+    findById: jest.fn(),
+    findByIdAndDelete: jest.fn(),
   };
 
   const mockMantenimientoModel = {
     find: jest.fn(),
     create: jest.fn(),
     findById: jest.fn(),
+    findByIdAndDelete: jest.fn(),
+  };
+
+  const mockViajeModel = {
+    find: jest.fn(),
+    countDocuments: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -43,6 +53,7 @@ describe('FleetService', () => {
           provide: getModelToken(Mantenimiento.name),
           useValue: mockMantenimientoModel,
         },
+        { provide: getModelToken(Viaje.name), useValue: mockViajeModel },
         { provide: RedisService, useValue: mockRedisService },
       ],
     }).compile();
@@ -115,5 +126,26 @@ describe('FleetService', () => {
     );
     expect(mockBuqueSave).toHaveBeenCalled();
     expect(mockRedisService.invalidarKpiResumen).toHaveBeenCalled();
+  });
+
+  it('should reject deleting a ship that has associated voyages', async () => {
+    const buqueId = new Types.ObjectId();
+
+    mockBuqueModel.findById.mockReturnValue({
+      lean: jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue({
+          _id: buqueId,
+          imo: 'IMO-9812345',
+        }),
+      }),
+    });
+
+    mockViajeModel.countDocuments.mockReturnValue({
+      exec: jest.fn().mockResolvedValue(2),
+    });
+
+    await expect(service.eliminarBuque(String(buqueId))).rejects.toThrow(
+      ConflictException,
+    );
   });
 });

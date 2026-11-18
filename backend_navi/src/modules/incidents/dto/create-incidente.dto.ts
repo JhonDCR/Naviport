@@ -7,6 +7,7 @@ import {
   MinLength,
 } from 'class-validator';
 import {
+  EstadoIncidente,
   GravedadIncidente,
   TipoIncidente,
 } from '../../../database/schemas/incidente.schema';
@@ -55,4 +56,13 @@ export class CreateIncidenteDto {
   @IsOptional()
   @IsString()
   codigoContenedor?: string;
+}
+
+export class UpdateEstadoIncidenteDto {
+  @ApiProperty({
+    enum: ['abierto', 'en_revision', 'resuelto'],
+    example: 'resuelto',
+  })
+  @IsIn(['abierto', 'en_revision', 'resuelto'])
+  estado: EstadoIncidente;
 }
