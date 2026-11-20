@@ -1,0 +1,50 @@
+<article class="navi-surface-panel">
+  <div class="navi-table-scroll">
+    <table class="navi-data-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Correo</th>
+          <th>Rol</th>
+          <th>Sesión / Estado</th>
+          <th>Control Redis</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of users(); track user.email) {
+          <tr>
+            <td><strong>{{ user.name }}</strong></td>
+            <td>{{ user.email }}</td>
+            <td>
+              <ion-badge class="navi-badge badge-puerto">{{ user.role }}</ion-badge>
+            </td>
+            <td>
+              <ion-badge
+                class="navi-badge"
+                [class.badge-ok]="user.active"
+                [class.badge-retraso]="!user.active"
+              >
+                {{ user.active ? 'ACTIVO' : 'SUSPENDIDO' }}
+              </ion-badge>
+            </td>
+            <td>
+              <ion-toggle
+                [checked]="user.active"
+                (ionChange)="toggleUserActive(user.email)"
+              ></ion-toggle>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</article>
+
+<ion-toast
+  [isOpen]="toastMessage() !== null"
+  [message]="toastMessage() ?? ''"
+  [duration]="2200"
+  position="top"
+  color="primary"
+  (didDismiss)="toastMessage.set(null)"
+></ion-toast>

@@ -1,0 +1,149 @@
+<app-mobile-header
+  avatarImage="assets/figma/operator-avatar.png"
+  title="Hola, Gary Barreiro"
+  [shiftMode]="true"
+  [shiftActive]="shiftActive()"
+  [showUnreadDot]="true"
+  (shiftToggle)="toggleShift()"
+  (bellClick)="toastMessage.set('2 contenedores prioritarios esperan inspección en Muelle 3.')"
+/>
+
+<ion-card class="navi-card assigned-banner" button="true" (click)="openScanner()">
+      <ion-card-content>
+        <div class="banner-top">
+          <div>
+            <span class="banner-over">BUQUE EN OPERACIÓN</span>
+            <h2>#BU-1234XYZ · Maersk Horizon</h2>
+          </div>
+          <ion-badge class="banner-pill">EN MUELLE</ion-badge>
+        </div>
+        <p class="banner-route">Shanghai (CHN) → Muelle Sur 3 Guayaquil (ECU)</p>
+        <div class="banner-progress-row">
+          <ion-progress-bar [value]="0.71" class="banner-progress"></ion-progress-bar>
+          <span>{{ scanCount() }} / 45</span>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <div class="ops-grid">
+      <ion-card class="navi-card ops-card" button="true" (click)="openIncidentModal()">
+        <ion-card-content>
+          <div class="ops-top">
+            <div class="warn-square">
+              <ion-icon name="warning-outline"></ion-icon>
+            </div>
+            <ion-icon name="arrow-forward" class="arrow-muted"></ion-icon>
+          </div>
+          <h3>Reportar Incidente</h3>
+          <p>Avería, precinto o sello roto</p>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="navi-card ops-card">
+        <ion-card-content>
+          <h3 class="perf-heading">Rendimiento</h3>
+          <div class="perf-body">
+            <div class="ring-wrap" aria-hidden="true">
+              <svg viewBox="0 0 60 60" class="ring-svg">
+                <circle cx="30" cy="30" r="24" class="ring-track" />
+                <circle cx="30" cy="30" r="24" class="ring-fill" />
+              </svg>
+              <span class="ring-num">{{ scanCount() }}</span>
+            </div>
+            <div class="perf-copy">
+              <strong>{{ scanCount() }}</strong>
+              <span>Escaneos hoy</span>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <div class="records-header">
+      <h2>Últimos Registros</h2>
+      <button type="button" class="view-all-btn" (click)="toggleViewAll()">
+        <span>{{ showAllScans() ? 'Ver menos' : 'Ver todos (' + scanCount() + ')' }}</span>
+        <ion-icon name="chevron-forward"></ion-icon>
+      </button>
+    </div>
+
+    <div class="records-list">
+      @for (scan of visibleScans(); track scan.id) {
+        <ion-card class="navi-card record-card" button="true" (click)="openScanner()">
+          <ion-card-content>
+            <img [src]="scan.image" [alt]="'Contenedor ' + scan.code" class="container-thumb" />
+
+            <div class="record-body">
+              <div class="record-top">
+                <strong>{{ scan.code }}</strong>
+                <ion-badge
+                  class="navi-badge"
+                  [class.badge-ok]="scan.status === 'OK'"
+                  [class.badge-sello]="scan.status === 'Sello'"
+                  [class.badge-retraso]="scan.status === 'Avería'"
+                >
+                  <ion-icon
+                    [name]="scan.status === 'OK' ? 'checkmark-circle' : 'warning'"
+                    class="badge-icon"
+                  ></ion-icon>
+                  {{ scan.status }}
+                </ion-badge>
+              </div>
+              <p class="record-info">{{ scan.info }}</p>
+              <p class="record-meta">
+                <strong>{{ scan.vessel }}</strong> · {{ scan.timeAgo }}
+              </p>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      }
+    </div>
+
+  <ion-modal [isOpen]="incidentModalOpen()" (didDismiss)="incidentModalOpen.set(false)">
+    <ng-template>
+      <div class="incident-modal">
+        <div class="modal-head">
+          <h2>Reportar Incidente en Muelle</h2>
+          <button type="button" class="close-btn" (click)="incidentModalOpen.set(false)">
+            <ion-icon name="close"></ion-icon>
+          </button>
+        </div>
+
+        <label class="field-label" for="inc-code">Código de Contenedor</label>
+        <ion-input
+          id="inc-code"
+          [(ngModel)]="incidentContainer"
+          placeholder="#MSK-1567"
+          class="modal-field"
+        ></ion-input>
+
+        <label class="field-label" for="inc-type">Clasificación de Novedad</label>
+        <ion-select id="inc-type" [(ngModel)]="incidentType" interface="popover" class="modal-field">
+          <ion-select-option value="Sello">Precinto / Sello roto</ion-select-option>
+          <ion-select-option value="Avería">Avería estructural / Golpe</ion-select-option>
+        </ion-select>
+
+        <label class="field-label" for="inc-desc">Observaciones</label>
+        <ion-textarea
+          id="inc-desc"
+          [(ngModel)]="incidentDetail"
+          [rows]="4"
+          placeholder="Describe daños visibles o estado del sello..."
+          class="modal-textarea"
+        ></ion-textarea>
+
+        <ion-button expand="block" class="submit-incident-btn" (click)="submitIncident()">
+          Registrar Incidente
+        </ion-button>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <ion-toast
+    [isOpen]="toastMessage() !== null"
+    [message]="toastMessage() ?? ''"
+    [duration]="2200"
+    position="top"
+    color="primary"
+    (didDismiss)="toastMessage.set(null)"
+  ></ion-toast>

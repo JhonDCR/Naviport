@@ -1,0 +1,73 @@
+<nav class="floating-nav-wrap" aria-label="Navegación principal móvil">
+  <div class="floating-pill" [class.has-fab]="mode() === 'operador'">
+    @if (mode() === 'cliente') {
+      <a
+        routerLink="/cliente/inicio"
+        class="nav-item"
+        aria-label="Inicio"
+        [class.is-active]="isActive('/cliente/inicio')"
+      >
+        <ion-icon [name]="isActive('/cliente/inicio') ? 'home' : 'home-outline'"></ion-icon>
+        @if (isActive('/cliente/inicio')) {
+          <span>Inicio</span>
+        }
+      </a>
+
+      <a
+        routerLink="/cliente/seguimiento"
+        class="nav-item"
+        aria-label="Seguimiento"
+        [class.is-active]="isActive('/cliente/seguimiento')"
+      >
+        <ion-icon [name]="isActive('/cliente/seguimiento') ? 'map' : 'map-outline'"></ion-icon>
+        @if (isActive('/cliente/seguimiento')) {
+          <span>Seguimiento</span>
+        }
+      </a>
+
+      <a
+        routerLink="/cliente/perfil"
+        class="nav-item"
+        aria-label="Perfil"
+        [class.is-active]="isActive('/cliente/perfil')"
+      >
+        <ion-icon [name]="isActive('/cliente/perfil') ? 'person' : 'person-outline'"></ion-icon>
+        @if (isActive('/cliente/perfil')) {
+          <span>Perfil</span>
+        }
+      </a>
+    } @else {
+      <a
+        routerLink="/operador/inicio"
+        class="nav-item"
+        aria-label="Inicio operador"
+        [class.is-active]="isActive('/operador/inicio')"
+      >
+        <ion-icon [name]="isActive('/operador/inicio') ? 'home' : 'home-outline'"></ion-icon>
+        @if (isActive('/operador/inicio')) {
+          <span>Inicio</span>
+        }
+      </a>
+
+      <a
+        routerLink="/operador/escaner"
+        class="scan-fab"
+        aria-label="Abrir escáner IA de contenedor"
+      >
+        <ion-icon name="scan-outline"></ion-icon>
+      </a>
+
+      <a
+        routerLink="/operador/perfil"
+        class="nav-item"
+        aria-label="Perfil operador"
+        [class.is-active]="isActive('/operador/perfil')"
+      >
+        <ion-icon [name]="isActive('/operador/perfil') ? 'person' : 'person-outline'"></ion-icon>
+        @if (isActive('/operador/perfil')) {
+          <span>Perfil</span>
+        }
+      </a>
+    }
+  </div>
+</nav>

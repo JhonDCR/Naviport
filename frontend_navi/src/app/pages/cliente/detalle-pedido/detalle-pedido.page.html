@@ -1,0 +1,158 @@
+<div class="detail-shell">
+  <section class="route-map-hero">
+      <div class="ocean-backdrop" aria-hidden="true">
+        <svg viewBox="0 0 400 260" class="route-svg" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="oceanGlow" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#e3f0ff" />
+              <stop offset="100%" stop-color="#edf5ff" />
+            </linearGradient>
+          </defs>
+          <path
+            d="M-20,160 C40,40 160,10 260,35 C340,55 410,10 420,90 L420,240 C300,255 120,255 10,220 Z"
+            fill="url(#oceanGlow)"
+          />
+          <g stroke="#dce8f8" stroke-width="1" opacity="0.7">
+            <line x1="0" y1="60" x2="400" y2="60" />
+            <line x1="0" y1="120" x2="400" y2="120" />
+            <line x1="0" y1="180" x2="400" y2="180" />
+            <line x1="80" y1="0" x2="80" y2="260" />
+            <line x1="160" y1="0" x2="160" y2="260" />
+            <line x1="240" y1="0" x2="240" y2="260" />
+            <line x1="320" y1="0" x2="320" y2="260" />
+          </g>
+          <path
+            d="M44,175 Q125,85 200,98"
+            fill="none"
+            stroke="#005cff"
+            stroke-width="3.5"
+            stroke-linecap="round"
+          />
+          <path
+            d="M200,98 Q285,128 362,108"
+            fill="none"
+            stroke="#6b7280"
+            stroke-width="2.5"
+            stroke-dasharray="5 5"
+            stroke-linecap="round"
+          />
+          <circle cx="44" cy="175" r="5" fill="#005cff" />
+          <circle cx="362" cy="108" r="5" fill="#6b7280" />
+        </svg>
+      </div>
+
+      <button type="button" class="back-circle-btn" aria-label="Volver a seguimiento" (click)="goBack()">
+        <ion-icon name="arrow-back"></ion-icon>
+      </button>
+
+      <div class="ship-marker-float">
+        <div class="pin-halo">
+          <div class="pin-core">
+            <ion-icon name="boat"></ion-icon>
+          </div>
+        </div>
+        <div class="vessel-float-pill">
+          <span>{{ shipment().vessel }}</span>
+          <span class="amber-dot"></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-sheet">
+      <div class="sheet-handle" aria-hidden="true"></div>
+
+      <div class="sheet-header">
+        <h1 class="detail-code">{{ shipment().code }}</h1>
+        <span class="vessel-pill">
+          <ion-icon name="boat"></ion-icon>
+          Buque: {{ shipment().vessel }}
+        </span>
+      </div>
+
+      <ion-card class="transit-box">
+        <ion-card-content>
+          <h2 class="transit-title">{{ shipment().stageLabel }}</h2>
+
+          <div class="navi-progress-track-wrapper">
+            <ion-progress-bar class="navi-progress" [value]="shipment().progress"></ion-progress-bar>
+            <div class="navi-ship-pin" [style.left.%]="shipment().progress * 100" aria-hidden="true">
+              <ion-icon name="boat"></ion-icon>
+            </div>
+          </div>
+
+          <div class="ports-summary">
+            <div>
+              <strong>{{ shipment().originCity }},</strong>
+              <span>{{ shipment().originCode }}</span>
+            </div>
+            <div class="is-right">
+              <strong>{{ shipment().destinationCity }},</strong>
+              <span>{{ shipment().destinationCode }}</span>
+            </div>
+          </div>
+
+          <div class="eta-row">
+            <span class="eta-label">Fecha estimada:</span>
+            <ion-badge class="navi-badge badge-ruta">{{ shipment().etaSummary }}</ion-badge>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <section class="timeline-section">
+        <h3 class="timeline-heading">Proceso del Embarque</h3>
+
+        <div class="timeline-list">
+          @for (event of shipment().timeline; track event.title; let last = $last) {
+            <div class="timeline-item" [class.is-last]="last">
+              <div class="marker-col">
+                @if (event.state === 'done') {
+                  <span class="step-dot is-done">
+                    <ion-icon name="checkmark"></ion-icon>
+                  </span>
+                } @else if (event.state === 'active') {
+                  <span class="step-dot is-active">
+                    <span class="inner-dot"></span>
+                  </span>
+                } @else {
+                  <span class="step-dot is-pending"></span>
+                }
+                @if (!last) {
+                  <span class="step-line"></span>
+                }
+              </div>
+
+              <div class="event-body">
+                <div class="event-top">
+                  <strong>{{ event.title }}</strong>
+                  <span>{{ event.timestamp }}</span>
+                </div>
+                <p>{{ event.description }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+
+      <button type="button" class="manifest-pill-btn" (click)="downloadManifest()">
+        <span class="manifest-left-icon">
+          <ion-icon name="barcode-outline"></ion-icon>
+        </span>
+        <span class="manifest-text">
+          <strong>Descargar Manifiesto (PDF)</strong>
+          <span>Documento aduanero</span>
+        </span>
+        <span class="manifest-right-icon">
+          <ion-icon name="download-outline"></ion-icon>
+        </span>
+      </button>
+    </section>
+  </div>
+
+  <ion-toast
+    [isOpen]="toastOpen()"
+    message="Manifiesto aduanero de {{ shipment().code }} preparado en PDF."
+    [duration]="2500"
+    position="top"
+    color="primary"
+    (didDismiss)="toastOpen.set(false)"
+  ></ion-toast>

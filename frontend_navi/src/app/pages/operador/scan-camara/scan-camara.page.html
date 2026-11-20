@@ -1,0 +1,129 @@
+<div class="scanner-shell">
+  <section class="camera-viewport">
+      <img
+        src="assets/figma/container-scan.png"
+        alt="Visor de cámara escaneando contenedor"
+        class="camera-feed"
+      />
+      <div class="camera-vignette" aria-hidden="true"></div>
+
+      <button type="button" class="back-circle-btn" aria-label="Volver al inicio" (click)="goBack()">
+        <ion-icon name="arrow-back"></ion-icon>
+      </button>
+
+      <div class="reticle-box" aria-hidden="true">
+        <span class="corner tl"></span>
+        <span class="corner tr"></span>
+        <span class="corner bl"></span>
+        <span class="corner br"></span>
+        <span class="laser-beam"></span>
+        <div class="ocr-pill">{{ detectedCode() }} · OCR</div>
+      </div>
+
+      <div class="zoom-hud" aria-hidden="true">
+        <span class="zoom-dot">1x</span>
+      </div>
+    </section>
+
+    <section class="scanner-sheet">
+      <div class="sheet-handle" aria-hidden="true"></div>
+
+      <div class="analysis-row">
+        <div class="analysis-spinner" aria-hidden="true">
+          <svg viewBox="0 0 36 36">
+            <circle cx="18" cy="18" r="14" class="spin-track" />
+            <circle cx="18" cy="18" r="14" class="spin-arc" [class.is-complete]="scanCaptured()" />
+          </svg>
+        </div>
+
+        <div class="analysis-copy">
+          <h1>
+            {{
+              scanCaptured()
+                ? 'Contenedor ' + detectedCode() + ' validado'
+                : 'Analizando imagen...'
+            }}
+          </h1>
+          <p>Inspección óptica de contenedor</p>
+        </div>
+
+        <ion-badge class="navi-badge badge-ok confidence-pill">{{ confidence() }}%</ion-badge>
+      </div>
+
+      <ion-card class="transit-box">
+        <ion-card-content>
+          <h2 class="transit-title">En Tránsito - Océano Pacífico</h2>
+
+          <div class="navi-progress-track-wrapper">
+            <ion-progress-bar class="navi-progress" [value]="0.65"></ion-progress-bar>
+            <div class="navi-ship-pin" style="left: 65%" aria-hidden="true">
+              <ion-icon name="boat"></ion-icon>
+            </div>
+          </div>
+
+          <div class="ports-summary">
+            <div>
+              <strong>Shanghai,</strong>
+              <span>CHN</span>
+            </div>
+            <div class="is-right">
+              <strong>Guayaquil,</strong>
+              <span>EC</span>
+            </div>
+          </div>
+
+          <div class="eta-row">
+            <span class="eta-label">Fecha estimada:</span>
+            <ion-badge class="navi-badge badge-ruta">6 días (18 Octubre)</ion-badge>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <div class="action-buttons">
+        <button type="button" class="manual-btn" (click)="openManualEntry()">
+          <ion-icon name="keypad-outline"></ion-icon>
+          <span>Manual</span>
+        </button>
+
+        <button type="button" class="capture-btn" (click)="captureScan()">
+          <ion-icon name="barcode-outline"></ion-icon>
+          <span>Capturar</span>
+        </button>
+      </div>
+
+      <p class="helper-caption">
+        Mantén la cámara firme y alineada a los dígitos en fondo liso.
+      </p>
+    </section>
+  </div>
+
+  <ion-modal [isOpen]="manualModalOpen()" (didDismiss)="manualModalOpen.set(false)">
+    <ng-template>
+      <div class="manual-modal">
+        <div class="modal-head">
+          <h2>Ingreso Manual de Código</h2>
+          <button type="button" class="close-btn" (click)="manualModalOpen.set(false)">
+            <ion-icon name="close"></ion-icon>
+          </button>
+        </div>
+        <p>Digita el número ISO del contenedor cuando la placa presente desgaste.</p>
+        <ion-input
+          [(ngModel)]="manualCodeInput"
+          placeholder="Ej. CN-9823 o MSKU9823410"
+          class="manual-input"
+        ></ion-input>
+        <ion-button expand="block" class="apply-manual-btn" (click)="applyManualCode()">
+          Confirmar Código
+        </ion-button>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <ion-toast
+    [isOpen]="toastMessage() !== null"
+    [message]="toastMessage() ?? ''"
+    [duration]="2300"
+    position="top"
+    color="success"
+    (didDismiss)="toastMessage.set(null)"
+  ></ion-toast>

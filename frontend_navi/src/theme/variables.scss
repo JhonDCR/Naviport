@@ -43,11 +43,19 @@
   --navi-navbar-dark: #111827;
   --navi-progress-track: #c3c4c7;
 
-  /* Estados de IA y Calidad */
+  /* Estados de IA, Buques y Calidad */
   --navi-good-bg: #defde2;
   --navi-good-text: #418e4a;
-  --navi-danger-bg: #fee2e2;
-  --navi-danger-text: #dc2626;
+  --navi-warning-bg: #fdf5de;
+  --navi-warning-text: #af7c29;
+  --navi-danger-bg: #fddee7;
+  --navi-danger-text: #af295a;
+  --navi-alert-bg: #fee2e2;
+  --navi-alert-text: #dc2626;
+  --navi-purple-bg: #e8defd;
+  --navi-purple-text: #6129af;
+  --navi-blue-soft-bg: #deeafd;
+  --navi-sky-bar: #def1fd;
 
   /** Radios de Borde Figma **/
   --navi-radius-card: 24px;
@@ -56,6 +64,6 @@
   --navi-radius-container: 16px;
 
   /** Sombras **/
-  --navi-shadow-card: 0px 4px 4px 0px rgba(0, 0, 0, 0.1);
-  --navi-shadow-pill: 0px 3px 4.6px 0px rgba(0, 0, 0, 0.25);
+  --navi-shadow-card: 0px 8px 24px 0px rgba(17, 24, 39, 0.05);
+  --navi-shadow-pill: 0px 8px 20px 0px rgba(17, 24, 39, 0.25);
 }

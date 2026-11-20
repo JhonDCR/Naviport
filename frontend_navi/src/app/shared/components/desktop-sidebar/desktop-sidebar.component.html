@@ -1,0 +1,31 @@
+<aside class="navi-sidebar">
+  <div class="sidebar-top">
+    <div class="sidebar-brand">
+      <div class="brand-emblem">
+        <ion-icon name="boat"></ion-icon>
+      </div>
+      <div>
+        <span class="brand-sub">{{ brandSub() }}</span>
+        <strong class="brand-main">{{ brandMain() }}</strong>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav" [attr.aria-label]="ariaLabel()">
+      @for (item of items(); track item.route) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="is-active"
+          class="side-link"
+        >
+          <ion-icon [name]="item.icon"></ion-icon>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+  </div>
+
+  <button type="button" class="side-logout" (click)="logout()">
+    <ion-icon name="log-out-outline"></ion-icon>
+    <span>Cerrar Sesión</span>
+  </button>
+</aside>

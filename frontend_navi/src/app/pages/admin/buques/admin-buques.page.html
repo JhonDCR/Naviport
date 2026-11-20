@@ -1,0 +1,159 @@
+<div class="toolbar-panel">
+  <div class="navi-search-pill-box is-soft">
+    <ion-icon name="search-outline"></ion-icon>
+    <input
+      type="text"
+      [ngModel]="searchQuery()"
+      (ngModelChange)="onSearchChange($event)"
+      placeholder="Buscar por IMO o nombre..."
+    />
+  </div>
+
+  <div class="toolbar-buttons">
+    <button type="button" class="navi-outline-pill-btn" (click)="cycleFilter()">
+      <ion-icon name="funnel-outline"></ion-icon>
+      <span>{{ statusFilter() === 'ALL' ? 'Filtrar' : statusFilter() }}</span>
+    </button>
+
+    <button
+      type="button"
+      class="navi-outline-pill-btn"
+      (click)="toastMessage.set('Catálogo de buques exportado a CSV.')"
+    >
+      <ion-icon name="download-outline"></ion-icon>
+      <span>Exportar CSV</span>
+    </button>
+
+    <button type="button" class="navi-primary-pill-btn" (click)="addModalOpen.set(true)">
+      <ion-icon name="add"></ion-icon>
+      <span>Agregar</span>
+    </button>
+  </div>
+</div>
+
+<article class="navi-surface-panel">
+  <div class="navi-table-scroll">
+    <table class="navi-data-table">
+      <thead>
+        <tr>
+          <th>IMO</th>
+          <th>Nombre</th>
+          <th>Tipo</th>
+          <th>Capacidad (Tn)</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (ship of pagedShips(); track ship.id) {
+          <tr>
+            <td class="imo-cell">{{ ship.imo }}</td>
+            <td><strong>{{ ship.name }}</strong></td>
+            <td>{{ ship.type }}</td>
+            <td>{{ ship.capacityTn | number }}</td>
+            <td>
+              <ion-badge
+                class="navi-badge"
+                [class.badge-ok]="ship.adminStatus === 'ACTIVO'"
+                [class.badge-retraso]="ship.adminStatus === 'INACTIVO'"
+                [class.badge-ruta-soft]="ship.adminStatus === 'MANTENIMIENTO'"
+              >
+                {{ ship.adminStatus }}
+              </ion-badge>
+            </td>
+            <td>
+              <div class="row-actions">
+                <button
+                  type="button"
+                  class="act-btn is-edit"
+                  aria-label="Cambiar estado"
+                  (click)="cycleShipState(ship)"
+                >
+                  <ion-icon name="create-outline"></ion-icon>
+                </button>
+                <button
+                  type="button"
+                  class="act-btn is-delete"
+                  aria-label="Eliminar buque"
+                  (click)="removeShip(ship.id, ship.name)"
+                >
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination-bar">
+    <span>
+      Mostrando {{ pageStartIndex() }} a {{ pageEndIndex() }} de
+      {{ filteredShips().length }} buques
+    </span>
+    <div class="pager-controls">
+      <span>Página {{ currentPage() }} de {{ totalPages() }}</span>
+      <button
+        type="button"
+        class="pager-btn"
+        [disabled]="currentPage() <= 1"
+        (click)="prevPage()"
+      >
+        <ion-icon name="chevron-back"></ion-icon>
+        <span>Anterior</span>
+      </button>
+      <button
+        type="button"
+        class="pager-btn is-next"
+        [disabled]="currentPage() >= totalPages()"
+        (click)="nextPage()"
+      >
+        <span>Siguiente</span>
+        <ion-icon name="chevron-forward"></ion-icon>
+      </button>
+    </div>
+  </div>
+</article>
+
+<ion-modal [isOpen]="addModalOpen()" (didDismiss)="addModalOpen.set(false)">
+  <ng-template>
+    <div class="ship-modal">
+      <div class="modal-head">
+        <h2>Registrar Buque en Flota</h2>
+        <button type="button" class="close-btn" (click)="addModalOpen.set(false)">
+          <ion-icon name="close"></ion-icon>
+        </button>
+      </div>
+
+      <label class="field-lbl" for="imo-in">Número IMO</label>
+      <ion-input id="imo-in" [(ngModel)]="newImo" class="modal-in"></ion-input>
+
+      <label class="field-lbl" for="name-in">Nombre del Buque</label>
+      <ion-input id="name-in" [(ngModel)]="newName" placeholder="Ej. Pacific Horizon" class="modal-in"></ion-input>
+
+      <label class="field-lbl" for="type-in">Tipo de Embarcación</label>
+      <ion-select id="type-in" [(ngModel)]="newType" interface="popover" class="modal-in">
+        <ion-select-option value="Portacontenedores">Portacontenedores</ion-select-option>
+        <ion-select-option value="Granelero">Granelero</ion-select-option>
+        <ion-select-option value="Refrigerado">Refrigerado</ion-select-option>
+      </ion-select>
+
+      <label class="field-lbl" for="cap-in">Capacidad (Tn)</label>
+      <ion-input id="cap-in" type="number" [(ngModel)]="newCapacity" class="modal-in"></ion-input>
+
+      <ion-button expand="block" class="save-ship-btn" (click)="addShip()">
+        Guardar Buque
+      </ion-button>
+    </div>
+  </ng-template>
+</ion-modal>
+
+<ion-toast
+  [isOpen]="toastMessage() !== null"
+  [message]="toastMessage() ?? ''"
+  [duration]="2200"
+  position="top"
+  color="primary"
+  (didDismiss)="toastMessage.set(null)"
+></ion-toast>

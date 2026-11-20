@@ -1,0 +1,96 @@
+<div class="search-toolbar">
+  <ion-searchbar
+    class="navi-searchbar"
+    placeholder="Buscar contenedores/buques..."
+    [value]="searchQuery()"
+    (ionInput)="onSearchInput($event)"
+  ></ion-searchbar>
+
+  <button
+    type="button"
+    class="filter-icon-btn"
+    [class.is-filtered]="originFilter() !== 'ALL'"
+    aria-label="Filtrar por puerto de origen"
+    (click)="cycleOriginFilter()"
+  >
+    <ion-icon name="options-outline"></ion-icon>
+  </button>
+</div>
+
+<div class="segment-chips">
+  <button
+    type="button"
+    class="chip-pill"
+    [class.is-active]="activeTab() === 'en_curso'"
+    (click)="setTab('en_curso')"
+  >
+    En Curso
+  </button>
+  <button
+    type="button"
+    class="chip-pill"
+    [class.is-active]="activeTab() === 'completados'"
+    (click)="setTab('completados')"
+  >
+    Completados
+  </button>
+
+  @if (originFilter() !== 'ALL') {
+    <span class="origin-tag">Origen: {{ originFilter() }}</span>
+  }
+</div>
+
+<div class="shipments-list">
+  @for (item of filteredShipments(); track item.id) {
+    <ion-card class="navi-card tracking-card" button="true" (click)="openDetail(item.id)">
+      <ion-card-content>
+        <div class="tracking-head">
+          <div>
+            <h2 class="tracking-code">{{ item.code }}</h2>
+            <p class="tracking-vessel">{{ item.vessel }}</p>
+          </div>
+          <ion-badge
+            class="navi-badge"
+            [class.badge-ruta]="item.status !== 'ENTREGADO'"
+            [class.badge-ok]="item.status === 'ENTREGADO'"
+          >
+            {{ item.status }}
+          </ion-badge>
+        </div>
+
+        <div class="tracking-ports">
+          <div class="port-block">
+            <span>Origen</span>
+            <strong>{{ item.originCity }} ({{ item.originCode }})</strong>
+          </div>
+          <div class="port-block is-right">
+            <span>Destino</span>
+            <strong>{{ item.destinationCity }} ({{ item.destinationCode }})</strong>
+          </div>
+        </div>
+
+        <p class="transit-label">{{ item.stageLabel }}</p>
+
+        <div class="navi-progress-track-wrapper">
+          <ion-progress-bar class="navi-progress" [value]="item.progress"></ion-progress-bar>
+          <div class="navi-ship-pin" [style.left.%]="item.progress * 100" aria-hidden="true">
+            <ion-icon name="boat"></ion-icon>
+          </div>
+        </div>
+
+        <div class="eta-footer">
+          <ion-icon name="calendar" class="blue-cal"></ion-icon>
+          <span>Llegada: {{ item.etaText }}</span>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  } @empty {
+    <ion-card class="navi-card empty-card">
+      <ion-card-content>
+        <ion-icon name="cube-outline"></ion-icon>
+        <h3>Sin embarques coincidentes</h3>
+        <p>Prueba cambiando el filtro o limpiando la búsqueda actual.</p>
+      </ion-card-content>
+    </ion-card>
+  }
+</div>

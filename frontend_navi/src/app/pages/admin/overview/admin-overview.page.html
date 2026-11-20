@@ -1,0 +1,18 @@
+<section class="overview-grid">
+  @for (mod of modules; track mod.route) {
+    <a [routerLink]="mod.route" class="navi-surface-panel overview-card">
+      <div class="overview-top">
+        <div class="ov-icon">
+          <ion-icon [name]="mod.icon"></ion-icon>
+        </div>
+        <ion-badge class="navi-badge" [class]="mod.tone">{{ mod.badge }}</ion-badge>
+      </div>
+      <h2>{{ mod.title }}</h2>
+      <p>{{ mod.detail }}</p>
+      <span class="ov-link">
+        Abrir módulo
+        <ion-icon name="arrow-forward"></ion-icon>
+      </span>
+    </a>
+  }
+</section>

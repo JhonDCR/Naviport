@@ -1,0 +1,156 @@
+<section class="profile-hero">
+      <div class="avatar-large">
+        <span>G</span>
+        <button
+          type="button"
+          class="edit-badge"
+          aria-label="Editar perfil empresarial"
+          (click)="showInfoToast('Edición de empresa habilitada en etapa API.')"
+        >
+          <ion-icon name="create-outline"></ion-icon>
+        </button>
+      </div>
+      <h1 class="profile-name">Gary Industries</h1>
+      <p class="profile-email">garyin&#64;gmail.com</p>
+    </section>
+
+    <div class="section-label">CUENTA</div>
+    <ion-card class="navi-card menu-group">
+      <button
+        type="button"
+        class="menu-row"
+        (click)="showInfoToast('Detalles fiscales de Gary Industries')"
+      >
+        <span class="row-icon">
+          <ion-icon name="business-outline"></ion-icon>
+        </span>
+        <span class="row-copy">
+          <strong>Editar Empresa</strong>
+          <span>Detalles fiscales y dirección legal</span>
+        </span>
+        <ion-icon name="chevron-forward" class="row-arrow"></ion-icon>
+      </button>
+
+      <div class="row-divider"></div>
+
+      <button
+        type="button"
+        class="menu-row"
+        (click)="showInfoToast('Métodos de pago y documentos aduaneros')"
+      >
+        <span class="row-icon">
+          <ion-icon name="card-outline"></ion-icon>
+        </span>
+        <span class="row-copy">
+          <strong>Métodos de Pago</strong>
+          <span>Facturación y crédito corporativo</span>
+        </span>
+        <ion-icon name="chevron-forward" class="row-arrow"></ion-icon>
+      </button>
+    </ion-card>
+
+    <div class="section-label">PREFERENCIAS</div>
+    <ion-card class="navi-card menu-group">
+      <div class="menu-row">
+        <span class="row-icon">
+          <ion-icon name="notifications-outline"></ion-icon>
+        </span>
+        <span class="row-copy">
+          <strong>Notificaciones Push</strong>
+          <span>Alertas de atraque y desvíos</span>
+        </span>
+        <ion-toggle
+          class="navi-toggle"
+          [checked]="pushEnabled()"
+          (ionChange)="togglePush($event)"
+        ></ion-toggle>
+      </div>
+
+      <div class="row-divider"></div>
+
+      <button type="button" class="menu-row" (click)="showInfoToast('Idioma actual: Español (ECU)')">
+        <span class="row-icon">
+          <ion-icon name="globe-outline"></ion-icon>
+        </span>
+        <span class="row-copy">
+          <strong>Idioma</strong>
+          <span>Región e informes portuarios · Español</span>
+        </span>
+        <ion-icon name="chevron-forward" class="row-arrow"></ion-icon>
+      </button>
+    </ion-card>
+
+    <div class="section-label">SOPORTE</div>
+    <ion-card class="navi-card menu-group">
+      <button type="button" class="menu-row" (click)="openSupportModal()">
+        <span class="row-icon">
+          <ion-icon name="headset-outline"></ion-icon>
+        </span>
+        <span class="row-copy">
+          <strong>Contactar Agente</strong>
+          <span>Asistencia técnica y aduanas...</span>
+        </span>
+        <ion-icon name="chevron-forward" class="row-arrow"></ion-icon>
+      </button>
+
+      <div class="row-divider"></div>
+
+      <button
+        type="button"
+        class="menu-row"
+        (click)="showInfoToast('Políticas vigentes NaviPort Tracking v1.0')"
+      >
+        <span class="row-icon">
+          <ion-icon name="document-text-outline"></ion-icon>
+        </span>
+        <span class="row-copy">
+          <strong>Términos y Condiciones</strong>
+          <span>Políticas de flete y privacidad</span>
+        </span>
+        <ion-icon name="chevron-forward" class="row-arrow"></ion-icon>
+      </button>
+    </ion-card>
+
+    <button type="button" class="logout-pill" (click)="logout()">Cerrar Sesión</button>
+
+    <footer class="app-version">
+      <strong>NaviPort Mobile - v1.0</strong>
+      <span>Desarrollado por: Insaniza G3</span>
+    </footer>
+
+  <ion-modal [isOpen]="supportModalOpen()" (didDismiss)="supportModalOpen.set(false)">
+    <ng-template>
+      <div class="support-modal">
+        <div class="modal-head">
+          <h2>Contactar Agente</h2>
+          <button type="button" class="close-btn" (click)="supportModalOpen.set(false)">
+            <ion-icon name="close"></ion-icon>
+          </button>
+        </div>
+        <p class="modal-desc">Envía una consulta directa sobre tu embarque o trámites SENAE.</p>
+        <ion-input
+          [(ngModel)]="supportSubject"
+          placeholder="Asunto (ej. Manifiesto #BU-1234XYZ)"
+          class="modal-input"
+        ></ion-input>
+        <ion-textarea
+          [(ngModel)]="supportMessage"
+          placeholder="Describe tu solicitud..."
+          [rows]="5"
+          class="modal-textarea"
+        ></ion-textarea>
+        <ion-button expand="block" class="send-btn" (click)="sendSupportTicket()">
+          Enviar Solicitud
+        </ion-button>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <ion-toast
+    [isOpen]="toastMessage() !== null"
+    [message]="toastMessage() ?? ''"
+    [duration]="2200"
+    position="top"
+    color="primary"
+    (didDismiss)="toastMessage.set(null)"
+  ></ion-toast>

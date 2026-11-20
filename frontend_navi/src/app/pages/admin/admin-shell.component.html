@@ -1,0 +1,66 @@
+<ion-content [fullscreen]="true">
+  <div class="navi-desktop-shell">
+    <app-desktop-sidebar
+      brandSub="NaviPort"
+      brandMain="Tracker"
+      ariaLabel="Menú Administración"
+      [items]="navItems"
+    />
+
+    <main class="navi-main-canvas">
+      <app-desktop-topbar
+        [title]="headerMeta().title"
+        [subtitle]="headerMeta().subtitle"
+        userName="Gary Barreiro"
+        userRole="Administrador"
+      />
+
+      <section class="navi-kpi-4-grid">
+        <article class="mini-kpi">
+          <div class="mini-kpi-top">
+            <span>Flota Total</span>
+            <div class="sq-icon is-green">
+              <ion-icon name="boat-outline"></ion-icon>
+            </div>
+          </div>
+          <strong>45</strong>
+        </article>
+
+        <article class="mini-kpi">
+          <div class="mini-kpi-top">
+            <span>En Tránsito</span>
+            <div class="sq-icon is-blue">
+              <ion-icon name="compass-outline"></ion-icon>
+            </div>
+          </div>
+          <strong>38</strong>
+        </article>
+
+        <article class="mini-kpi">
+          <div class="mini-kpi-top">
+            <span>Mantenimiento</span>
+            <div class="sq-icon is-amber">
+              <ion-icon name="warning-outline"></ion-icon>
+            </div>
+          </div>
+          <strong>4</strong>
+        </article>
+
+        <article class="mini-kpi">
+          <div class="mini-kpi-top">
+            <span>Capacidad Neta</span>
+            <div class="sq-icon is-purple">
+              <ion-icon name="cube-outline"></ion-icon>
+            </div>
+          </div>
+          <div class="cap-row">
+            <strong>842k</strong>
+            <span>Tn</span>
+          </div>
+        </article>
+      </section>
+
+      <router-outlet />
+    </main>
+  </div>
+</ion-content>
