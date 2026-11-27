@@ -7,10 +7,19 @@ import {
   IsIn,
   IsOptional,
   IsString,
+  MaxLength,
   MinLength,
   ValidateNested,
 } from 'class-validator';
 import { RolUsuario } from '../../../common/enums/rol.enum';
+
+export class GoogleLoginDto {
+  @ApiProperty({ description: 'Credencial firmada por Google Identity Services' })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(8192)
+  credential: string;
+}
 
 export class LoginDto {
   @ApiProperty({

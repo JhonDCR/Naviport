@@ -1,85 +1,95 @@
-# NaviPort Tracking — Plataforma Logística OceanTrack
+# NaviPort Tracking (OceanTrack)
 
-Plataforma integral basada en arquitectura NoSQL (**MongoDB + Redis**) para la gestión de flota naviera y rastreo en tiempo real de importaciones marítimas desde **China (Shanghai)** y **EE.UU. (Miami)** hacia **Ecuador (Guayaquil)**.
+NaviPort es una aplicación para seguir contenedores de importación y gestionar la operación de una flota naviera. Los datos de ejemplo incluyen viajes desde Shanghái y Miami hacia Guayaquil.
 
----
+## Qué puede hacer cada rol
 
-## 👥 Equipo de Desarrollo y Responsabilidades
+| Rol | Para qué usa NaviPort |
+| --- | --- |
+| Cliente | Consulta sus envíos, la fecha estimada de llegada, el historial de cada carga y las notificaciones. |
+| Operador | Consulta su jornada y el historial de inspecciones. La API permite registrar turnos e incidentes con evidencia fotográfica. |
+| Gerente | Consulta el estado de la flota, los indicadores de operación, las alertas y los reportes. |
+| Administrador | Gestiona buques, puertos, viajes y usuarios. La API también incluye operaciones de mantenimiento y auditoría. |
 
-| Rol | Miembro(s) | Alcance Principal |
-| :--- | :--- | :--- |
-| **Frontend Dev 1** | Integrante 1 | Maquetación Figma, navegación core, vistas de cliente (`Introduccion`, `Inicio`, `Seguimiento`), floating navbar y diseño adaptable |
-| **Frontend Dev 2** | Integrante 2 | Vistas de operador (`Inicio Empleado`, `Scan Camara` con IA, `Detalle Pedido`, `Perfil`), servicios Capacitor (cámara, almacenamiento) y consumo de APIs |
-| **Backend Dev** | Integrante 3 | API NestJS modular, esquemas Mongoose (8 colecciones), capa de caché/sesiones Redis (`kpi:resumen`, `alertas:activas`, `sesion:{id}`), Docker y Swagger |
+**Estado actual en `develop`.** Los paneles usan datos de ejemplo. El acceso web permite verificar credenciales con la API o abrir la demostración. En la app híbrida, el acceso selecciona un rol y el escáner simula la lectura. La API se puede probar por separado desde Swagger y guarda sus propios datos en MongoDB. El servicio de inspección registra imágenes y resultados recibidos, con valores de ejemplo cuando faltan algunos datos.
 
----
+## Cómo está organizado
 
-## 🛠️ Stack Tecnológico
+| Carpeta o archivo | Qué contiene |
+| --- | --- |
+| [`frontend_navi/src/app/web/`](frontend_navi/src/app/web/) | Página pública, inicio de sesión web y paneles de gerente y administrador. |
+| [`frontend_navi/src/app/movil/`](frontend_navi/src/app/movil/) | Bienvenida y pantallas de cliente y operador de la app híbrida. |
+| [`frontend_navi/src/app/login/`](frontend_navi/src/app/login/) | Acceso de demostración de la app híbrida. La web y la app móvil usan el mismo proyecto Ionic + Angular. |
+| [`frontend_navi/src/app/shared/`](frontend_navi/src/app/shared/) | Menús, encabezados, iconos y datos de ejemplo compartidos. [`app.routes.ts`](frontend_navi/src/app/app.routes.ts) define la navegación y [`src/theme/`](frontend_navi/src/theme/) concentra variables visuales. |
+| [`backend_navi/src/modules/`](backend_navi/src/modules/) | API de NestJS organizada por función: acceso y usuarios, seguimiento, escáner, incidentes, indicadores, flota y soporte. |
+| [`backend_navi/src/database/`](backend_navi/src/database/) | Modelos de las 12 colecciones de MongoDB y datos iniciales de demostración. |
+| [`backend_navi/src/redis/`](backend_navi/src/redis/) | Sesiones, alertas y consultas rápidas, como los indicadores del gerente. |
+| [`backend_navi/test/`](backend_navi/test/) | Prueba de disponibilidad de la API y guion de verificación del flujo con el servidor levantado. |
+| [`docs/`](docs/) y [`.github/workflows/`](.github/workflows/) | Documentación del equipo y tareas automáticas de GitHub. |
+| [`docker-compose.yml`](docker-compose.yml) y [`.env.example`](.env.example) | Configuración local de MongoDB, Redis y Mongo Express. |
 
-- **Frontend Móvil**: [Ionic Framework 9+](https://ionicframework.com/) + [Angular 22+](https://angular.dev/) + [Capacitor 8+](https://capacitorjs.com/)
-- **Backend API**: [NestJS](https://nestjs.com/) (Node.js con TypeScript estricto)
-- **Base de Datos NoSQL**: [MongoDB 7.0](https://www.mongodb.com/) (ODM Mongoose)
-- **Caché y Fast Storage**: [Redis 7.2](https://redis.io/)
-- **Infraestructura**: Docker & Docker Compose (MongoDB, Redis, Mongo Express)
-- **Diseño**: Figma ([Ver archivo de diseño](https://www.figma.com/design/vu7SLGvtwRZf1CMBkQt0sA/NaviPort?node-id=33-1073))
+### Cómo viajan los datos
 
----
+En la interfaz actual, cuando un cliente abre el detalle de una carga, la pantalla lee el envío de [`mock-data.ts`](frontend_navi/src/app/shared/mock-data.ts) y muestra sus eventos.
 
-## 📁 Estructura del Proyecto y Documentación
+Al probar el mismo flujo desde la API, primero se inicia sesión para obtener un token de acceso. Al pedir las cargas, NestJS comprueba la sesión y el rol, consulta MongoDB y devuelve la respuesta. Redis ayuda a validar sesiones y a reutilizar resultados frecuentes, como el resumen de indicadores.
 
-```text
-Naviport/
-├── .github/
-│   ├── workflows/
-│   │   ├── ci-develop.yml    # Validación automática en PRs a develop
-│   │   └── cd-main.yml       # Release & Quality Gate a main
-│   └── pull_request_template.md
-├── docs/
-│   ├── API_CONTRACT.md       # Endpoints REST, DTOs y claves de Redis
-│   └── DESIGN_SYSTEM.md      # Tokens de Figma, colores, tipografía Poppins y pantallas
-├── backend_navi/             # Backend NestJS
-├── frontend_navi/            # Frontend Ionic/Angular
-├── docker-compose.yml        # MongoDB + Redis + Mongo Express
-├── .agents                   # Reglas esenciales para asistentes de IA
-├── AGENTS.md                 # Guía maestra de arquitectura para agentes
-├── ARCHITECTURE.md           # 8 esquemas MongoDB, Redis TTL, 4 roles de usuario
-├── CONTRIBUTING.md           # Flujo de ramas develop/feature y Conventional Commits
-└── .env.example              # Variables de entorno
+## Cómo abrirlo en tu equipo
+
+Usa Node.js 24.15 o una versión posterior de la serie 24, con npm. Para probar la API también necesitas Docker con Docker Compose.
+
+### Ver las pantallas
+
+Desde la raíz del repositorio, ejecuta estos comandos.
+
+```sh
+cd frontend_navi
+npm ci
+npm start -- --port 8100
 ```
 
----
+- [Inicio web](http://localhost:8100/) abre la [página pública de servicios](http://localhost:8100/servicios).
+- El menú web abre paneles al pasar el cursor y también funciona con clic y teclado. Cada opción lleva a su propia página, como [Rutas marítimas](http://localhost:8100/rutas-maritimas) y [Cómo preparar la carga](http://localhost:8100/preparar-embarque).
+- En la app instalada con Capacitor, la bienvenida se abre en `/introduccion`. Las pantallas de cliente y operador se abren dentro de esa app.
+- Los botones **Acceder** y **Registrarse** abren el formulario sobre la portada. El registro público crea cuentas de cliente. Los paneles de Gerencia y Administración también se pueden explorar en modo de demostración.
+- [Catálogo de contenedores](http://localhost:8100/contenedores) para comparar medidas interiores, puertas y capacidades.
+- [Portal del cliente](http://localhost:8100/portal-cliente) para revisar las cargas y notificaciones asociadas a una cuenta de cliente.
+- [Aviso de privacidad](http://localhost:8100/privacidad) del prototipo académico.
+- El acceso web usa la API local en el puerto 3000. En producción, `/api/v1` debe dirigir a NestJS desde el mismo origen.
 
-## 🚀 Inicio Rápido (Quickstart)
+Para habilitar **Continuar con Google**, crea un cliente OAuth de tipo aplicación web en Google Cloud, autoriza `http://localhost` y `http://localhost:8100` como orígenes de JavaScript, agrega su ID a `GOOGLE_CLIENT_ID` en el archivo `.env` y reinicia la API. Abre la web con la misma dirección autorizada. En producción, añade el origen HTTPS del sitio. [Configuración de Google Identity Services](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid)
 
-### 1. Clonar y cambiar a rama `develop`
-```bash
-git clone https://github.com/JhonDCR/Naviport.git
-cd Naviport
-git checkout develop
-```
+### Probar la API
 
-### 2. Levantar Servicios con Docker (MongoDB + Redis + Mongo Express)
-```bash
-cp .env.example .env
+Abre otra terminal en la raíz del repositorio. Si ya tienes un archivo `.env`, conserva esa configuración y omite la copia. En Bash, usa `cp .env.example .env` para el primer paso.
+
+```powershell
+Copy-Item .env.example .env
 docker compose up -d
-```
-- **MongoDB**: `localhost:27017`
-- **Redis**: `localhost:6379`
-- **Mongo Express (GUI web)**: `http://localhost:8081` (User: `admin`, Password: `admin`)
-
-### 3. Levantar Backend (NestJS)
-```bash
 cd backend_navi
-npm install
+npm ci
 npm run start:dev
 ```
-- API REST: `http://localhost:3000/api/v1`
-- Swagger UI: `http://localhost:3000/api/docs`
 
-### 4. Levantar Frontend Móvil (Ionic + Angular)
-```bash
-cd frontend_navi
-npm install
-ionic serve
-```
-- Vista web de la app: `http://localhost:8100`
+- [Swagger](http://localhost:3000/api/docs) permite explorar y ejecutar las peticiones.
+- [Estado de la API](http://localhost:3000/api/v1/health) permite comprobar que el servidor responde.
+- [Mongo Express](http://localhost:8081) permite ver los datos guardados.
+
+En una base nueva, el servidor carga datos de demostración. Para consultar las cargas del cliente en Swagger, usa `POST /auth/login` con `correo` igual a `contacto@garyindustries.com` y `password` igual a `naviport123`, los valores locales definidos en los [datos iniciales](backend_navi/src/database/seeder.service.ts). Copia `data.accessToken` en el botón **Authorize** y ejecuta `GET /cargas/mis-cargas`.
+
+## Aportes de los últimos commits
+
+El historial local de `develop` registra estos autores de Git. Los commits firmados con un alias se citan con ese nombre.
+
+| Fecha | Autor y commit | Cambios |
+| --- | --- | --- |
+| 20 nov 2026 | Gary Barreiro · [`15a16cd`](https://github.com/JhonDCR/Naviport/commit/15a16cd) | Fusionó el PR #3 de interfaz en `develop`. El contenido resultante coincide con el commit `33c05a2`. |
+| 18 nov 2026 | DeibisuK · [`33c05a2`](https://github.com/JhonDCR/Naviport/commit/33c05a2) | Implementó introducción, acceso y navegación. Añadió las pantallas de cliente (inicio, seguimiento, detalle y perfil), operador (inicio, escáner y perfil), gerente (resumen, flota y reportes) y administrador (resumen, buques, puertos, viajes y usuarios). Incorporó menús y encabezados reutilizables, estilos de Figma y datos de demostración. |
+| 17 nov 2026 | Jhon Davis Cruz Ruiz · [`e8010c1`](https://github.com/JhonDCR/Naviport/commit/e8010c1) | Amplió la API con perfiles, turnos, gestión de usuarios, seguimiento, notificaciones, escaneos e incidentes con fotos, reportes e inventario de flota. Añadió el módulo de soporte, cuatro colecciones (notificaciones, tickets, turnos y auditoría), mejoras de Redis, datos iniciales, pruebas unitarias, una prueba de disponibilidad y un guion para verificar flujos con la API levantada. |
+| 10 nov 2026 | Jhon Davis Cruz Ruiz · [`8e918ab`](https://github.com/JhonDCR/Naviport/commit/8e918ab) | Fusionó el PR #1 con la base del servidor. Los commits de DeibisuK [`ec3c364`](https://github.com/JhonDCR/Naviport/commit/ec3c364), [`67a57ab`](https://github.com/JhonDCR/Naviport/commit/67a57ab) y [`b47963b`](https://github.com/JhonDCR/Naviport/commit/b47963b) crearon la base de NestJS, Redis y ocho modelos de MongoDB, añadieron los seis primeros módulos de la API y corrigieron la compilación, respectivamente. |
+
+## Más documentación
+
+- [Arquitectura y datos](ARCHITECTURE.md) · [Flujo de los cuatro roles](docs/FLUJO_ROLES_DIAGRAMA.md) · [Cambios en MongoDB y Redis](docs/MONGODB_REDIS_CHANGELOG.md)
+- [Contrato de la API](docs/API_CONTRACT.md) · [Sistema de diseño](docs/DESIGN_SYSTEM.md) · [Diseño en Figma](https://www.figma.com/design/vu7SLGvtwRZf1CMBkQt0sA/NaviPort?node-id=33-1073)
+- [Guía para contribuir](CONTRIBUTING.md)

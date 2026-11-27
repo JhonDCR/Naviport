@@ -1,0 +1,62 @@
+<header class="g-page-head">
+  <div>
+    <h1>Resumen operativo</h1>
+    <p class="g-muted">Estado de la flota y actividad de los embarques.</p>
+  </div>
+  <a class="g-link" routerLink="/gerente/reportes">Abrir reportes</a>
+</header>
+
+<section class="summary-metrics" aria-label="Indicadores operativos">
+  <article class="g-panel">
+    <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+    <h2>Puntualidad</h2>
+    <strong>{{ latestMonth.punctuality }} %</strong>
+    <p class="g-muted">Octubre de 2026</p>
+  </article>
+  <article class="g-panel">
+    <ion-icon name="cube-outline" aria-hidden="true"></ion-icon>
+    <h2>Carga movilizada</h2>
+    <strong>{{ latestMonth.tonnes | number }} <small>t</small></strong>
+    <p class="g-muted">Octubre de 2026</p>
+  </article>
+  <a class="g-panel metric-link" routerLink="/gerente/flota" [queryParams]="{ estado: 'EN RUTA' }">
+    <ion-icon name="boat-outline" aria-hidden="true"></ion-icon>
+    <h2>Buques en ruta</h2>
+    <strong>{{ shipsAtSea }}</strong>
+    <p class="g-link">Ver flota en ruta</p>
+  </a>
+  <a class="g-panel metric-link attention" routerLink="/gerente/alertas">
+    <ion-icon name="warning-outline" aria-hidden="true"></ion-icon>
+    <h2>Alertas pendientes</h2>
+    <strong>{{ alerts.length }}</strong>
+    <p class="g-link">Revisar alertas</p>
+  </a>
+</section>
+
+<div class="summary-detail">
+  <section class="g-panel" aria-labelledby="trend-title">
+    <header class="g-panel-head">
+      <div>
+        <h2 id="trend-title">Carga por mes</h2>
+        <p class="g-muted">Mayo a octubre de 2026 · Toneladas</p>
+      </div>
+    </header>
+    <app-gerente-grafica [points]="trend" unit="t" />
+  </section>
+
+  <section class="g-panel" aria-labelledby="summary-alerts-title">
+    <header class="g-panel-head">
+      <h2 id="summary-alerts-title">Pendientes de atención</h2>
+      <a class="g-link" routerLink="/gerente/alertas">Ver todas</a>
+    </header>
+    <ul class="summary-alerts">
+      @for (alert of alerts; track alert.code) {
+        <li>
+          <span class="g-status is-attention">{{ alert.badge }}</span>
+          <a class="g-link" routerLink="/gerente/alertas" [queryParams]="{ codigo: alert.code }">{{ alert.vessel }}</a>
+          <p class="g-muted">{{ alert.eta }}</p>
+        </li>
+      }
+    </ul>
+  </section>
+</div>

@@ -1,0 +1,28 @@
+.fleet-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(150px, 1fr);
+  gap: 16px;
+  max-width: 680px;
+}
+
+.fleet-results {
+  margin-block: 14px;
+}
+
+.fleet-imo {
+  display: block;
+  margin-top: 3px;
+  color: var(--g-muted);
+  font-size: 0.73rem;
+  font-weight: 400;
+}
+
+.clear-filters {
+  margin-top: 12px;
+}
+
+@media (max-width: 500px) {
+  .fleet-controls {
+    grid-template-columns: 1fr;
+  }
+}

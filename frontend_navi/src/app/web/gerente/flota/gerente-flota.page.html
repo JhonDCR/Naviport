@@ -1,0 +1,54 @@
+<header class="g-page-head">
+  <div>
+    <h1>Flota</h1>
+    <p class="g-muted">Consulta el estado, la ruta y la llegada estimada de cada buque.</p>
+  </div>
+</header>
+
+<section class="g-panel" aria-label="Directorio de flota">
+  <div class="fleet-controls">
+    <label class="g-control">
+      Buscar buque
+      <input #filterSearch type="search" placeholder="Nombre, IMO, capitán o ruta"
+        [value]="search()" (input)="search.set(filterSearch.value)">
+    </label>
+    <label class="g-control">
+      Estado
+      <select #statusSelect (change)="status.set(statusSelect.value)">
+        <option value="" [selected]="!status()">Todos los estados</option>
+        @for (option of statusOptions; track option.value) {
+          <option [value]="option.value" [selected]="status() === option.value">{{ option.label }}</option>
+        }
+      </select>
+    </label>
+  </div>
+  <p class="g-muted fleet-results" role="status">Resultados: {{ ships().length }}</p>
+
+  @if (ships().length) {
+    <div class="g-scroll" tabindex="0" role="region" aria-label="Tabla de buques">
+      <table class="g-table">
+        <thead>
+          <tr>
+            <th scope="col">Buque</th><th scope="col">Estado</th><th scope="col">Ruta</th>
+            <th scope="col">Llegada estimada</th><th scope="col">Capitán</th>
+            <th scope="col" class="g-number">Capacidad</th><th scope="col" class="g-number">Avance</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (ship of ships(); track ship.id) {
+            <tr>
+              <th scope="row">{{ ship.name }}<small class="fleet-imo">{{ ship.imo }} · {{ ship.type }}</small></th>
+              <td><span class="g-status" [class.is-attention]="ship.status === 'RETRASO CLIMA' || ship.status === 'MANTENIMIENTO'">{{ ship.status }}</span></td>
+              <td>{{ ship.route }}</td><td>{{ ship.eta }}</td><td>{{ ship.captain }}</td>
+              <td class="g-number">{{ ship.capacityTn | number }} t</td>
+              <td class="g-number">{{ ship.progress | percent }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <p class="g-muted">No se encontraron buques con esos filtros.</p>
+    <button type="button" class="g-button clear-filters" (click)="search.set(''); status.set('')">Limpiar filtros</button>
+  }
+</section>

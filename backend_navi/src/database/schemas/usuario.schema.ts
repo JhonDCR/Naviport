@@ -54,6 +54,9 @@ export class Usuario {
   @Prop({ required: true })
   password_hash: string;
 
+  @Prop({ type: String, unique: true, sparse: true, select: false })
+  googleSubject?: string;
+
   @Prop()
   avatarUrl?: string;
 

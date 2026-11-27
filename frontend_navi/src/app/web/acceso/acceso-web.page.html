@@ -1,0 +1,124 @@
+<dialog #dialog class="access-dialog" aria-labelledby="access-title" (cancel)="close()">
+  @if (mode(); as currentMode) {
+    <div class="access-layout">
+      <div class="access-visual">
+        <img src="assets/web/terminal-maritime-login.jpg" width="800" height="1000" alt="" loading="lazy" decoding="async">
+        <div class="visual-caption">
+          <span class="visual-brand"><ion-icon [icon]="icons.boatOutline" aria-hidden="true"></ion-icon> NaviPort</span>
+          <p>Seguimiento marítimo y operación de flota.</p>
+        </div>
+      </div>
+
+      <section #formArea class="access-form-area">
+        <button type="button" class="close-button" aria-label="Cerrar ventana" (click)="close()">
+          <ion-icon [icon]="icons.closeOutline" aria-hidden="true"></ion-icon>
+        </button>
+
+        @if (session(); as active) {
+          <header class="form-header">
+            <h2 id="access-title">Mi cuenta</h2>
+            <p>{{ active.usuario.nombre }} · {{ active.usuario.correo }}</p>
+          </header>
+          @if (active.usuario.rol === 'gerente' || active.usuario.rol === 'admin') {
+            <a class="text-link" [routerLink]="active.usuario.rol === 'gerente' ? '/gerente' : '/admin'">Abrir mi panel</a>
+          } @else if (active.usuario.rol === 'cliente') {
+            <a class="text-link" routerLink="/portal-cliente">Abrir mi portal</a>
+          } @else {
+            <p class="account-note">Tu sesión está activa. Las herramientas de operador están en la app móvil.</p>
+          }
+          <button type="button" class="submit-button account-button" (click)="signOut()">Cerrar sesión</button>
+        } @else {
+          <header class="form-header">
+            <h2 id="access-title">{{ currentMode === 'registro' ? 'Crear cuenta' : 'Iniciar sesión' }}</h2>
+            <p>{{ currentMode === 'registro' ? 'Regístrate como cliente.' : 'Accede a tu cuenta.' }}</p>
+          </header>
+
+          <form [formGroup]="form" (ngSubmit)="submit()" [attr.aria-busy]="busy()">
+            @let nombreInvalido = form.controls.nombre.touched && form.controls.nombre.value.trim().length < 2;
+            @let correoInvalido = form.controls.correo.touched && form.controls.correo.invalid;
+            @let passwordInvalido = form.controls.password.touched && form.controls.password.invalid;
+            <div class="identity-fields" [class.is-registration]="currentMode === 'registro'">
+              @if (currentMode === 'registro') {
+                <div class="form-field">
+                  <label for="access-name">Nombre</label>
+                  <div class="field-control">
+                    <ion-icon [icon]="icons.personOutline" aria-hidden="true"></ion-icon>
+                    <input id="access-name" type="text" autocomplete="name" formControlName="nombre"
+                      maxlength="120" aria-required="true"
+                      [attr.aria-invalid]="nombreInvalido ? 'true' : null"
+                      [attr.aria-describedby]="nombreInvalido ? 'access-name-error' : null">
+                  </div>
+                  <p class="field-message" id="access-name-error" aria-live="polite">
+                    @if (nombreInvalido) { Falta nombre. }
+                  </p>
+                </div>
+              }
+
+              <div class="form-field">
+                <label for="access-email">Correo electrónico</label>
+                <div class="field-control">
+                  <ion-icon [icon]="icons.mailOutline" aria-hidden="true"></ion-icon>
+                  <input id="access-email" type="email" autocomplete="username" formControlName="correo"
+                    maxlength="254" required
+                    [attr.aria-invalid]="correoInvalido ? 'true' : null"
+                    [attr.aria-describedby]="correoInvalido ? 'access-email-error' : null">
+                </div>
+                <p class="field-message" id="access-email-error" aria-live="polite">
+                  @if (correoInvalido) { Correo no válido. }
+                </p>
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label for="access-password">Contraseña</label>
+              <div class="field-control">
+                <ion-icon [icon]="icons.lockClosedOutline" aria-hidden="true"></ion-icon>
+                <input id="access-password" [type]="showPassword() ? 'text' : 'password'"
+                  [attr.autocomplete]="currentMode === 'registro' ? 'new-password' : 'current-password'"
+                  formControlName="password" required
+                  [attr.aria-invalid]="passwordInvalido ? 'true' : null"
+                  [attr.aria-describedby]="passwordInvalido ? 'access-password-error' : null">
+                <button type="button" class="icon-button" (click)="showPassword.set(!showPassword())"
+                  [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                  aria-controls="access-password">
+                  <ion-icon [icon]="showPassword() ? icons.eyeOffOutline : icons.eyeOutline" aria-hidden="true"></ion-icon>
+                </button>
+              </div>
+              <p class="field-message" id="access-password-error" aria-live="polite">
+                @if (passwordInvalido) { Usa al menos 6 caracteres. }
+              </p>
+            </div>
+
+            <button type="submit" class="submit-button" [disabled]="busy()">
+              {{ busy() ? 'Procesando…' : currentMode === 'registro' ? 'Crear cuenta' : 'Iniciar sesión' }}
+            </button>
+          </form>
+
+          <div class="form-divider"><span>o continúa con</span></div>
+          <app-google-access [busy]="busy()" (credential)="signInWithGoogle($event)" />
+
+          <p class="switch-mode">
+            <span>{{ currentMode === 'registro' ? '¿Ya tienes cuenta?' : '¿Aún sin cuenta?' }}</span>
+            <button type="button" class="text-link"
+              [disabled]="busy()" (click)="selectMode(currentMode === 'registro' ? 'login' : 'registro')">
+              {{ currentMode === 'registro' ? 'Iniciar sesión' : 'Registrarme' }}
+            </button>
+          </p>
+        }
+
+        @if (message()) {
+          <p class="login-message" role="alert">{{ message() }}</p>
+        }
+        @if (notice()) {
+          <p class="login-message" role="status">{{ notice() }}</p>
+        }
+
+        <nav class="demo-access" aria-label="Accesos de demostración">
+          <span>Vista de demostración</span>
+          <a routerLink="/gerente">Gerencia</a>
+          <a routerLink="/admin">Administración</a>
+        </nav>
+      </section>
+    </div>
+  }
+</dialog>

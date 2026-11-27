@@ -1,0 +1,76 @@
+<header class="g-page-head">
+  <div>
+    <h1>Reportes</h1>
+    <p class="g-muted">Compara el comportamiento mensual de la operación.</p>
+  </div>
+  <div class="report-actions">
+    <button type="button" class="g-button print-button" (click)="printReport()">
+      <ion-icon name="print-outline" aria-hidden="true"></ion-icon> Imprimir
+    </button>
+    <button type="button" class="g-button" (click)="downloadCsv()">
+      <ion-icon name="download-outline" aria-hidden="true"></ion-icon> Descargar CSV
+    </button>
+  </div>
+</header>
+
+<section class="g-panel report-trend" aria-labelledby="report-trend-title">
+  <header class="g-panel-head">
+    <div>
+      <h2 id="report-trend-title">{{ metric().label }}</h2>
+      <p class="g-muted">{{ period().label }} · {{ metric().unit }}</p>
+    </div>
+    <div class="report-controls">
+      <label class="g-control">
+        Periodo
+        <select #periodSelect (change)="period.set(periods[periodSelect.selectedIndex])">
+          @for (option of periods; track option.months) {
+            <option [value]="option.months" [selected]="period().months === option.months">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+      <label class="g-control">
+        Indicador
+        <select #metricSelect (change)="metric.set(metrics[metricSelect.selectedIndex])">
+          @for (option of metrics; track option.key) {
+            <option [value]="option.key" [selected]="metric().key === option.key">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+    </div>
+  </header>
+
+  <app-gerente-grafica [points]="chart()" [unit]="metric().unit" />
+
+  <details class="report-values">
+    <summary>Ver valores exactos</summary>
+    <div class="g-scroll" tabindex="0" role="region" aria-label="Tabla de datos mensuales">
+      <table class="g-table">
+        <thead><tr><th scope="col">Mes</th><th scope="col" class="g-number">{{ metric().label }} ({{ metric().unit }})</th></tr></thead>
+        <tbody>
+          @for (point of chart(); track point.label) {
+            <tr><th scope="row">{{ point.label }}</th><td class="g-number">{{ point.value | number }}</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </details>
+</section>
+
+<section class="g-panel" aria-labelledby="report-routes-title">
+  <header class="g-panel-head">
+    <div>
+      <h2 id="report-routes-title">Carga por ruta</h2>
+      <p class="g-muted">Desglose de octubre de 2026</p>
+    </div>
+  </header>
+  <div class="g-scroll" tabindex="0" role="region" aria-label="Tabla de carga por ruta">
+    <table class="g-table">
+      <thead><tr><th scope="col">Ruta</th><th scope="col" class="g-number">Carga</th></tr></thead>
+      <tbody>
+        @for (route of routeLoads; track route.name) {
+          <tr><th scope="row">{{ route.name }}</th><td class="g-number">{{ route.tons }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

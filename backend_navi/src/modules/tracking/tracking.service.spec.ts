@@ -51,6 +51,8 @@ describe('TrackingService', () => {
   };
 
   const mockNotificacionModel = {
+    findOne: jest.fn(),
+    updateOne: jest.fn(),
     find: jest.fn(),
     create: jest.fn().mockResolvedValue({}),
     insertMany: jest.fn().mockResolvedValue([]),
@@ -100,6 +102,37 @@ describe('TrackingService', () => {
         nombre: 'Otro Cliente',
       }),
     ).rejects.toThrow(ForbiddenException);
+  });
+
+  it('keeps a role-wide notice unread for other recipients', async () => {
+    const sub = new Types.ObjectId().toString();
+    const id = new Types.ObjectId().toString();
+    mockNotificacionModel.findOne.mockReturnValue({
+      lean: () => ({ exec: jest.fn().mockResolvedValue({ rolDestino: 'cliente' }) }),
+    });
+
+    await service.marcarNotificacionLeida({ sub, rol: RolUsuario.CLIENTE, correo: 'qa@example.com', nombre: 'QA' }, id);
+
+    expect(mockNotificacionModel.findOne).toHaveBeenCalledWith({
+      _id: id,
+      $or: [{ usuarioId: null, rolDestino: 'cliente' }, { usuarioId: new Types.ObjectId(sub) }],
+    });
+    expect(mockNotificacionModel.updateOne).not.toHaveBeenCalled();
+    expect(mockRedisService.marcarNotificacionLeida).toHaveBeenCalledWith(sub, id);
+  });
+
+  it('rejects notices outside the current recipient', async () => {
+    mockNotificacionModel.findOne.mockReturnValue({
+      lean: () => ({ exec: jest.fn().mockResolvedValue(null) }),
+    });
+    await expect(service.marcarNotificacionLeida({
+      sub: new Types.ObjectId().toString(),
+      rol: RolUsuario.CLIENTE,
+      correo: 'qa@example.com',
+      nombre: 'QA',
+    }, new Types.ObjectId().toString())).rejects.toThrow('Notificación no encontrada');
+    expect(mockNotificacionModel.updateOne).not.toHaveBeenCalled();
+    expect(mockRedisService.marcarNotificacionLeida).not.toHaveBeenCalled();
   });
 
   it('should push Redis alert and persist notifications when trip state changes to retrasado', async () => {

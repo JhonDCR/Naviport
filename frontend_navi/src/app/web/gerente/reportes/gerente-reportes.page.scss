@@ -1,0 +1,48 @@
+.report-trend {
+  margin-bottom: 18px;
+}
+
+.report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.report-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: min(100%, 340px);
+}
+
+.print-button {
+  border-color: var(--g-line);
+  background: var(--g-white);
+  color: var(--g-ink);
+
+  &:hover {
+    background: var(--g-bg);
+  }
+}
+
+.report-values {
+  margin-top: 18px;
+
+  summary {
+    width: fit-content;
+    color: var(--g-blue);
+    font-size: 0.83rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .g-scroll {
+    margin-top: 12px;
+  }
+}
+
+@media (max-width: 400px) {
+  .report-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
