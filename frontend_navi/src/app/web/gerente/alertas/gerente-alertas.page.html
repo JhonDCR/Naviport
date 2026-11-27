@@ -1,0 +1,43 @@
+<header class="g-page-head">
+  <div>
+    <h1>Alertas operativas</h1>
+    <p class="g-muted">Revisa demoras y mantenimientos pendientes de atención.</p>
+  </div>
+</header>
+
+<section class="g-panel" aria-label="Alertas pendientes">
+  <div class="alert-controls">
+    <label class="g-control">
+      Tipo de alerta
+      <select #typeSelect [value]="type()" (change)="type.set(typeSelect.value)">
+        <option value="">Todos los tipos</option>
+        @for (option of types; track option) {
+          <option [value]="option">{{ option }}</option>
+        }
+      </select>
+    </label>
+    <p class="g-muted" role="status">Alertas encontradas: {{ alerts().length }}</p>
+  </div>
+
+  <div class="g-scroll" tabindex="0" role="region" aria-label="Tabla de alertas">
+    <table class="g-table">
+      <thead>
+        <tr>
+          <th scope="col">Referencia</th><th scope="col">Tipo</th><th scope="col">Detalle</th>
+          <th scope="col">Ruta o ubicación</th><th scope="col">Buque</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (alert of alerts(); track alert.code) {
+          <tr [class.selected-alert]="alert.code === codigo()">
+            <th scope="row">{{ alert.code }}</th>
+            <td><span class="g-status is-attention">{{ alert.badge }}</span></td>
+            <td>{{ alert.eta }}</td>
+            <td>{{ alert.route }}</td>
+            <td><a class="g-link" routerLink="/gerente/flota" [queryParams]="{ q: alert.vessel }">{{ alert.vessel }}</a></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

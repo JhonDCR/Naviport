@@ -1,14 +1,20 @@
 import { bootstrapApplication } from '@angular/platform-browser';
-import { RouteReuseStrategy, provideRouter, withComponentInputBinding, withPreloading, PreloadAllModules } from '@angular/router';
+import { NoPreloading, PreloadAllModules, RouteReuseStrategy, provideRouter, withComponentInputBinding, withPreloading } from '@angular/router';
 import { IonicRouteStrategy, provideIonicAngular } from '@ionic/angular';
-
-import { routes } from './app/app.routes';
 import { AppComponent } from './app/app.component';
+import { isNative, routes } from './app/app.routes';
+import { webNavigationAnimation } from './app/web/web-navigation-animation';
 
-bootstrapApplication(AppComponent, {
-  providers: [
-    { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
-    provideIonicAngular(),
-    provideRouter(routes, withPreloading(PreloadAllModules), withComponentInputBinding()),
-  ],
-});
+async function start(): Promise<void> {
+  if (isNative) (await import('./app/shared/icons')).registerNaviIcons();
+
+  await bootstrapApplication(AppComponent, {
+    providers: [
+      { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
+      provideIonicAngular(isNative ? {} : { navAnimation: webNavigationAnimation }),
+      provideRouter(routes, withComponentInputBinding(), withPreloading(isNative ? PreloadAllModules : NoPreloading)),
+    ],
+  });
+}
+
+void start();

@@ -1,14 +1,34 @@
-<ion-content [fullscreen]="true">
-  <div class="navi-desktop-shell">
-    <app-desktop-sidebar
-      brandSub="NaviPort"
-      brandMain="Tracker"
-      ariaLabel="Menú Gerente"
-      [items]="navItems"
-    />
+<ion-content class="gerencia-content" [fullscreen]="true">
+  <div class="gerencia">
+    <aside class="gerencia-sidebar">
+      <a class="gerencia-brand" routerLink="/gerente/dashboard">
+        <ion-icon name="boat-outline" aria-hidden="true"></ion-icon>
+        <span>NaviPort <small>Gerencia</small></span>
+      </a>
 
-    <main class="navi-main-canvas">
-      <router-outlet />
+      <nav aria-label="Menú de gerencia">
+        @for (item of navItems; track item.route) {
+          <a [routerLink]="item.route" routerLinkActive="is-active" ariaCurrentWhenActive="page">
+            <ion-icon [name]="item.icon" aria-hidden="true"></ion-icon>
+            {{ item.label }}
+          </a>
+        }
+      </nav>
+
+      <a class="gerencia-exit" routerLink="/login">
+        <ion-icon name="arrow-back" aria-hidden="true"></ion-icon>
+        Cambiar de panel
+      </a>
+    </aside>
+
+    <main class="gerencia-main">
+      <div class="gerencia-context">
+        <span>Operación naviera</span>
+        <span>Datos de demostración</span>
+      </div>
+      <div class="gerencia-workspace">
+        <router-outlet />
+      </div>
     </main>
   </div>
 </ion-content>

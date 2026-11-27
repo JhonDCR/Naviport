@@ -18,10 +18,12 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
+import { GoogleAuthService } from './google-auth.service';
 import {
   CambiarPasswordDto,
   ControlTurnoDto,
   CreateUsuarioDto,
+  GoogleLoginDto,
   LoginDto,
   UpdateEstadoUsuarioDto,
   UpdatePerfilDto,
@@ -38,7 +40,27 @@ import { JwtPayload } from '../../common/interfaces/api-response.interface';
 @ApiTags('Autenticación y Usuarios (/auth)')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly googleAuth: GoogleAuthService,
+  ) {}
+
+  @Post('google/challenge')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Preparar una comprobación de acceso con Google' })
+  async prepararGoogle() {
+    return { enabled: await this.googleAuth.challenge() };
+  }
+
+  @Post('google')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Validar la credencial firmada por Google' })
+  async iniciarConGoogle(@Body() dto: GoogleLoginDto) {
+    return {
+      message: 'Autenticación satisfactoria',
+      data: await this.googleAuth.login(dto.credential),
+    };
+  }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)

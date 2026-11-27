@@ -1,117 +1,54 @@
-<app-desktop-topbar
-  title="Gestión de Flota"
-  subtitle="Administra los buques, su estado y sus asignaciones"
-  userName="Gary Barreiro"
-  userRole="Gerente General"
-/>
-
-<div class="fleet-toolbar">
-  <div class="navi-search-pill-box">
-    <ion-icon name="search-outline"></ion-icon>
-    <input
-      type="text"
-      [ngModel]="fleetSearch()"
-      (ngModelChange)="onFleetSearch($event)"
-      placeholder="Buscar buque, capitán o ruta..."
-    />
+<header class="g-page-head">
+  <div>
+    <h1>Flota</h1>
+    <p class="g-muted">Consulta el estado, la ruta y la llegada estimada de cada buque.</p>
   </div>
+</header>
 
-  <button
-    type="button"
-    class="navi-primary-pill-btn"
-    (click)="toastMessage.set('Formulario de asignación rápida disponible en módulo Admin / API.')"
-  >
-    <ion-icon name="add"></ion-icon>
-    <span>Agregar</span>
-  </button>
-</div>
+<section class="g-panel" aria-label="Directorio de flota">
+  <div class="fleet-controls">
+    <label class="g-control">
+      Buscar buque
+      <input #filterSearch type="search" placeholder="Nombre, IMO, capitán o ruta"
+        [value]="search()" (input)="search.set(filterSearch.value)">
+    </label>
+    <label class="g-control">
+      Estado
+      <select #statusSelect (change)="status.set(statusSelect.value)">
+        <option value="" [selected]="!status()">Todos los estados</option>
+        @for (option of statusOptions; track option.value) {
+          <option [value]="option.value" [selected]="status() === option.value">{{ option.label }}</option>
+        }
+      </select>
+    </label>
+  </div>
+  <p class="g-muted fleet-results" role="status">Resultados: {{ ships().length }}</p>
 
-<div class="filter-pills-row">
-  <button
-    type="button"
-    class="filter-pill"
-    [class.is-active]="fleetFilter() === 'ALL'"
-    (click)="fleetFilter.set('ALL')"
-  >
-    <span>Todos</span>
-    <strong>{{ fleetCounts().ALL }}</strong>
-  </button>
-  <button
-    type="button"
-    class="filter-pill"
-    [class.is-active]="fleetFilter() === 'EN RUTA'"
-    (click)="fleetFilter.set('EN RUTA')"
-  >
-    <span>En ruta</span>
-    <strong>{{ fleetCounts()['EN RUTA'] }}</strong>
-  </button>
-  <button
-    type="button"
-    class="filter-pill"
-    [class.is-active]="fleetFilter() === 'EN PUERTO'"
-    (click)="fleetFilter.set('EN PUERTO')"
-  >
-    <span>En puerto</span>
-    <strong>{{ fleetCounts()['EN PUERTO'] }}</strong>
-  </button>
-  <button
-    type="button"
-    class="filter-pill"
-    [class.is-active]="fleetFilter() === 'RETRASO CLIMA'"
-    (click)="fleetFilter.set('RETRASO CLIMA')"
-  >
-    <span>Retraso</span>
-    <strong>{{ fleetCounts()['RETRASO CLIMA'] }}</strong>
-  </button>
-  <button
-    type="button"
-    class="filter-pill"
-    [class.is-active]="fleetFilter() === 'MANTENIMIENTO'"
-    (click)="fleetFilter.set('MANTENIMIENTO')"
-  >
-    <span>Mantenimiento</span>
-    <strong>{{ fleetCounts()['MANTENIMIENTO'] }}</strong>
-  </button>
-</div>
-
-<div class="fleet-3-grid">
-  @for (ship of filteredFleet(); track ship.id) {
-    <article class="ship-card">
-      <div class="ship-card-head">
-        <div class="ship-icon-box">
-          <ion-icon name="boat-outline"></ion-icon>
-        </div>
-        <div class="ship-title-col">
-          <h3>{{ ship.name }}</h3>
-          <span>{{ ship.type }} · {{ ship.capacityTn | number }} Tn</span>
-        </div>
-        <ion-badge class="navi-badge" [class]="getBadgeClass(ship.status)">
-          {{ ship.status }}
-        </ion-badge>
-      </div>
-
-      <p class="ship-route">{{ ship.route }}</p>
-      <ion-progress-bar [value]="ship.progress" class="ship-progress"></ion-progress-bar>
-
-      <div class="ship-card-foot">
-        <div>
-          <span>Capitán</span>
-          <strong>{{ ship.captain }}</strong>
-        </div>
-        <div class="is-right">
-          <span>ETA</span>
-          <strong>{{ ship.eta }}</strong>
-        </div>
-      </div>
-    </article>
+  @if (ships().length) {
+    <div class="g-scroll" tabindex="0" role="region" aria-label="Tabla de buques">
+      <table class="g-table">
+        <thead>
+          <tr>
+            <th scope="col">Buque</th><th scope="col">Estado</th><th scope="col">Ruta</th>
+            <th scope="col">Llegada estimada</th><th scope="col">Capitán</th>
+            <th scope="col" class="g-number">Capacidad</th><th scope="col" class="g-number">Avance</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (ship of ships(); track ship.id) {
+            <tr>
+              <th scope="row">{{ ship.name }}<small class="fleet-imo">{{ ship.imo }} · {{ ship.type }}</small></th>
+              <td><span class="g-status" [class.is-attention]="ship.status === 'RETRASO CLIMA' || ship.status === 'MANTENIMIENTO'">{{ ship.status }}</span></td>
+              <td>{{ ship.route }}</td><td>{{ ship.eta }}</td><td>{{ ship.captain }}</td>
+              <td class="g-number">{{ ship.capacityTn | number }} t</td>
+              <td class="g-number">{{ ship.progress | percent }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <p class="g-muted">No se encontraron buques con esos filtros.</p>
+    <button type="button" class="g-button clear-filters" (click)="search.set(''); status.set('')">Limpiar filtros</button>
   }
-</div>
-
-<ion-toast
-  [isOpen]="toastMessage() !== null"
-  [message]="toastMessage() ?? ''"
-  [duration]="2200"
-  position="top"
-  color="primary"
-  (didDismiss)="toastMessage.set(null)"
-></ion-toast>
+</section>

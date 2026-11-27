@@ -1,0 +1,57 @@
+:host {
+  display: block;
+  overflow-x: auto;
+}
+
+.chart {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(42px, 1fr);
+  gap: clamp(5px, 1.2vw, 16px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chart li {
+  display: grid;
+  grid-template-rows: auto 146px auto;
+  gap: 7px;
+  justify-items: center;
+  min-width: 0;
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.value {
+  color: var(--g-ink);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.track {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  width: 100%;
+  border-bottom: 1px solid var(--g-line);
+  background: repeating-linear-gradient(
+    to top,
+    transparent 0 calc(25% - 1px),
+    var(--g-line) calc(25% - 1px) 25%
+  );
+}
+
+.bar {
+  width: min(56%, 44px);
+  border-radius: 4px 4px 0 0;
+  background: color-mix(in srgb, var(--g-blue) 55%, var(--g-white));
+}
+
+li:last-child .bar {
+  background: var(--g-blue);
+}
+
+.month {
+  color: var(--g-muted);
+}

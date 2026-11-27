@@ -1,21 +1,19 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { IonContent } from '@ionic/angular';
-import {
-  DesktopSidebarComponent,
-  SidebarNavItem,
-} from '../../shared/components/desktop-sidebar/desktop-sidebar.component';
+import { Component, ViewEncapsulation } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { IonContent, IonIcon } from '@ionic/angular';
 
 @Component({
   selector: 'app-gerente-shell',
   templateUrl: './gerente-shell.component.html',
-  styleUrls: ['./gerente-shell.component.scss'],
-  imports: [IonContent, RouterOutlet, DesktopSidebarComponent],
+  styleUrl: './gerente-shell.component.scss',
+  encapsulation: ViewEncapsulation.None,
+  imports: [IonContent, IonIcon, RouterLink, RouterLinkActive, RouterOutlet],
 })
 export class GerenteShellComponent {
-  readonly navItems: SidebarNavItem[] = [
-    { label: 'Dashboard', icon: 'stats-chart-outline', route: '/gerente/dashboard' },
-    { label: 'Gestión de Flota', icon: 'boat-outline', route: '/gerente/flota' },
-    { label: 'Reportes y analíticas', icon: 'trending-up-outline', route: '/gerente/reportes' },
+  readonly navItems = [
+    { label: 'Resumen', icon: 'home-outline', route: '/gerente/dashboard' },
+    { label: 'Flota', icon: 'boat-outline', route: '/gerente/flota' },
+    { label: 'Alertas', icon: 'notifications-outline', route: '/gerente/alertas' },
+    { label: 'Reportes', icon: 'stats-chart-outline', route: '/gerente/reportes' },
   ];
 }

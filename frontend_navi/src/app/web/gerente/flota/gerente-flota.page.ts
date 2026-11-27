@@ -1,64 +1,35 @@
-import { DecimalPipe } from '@angular/common';
-import { Component, computed, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { IonBadge, IonIcon, IonProgressBar, IonToast } from '@ionic/angular';
-import { DesktopTopbarComponent } from '../../../shared/components/desktop-topbar/desktop-topbar.component';
+import { DecimalPipe, PercentPipe } from '@angular/common';
+import { Component, computed, input, linkedSignal } from '@angular/core';
 import { FLEET_SHIPS_MOCK, FleetShipMock } from '../../../shared/mock-data';
 
-type FleetFilter = 'ALL' | 'EN RUTA' | 'EN PUERTO' | 'RETRASO CLIMA' | 'MANTENIMIENTO';
+type FleetStatus = FleetShipMock['status'];
 
 @Component({
   selector: 'app-gerente-flota',
   templateUrl: './gerente-flota.page.html',
-  styleUrls: ['./gerente-flota.page.scss'],
-  imports: [DecimalPipe, FormsModule, DesktopTopbarComponent, IonIcon, IonBadge, IonProgressBar, IonToast],
+  styleUrl: './gerente-flota.page.scss',
+  imports: [DecimalPipe, PercentPipe],
 })
 export class GerenteFlotaPage {
-  readonly fleetSearch = signal('');
-  readonly fleetFilter = signal<FleetFilter>('ALL');
-  readonly toastMessage = signal<string | null>(null);
-  readonly ships = signal<FleetShipMock[]>(FLEET_SHIPS_MOCK);
+  readonly q = input<string>();
+  readonly estado = input<string>();
+  readonly search = linkedSignal(() => this.q() ?? '');
+  readonly status = linkedSignal(() => this.estado() ?? '');
+  readonly statusOptions: { value: FleetStatus; label: string }[] = [
+    { value: 'EN RUTA', label: 'En ruta' },
+    { value: 'EN PUERTO', label: 'En puerto' },
+    { value: 'RETRASO CLIMA', label: 'Retraso por clima' },
+    { value: 'MANTENIMIENTO', label: 'Mantenimiento' },
+  ];
 
-  readonly fleetCounts = computed(() => {
-    const all = this.ships();
-    return {
-      ALL: all.length,
-      'EN RUTA': all.filter((s) => s.status === 'EN RUTA').length,
-      'EN PUERTO': all.filter((s) => s.status === 'EN PUERTO').length,
-      'RETRASO CLIMA': all.filter((s) => s.status === 'RETRASO CLIMA').length,
-      MANTENIMIENTO: all.filter((s) => s.status === 'MANTENIMIENTO').length,
-    };
+  readonly ships = computed(() => {
+    const q = this.search().trim().toLocaleLowerCase('es-EC');
+    const status = this.status();
+    return FLEET_SHIPS_MOCK.filter((ship) =>
+      (!status || ship.status === status) &&
+      [ship.name, ship.imo, ship.captain, ship.route].some((text) =>
+        text.toLocaleLowerCase('es-EC').includes(q),
+      ),
+    );
   });
-
-  readonly filteredFleet = computed(() => {
-    const q = this.fleetSearch().trim().toLowerCase();
-    const filter = this.fleetFilter();
-
-    return this.ships().filter((ship) => {
-      const matchesStatus = filter === 'ALL' || ship.status === filter;
-      const matchesQuery =
-        !q ||
-        ship.name.toLowerCase().includes(q) ||
-        ship.captain.toLowerCase().includes(q) ||
-        ship.route.toLowerCase().includes(q);
-      return matchesStatus && matchesQuery;
-    });
-  });
-
-  onFleetSearch(val: string): void {
-    this.fleetSearch.set(val);
-  }
-
-  getBadgeClass(status: FleetShipMock['status']): string {
-    switch (status) {
-      case 'EN RUTA':
-        return 'badge-ruta-soft';
-      case 'RETRASO CLIMA':
-        return 'badge-retraso';
-      case 'MANTENIMIENTO':
-        return 'badge-mantenimiento';
-      case 'EN PUERTO':
-        return 'badge-puerto';
-    }
-  }
 }

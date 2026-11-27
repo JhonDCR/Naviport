@@ -1,15 +1,20 @@
+import { DecimalPipe } from '@angular/common';
 import { Component } from '@angular/core';
-import { IonBadge, IonIcon, IonProgressBar } from '@ionic/angular';
-import { DesktopTopbarComponent } from '../../../shared/components/desktop-topbar/desktop-topbar.component';
-import { GERENTE_MONTHLY_BARS, GERENTE_RECENT_ALERTS } from '../../../shared/mock-data';
+import { RouterLink } from '@angular/router';
+import { IonIcon } from '@ionic/angular';
+import { FLEET_SHIPS_MOCK } from '../../../shared/mock-data';
+import { gerenteAlertsDemo, gerenteMonthlyDemo } from '../gerente-demostracion';
+import { GerenteGraficaComponent } from '../grafica/gerente-grafica.component';
 
 @Component({
   selector: 'app-gerente-resumen',
   templateUrl: './gerente-resumen.page.html',
-  styleUrls: ['./gerente-resumen.page.scss'],
-  imports: [DesktopTopbarComponent, IonIcon, IonProgressBar, IonBadge],
+  styleUrl: './gerente-resumen.page.scss',
+  imports: [DecimalPipe, RouterLink, IonIcon, GerenteGraficaComponent],
 })
 export class GerenteResumenPage {
-  readonly monthlyBars = GERENTE_MONTHLY_BARS;
-  readonly recentAlerts = GERENTE_RECENT_ALERTS;
+  readonly latestMonth = gerenteMonthlyDemo.at(-1)!;
+  readonly trend = gerenteMonthlyDemo.slice(-6).map(({ label, tonnes }) => ({ label, value: tonnes }));
+  readonly shipsAtSea = FLEET_SHIPS_MOCK.filter(({ status }) => status === 'EN RUTA').length;
+  readonly alerts = gerenteAlertsDemo;
 }

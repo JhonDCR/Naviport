@@ -205,17 +205,22 @@ export class TrackingService {
     };
   }
 
+  private destinatariosNotificacion(user: JwtPayload): Record<string, unknown>[] {
+    const filtros: Record<string, unknown>[] = [
+      { usuarioId: null, rolDestino: user.rol },
+    ];
+    if (isValidObjectId(user.sub)) {
+      filtros.push({ usuarioId: new Types.ObjectId(user.sub) });
+    }
+    return filtros;
+  }
+
   async obtenerNotificacionesCliente(user: JwtPayload) {
     const leidasIds = new Set(
       await this.redisService.obtenerNotificacionesLeidas(user.sub),
     );
 
-    const filtrosNotif: Array<Record<string, unknown>> = [
-      { rolDestino: user.rol },
-    ];
-    if (isValidObjectId(user.sub)) {
-      filtrosNotif.unshift({ usuarioId: new Types.ObjectId(user.sub) });
-    }
+    const filtrosNotif = this.destinatariosNotificacion(user);
 
     const persistidas = (await this.notificacionModel
       .find({ $or: filtrosNotif })
@@ -331,15 +336,25 @@ export class TrackingService {
   }
 
   async marcarNotificacionLeida(user: JwtPayload, notificacionId: string) {
-    await this.redisService.marcarNotificacionLeida(user.sub, notificacionId);
     if (isValidObjectId(notificacionId)) {
-      await this.notificacionModel
-        .findByIdAndUpdate(notificacionId, {
-          leida: true,
-          fechaLectura: new Date(),
-        })
+      const aviso = await this.notificacionModel
+        .findOne({ _id: notificacionId, $or: this.destinatariosNotificacion(user) })
+        .lean()
         .exec();
+      if (!aviso) throw new NotFoundException('Notificación no encontrada');
+
+      if (aviso.usuarioId && String(aviso.usuarioId) === user.sub) {
+        await this.notificacionModel
+          .updateOne({ _id: notificacionId, usuarioId: aviso.usuarioId }, { leida: true, fechaLectura: new Date() })
+          .exec();
+      }
+    } else {
+      const avisos = await this.obtenerNotificacionesCliente(user);
+      if (!avisos.some((aviso) => aviso.id === notificacionId)) {
+        throw new NotFoundException('Notificación no encontrada');
+      }
     }
+    await this.redisService.marcarNotificacionLeida(user.sub, notificacionId);
     return {
       id: notificacionId,
       leida: true,
@@ -351,18 +366,14 @@ export class TrackingService {
     const ids = notificaciones.map((n) => n.id);
     await this.redisService.marcarTodasNotificacionesLeidas(user.sub, ids);
 
-    const filtrosNotif: Array<Record<string, unknown>> = [
-      { rolDestino: user.rol },
-    ];
     if (isValidObjectId(user.sub)) {
-      filtrosNotif.unshift({ usuarioId: new Types.ObjectId(user.sub) });
+      await this.notificacionModel
+        .updateMany(
+          { usuarioId: new Types.ObjectId(user.sub), _id: { $in: ids.filter((id) => isValidObjectId(id)) }, leida: false },
+          { leida: true, fechaLectura: new Date() },
+        )
+        .exec();
     }
-    await this.notificacionModel
-      .updateMany(
-        { $or: filtrosNotif, leida: false },
-        { leida: true, fechaLectura: new Date() },
-      )
-      .exec();
 
     return {
       totalMarcadas: ids.length,

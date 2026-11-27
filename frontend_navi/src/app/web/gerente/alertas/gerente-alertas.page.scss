@@ -1,0 +1,23 @@
+.alert-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px 22px;
+  margin-bottom: 18px;
+
+  .g-control {
+    min-width: min(100%, 205px);
+  }
+
+  p {
+    margin-bottom: 9px;
+  }
+}
+
+.selected-alert {
+  background: color-mix(in srgb, var(--g-amber) 15%, var(--g-white));
+
+  th {
+    box-shadow: inset 3px 0 var(--g-amber);
+  }
+}

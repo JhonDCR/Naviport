@@ -1,0 +1,62 @@
+<app-web-frame>
+  <header class="reference-intro">
+    <h1>Contenedores y dimensiones</h1>
+    <p>Compara la altura útil, el espacio interior y la entrada de cada equipo antes de consultar por un embarque.</p>
+  </header>
+
+  <div class="reference-stack">
+    <section class="reference-card" aria-labelledby="comparison-title">
+      <h2 id="comparison-title">Comparar dos contenedores</h2>
+      <div class="reference-filters">
+        <label>Primer equipo
+          <select #first (change)="left.set(first.value)">
+            @for (item of equipment; track item.id) {
+              <option [value]="item.id" [selected]="item.id === left()" [disabled]="item.id === right()">{{ item.title }}</option>
+            }
+          </select>
+        </label>
+        <label>Segundo equipo
+          <select #second (change)="right.set(second.value)">
+            @for (item of equipment; track item.id) {
+              <option [value]="item.id" [selected]="item.id === right()" [disabled]="item.id === left()">{{ item.title }}</option>
+            }
+          </select>
+        </label>
+      </div>
+      <div class="reference-table" role="region" aria-label="Comparación de dimensiones" tabindex="0">
+        <table class="reference-data">
+          <thead><tr><th scope="col">Medida</th>@for (item of comparison(); track item.id) { <th scope="col">{{ item.title }}</th> }</tr></thead>
+          <tbody>
+            <tr><th scope="row">Interior (largo × ancho × alto, mm)</th>@for (item of comparison(); track item.id) { <td>{{ item.space }}</td> }</tr>
+            <tr><th scope="row">Puerta (ancho × alto, mm)</th>@for (item of comparison(); track item.id) { <td>{{ item.door }}</td> }</tr>
+            <tr><th scope="row">Volumen</th>@for (item of comparison(); track item.id) { <td>{{ item.capacity }}</td> }</tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="equipment-title">
+      <h2 id="equipment-title">Tipos de equipo</h2>
+      <div class="reference-filters">
+        <label>Tipo de carga
+          <select #group (change)="family.set(group.value)">
+            @for (option of families; track option) { <option>{{ option }}</option> }
+          </select>
+        </label>
+        <span class="reference-muted" role="status">{{ visible().length }} equipos</span>
+      </div>
+      <div class="reference-grid">
+        @for (item of visible(); track item.id) {
+          <article class="reference-card">
+            <p><span class="reference-tag">{{ item.family }}</span></p>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.use }}</p>
+            <a [href]="provider + item.id + '.html'">Ficha de Hapag-Lloyd</a>
+          </article>
+        }
+      </div>
+    </section>
+    <p class="reference-muted reference-note">Las medidas corresponden a equipos de referencia de Hapag-Lloyd. Confirma las dimensiones y el peso admitido de la unidad asignada antes de preparar la carga.</p>
+    <div class="reference-actions"><a class="reference-button primary" routerLink="/portal-cliente">Consultar mis envíos</a></div>
+  </div>
+</app-web-frame>

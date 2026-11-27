@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 
@@ -84,6 +84,16 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   // ========================================================
   // 1. Sesiones: sesion:{idUsuario} (Hash)
   // ========================================================
+  async guardarDesafioGoogle(nonce: string): Promise<void> {
+    if (!this.isConnected) throw new ServiceUnavailableException('Verificación con Google no disponible');
+    await this.client.set(`auth:google:${nonce}`, '1', 'EX', 600);
+  }
+
+  async consumirDesafioGoogle(nonce: string): Promise<boolean> {
+    if (!this.isConnected) throw new ServiceUnavailableException('Verificación con Google no disponible');
+    return (await this.client.del(`auth:google:${nonce}`)) === 1;
+  }
+
   async guardarSesion(
     idUsuario: string,
     data: SesionRedisData,

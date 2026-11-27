@@ -11,15 +11,15 @@ NaviPort es una aplicación para seguir contenedores de importación y gestionar
 | Gerente | Consulta el estado de la flota, los indicadores de operación, las alertas y los reportes. |
 | Administrador | Gestiona buques, puertos, viajes y usuarios. La API también incluye operaciones de mantenimiento y auditoría. |
 
-**Estado actual en `develop`.** Las pantallas usan datos de ejemplo. El acceso selecciona un rol para navegar y el escáner simula la lectura. La API se puede probar por separado desde Swagger y guarda sus propios datos en MongoDB. El servicio de inspección registra imágenes y resultados recibidos, con valores de ejemplo cuando faltan algunos datos.
+**Estado actual en `develop`.** Los paneles usan datos de ejemplo. El acceso web permite verificar credenciales con la API o abrir la demostración. En la app híbrida, el acceso selecciona un rol y el escáner simula la lectura. La API se puede probar por separado desde Swagger y guarda sus propios datos en MongoDB. El servicio de inspección registra imágenes y resultados recibidos, con valores de ejemplo cuando faltan algunos datos.
 
 ## Cómo está organizado
 
 | Carpeta o archivo | Qué contiene |
 | --- | --- |
-| [`frontend_navi/src/app/web/`](frontend_navi/src/app/web/) | Página pública de servicios y paneles de gerente y administrador. |
+| [`frontend_navi/src/app/web/`](frontend_navi/src/app/web/) | Página pública, inicio de sesión web y paneles de gerente y administrador. |
 | [`frontend_navi/src/app/movil/`](frontend_navi/src/app/movil/) | Bienvenida y pantallas de cliente y operador de la app híbrida. |
-| [`frontend_navi/src/app/login/`](frontend_navi/src/app/login/) | Acceso compartido de demostración. La web y la app móvil usan el mismo proyecto Ionic + Angular. |
+| [`frontend_navi/src/app/login/`](frontend_navi/src/app/login/) | Acceso de demostración de la app híbrida. La web y la app móvil usan el mismo proyecto Ionic + Angular. |
 | [`frontend_navi/src/app/shared/`](frontend_navi/src/app/shared/) | Menús, encabezados, iconos y datos de ejemplo compartidos. [`app.routes.ts`](frontend_navi/src/app/app.routes.ts) define la navegación y [`src/theme/`](frontend_navi/src/theme/) concentra variables visuales. |
 | [`backend_navi/src/modules/`](backend_navi/src/modules/) | API de NestJS organizada por función: acceso y usuarios, seguimiento, escáner, incidentes, indicadores, flota y soporte. |
 | [`backend_navi/src/database/`](backend_navi/src/database/) | Modelos de las 12 colecciones de MongoDB y datos iniciales de demostración. |
@@ -48,9 +48,16 @@ npm ci
 npm start -- --port 8100
 ```
 
-- [Página pública de servicios](http://localhost:8100/servicios)
-- [Bienvenida de la app móvil](http://localhost:8100/introduccion)
-- [Acceso de demostración](http://localhost:8100/login) para elegir cualquiera de los cuatro roles
+- [Inicio web](http://localhost:8100/) abre la [página pública de servicios](http://localhost:8100/servicios).
+- El menú web abre paneles al pasar el cursor y también funciona con clic y teclado. Cada opción lleva a su propia página, como [Rutas marítimas](http://localhost:8100/rutas-maritimas) y [Cómo preparar la carga](http://localhost:8100/preparar-embarque).
+- En la app instalada con Capacitor, la bienvenida se abre en `/introduccion`. Las pantallas de cliente y operador se abren dentro de esa app.
+- Los botones **Acceder** y **Registrarse** abren el formulario sobre la portada. El registro público crea cuentas de cliente. Los paneles de Gerencia y Administración también se pueden explorar en modo de demostración.
+- [Catálogo de contenedores](http://localhost:8100/contenedores) para comparar medidas interiores, puertas y capacidades.
+- [Portal del cliente](http://localhost:8100/portal-cliente) para revisar las cargas y notificaciones asociadas a una cuenta de cliente.
+- [Aviso de privacidad](http://localhost:8100/privacidad) del prototipo académico.
+- El acceso web usa la API local en el puerto 3000. En producción, `/api/v1` debe dirigir a NestJS desde el mismo origen.
+
+Para habilitar **Continuar con Google**, crea un cliente OAuth de tipo aplicación web en Google Cloud, autoriza `http://localhost` y `http://localhost:8100` como orígenes de JavaScript, agrega su ID a `GOOGLE_CLIENT_ID` en el archivo `.env` y reinicia la API. Abre la web con la misma dirección autorizada. En producción, añade el origen HTTPS del sitio. [Configuración de Google Identity Services](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid)
 
 ### Probar la API
 

@@ -119,7 +119,10 @@ export class AuthService {
     }
 
     await this.redisService.limpiarIntentosLogin(correoNormalizado);
+    return this.iniciarSesion(usuario);
+  }
 
+  async iniciarSesion(usuario: UsuarioDocument): Promise<LoginResult> {
     const idUsuario = String(usuario._id);
     const payload: JwtPayload = {
       sub: idUsuario,

@@ -1,144 +1,62 @@
-<app-desktop-topbar
-  title="Resumen Ejecutivo"
-  subtitle="Métricas en tiempo real de la flota naviera"
-  userName="Gary Barreiro"
-  userRole="Gerente General"
-/>
+<header class="g-page-head">
+  <div>
+    <h1>Resumen operativo</h1>
+    <p class="g-muted">Estado de la flota y actividad de los embarques.</p>
+  </div>
+  <a class="g-link" routerLink="/gerente/reportes">Abrir reportes</a>
+</header>
 
-<section class="navi-kpi-4-grid">
-  <article class="kpi-box">
-    <div class="kpi-box-head">
-      <span>Puntualidad</span>
-      <div class="kpi-badge-sq is-green">
-        <ion-icon name="checkmark-circle-outline"></ion-icon>
-      </div>
-    </div>
-    <strong class="kpi-big">94%</strong>
-    <span class="delta-pill">+2% este mes</span>
+<section class="summary-metrics" aria-label="Indicadores operativos">
+  <article class="g-panel">
+    <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+    <h2>Puntualidad</h2>
+    <strong>{{ latestMonth.punctuality }} %</strong>
+    <p class="g-muted">Octubre de 2026</p>
   </article>
-
-  <article class="kpi-box">
-    <div class="kpi-box-head">
-      <span>Buques Activos</span>
-      <div class="kpi-badge-sq is-blue">
-        <ion-icon name="boat-outline"></ion-icon>
-      </div>
-    </div>
-    <div class="kpi-fraction">
-      <strong class="kpi-big">8</strong>
-      <span>/ 10</span>
-    </div>
-    <ion-progress-bar [value]="0.8" class="kpi-bar"></ion-progress-bar>
-    <p class="kpi-foot">80% de la flota en operación</p>
+  <article class="g-panel">
+    <ion-icon name="cube-outline" aria-hidden="true"></ion-icon>
+    <h2>Carga movilizada</h2>
+    <strong>{{ latestMonth.tonnes | number }} <small>t</small></strong>
+    <p class="g-muted">Octubre de 2026</p>
   </article>
-
-  <article class="kpi-box">
-    <div class="kpi-box-head">
-      <span>Carga Movilizada</span>
-      <div class="kpi-badge-sq is-amber">
-        <ion-icon name="cube-outline"></ion-icon>
-      </div>
-    </div>
-    <strong class="kpi-big">14,500</strong>
-    <p class="kpi-foot">Acumulado de Octubre 2026</p>
-  </article>
-
-  <article class="kpi-box">
-    <div class="kpi-box-head">
-      <span>Alertas Críticas</span>
-      <div class="kpi-badge-sq is-red">
-        <ion-icon name="warning-outline"></ion-icon>
-      </div>
-    </div>
-    <strong class="kpi-big">2</strong>
-    <p class="kpi-foot">Requieren atención inmediata</p>
-  </article>
+  <a class="g-panel metric-link" routerLink="/gerente/flota" [queryParams]="{ estado: 'EN RUTA' }">
+    <ion-icon name="boat-outline" aria-hidden="true"></ion-icon>
+    <h2>Buques en ruta</h2>
+    <strong>{{ shipsAtSea }}</strong>
+    <p class="g-link">Ver flota en ruta</p>
+  </a>
+  <a class="g-panel metric-link attention" routerLink="/gerente/alertas">
+    <ion-icon name="warning-outline" aria-hidden="true"></ion-icon>
+    <h2>Alertas pendientes</h2>
+    <strong>{{ alerts.length }}</strong>
+    <p class="g-link">Revisar alertas</p>
+  </a>
 </section>
 
-<section class="charts-2-grid">
-  <article class="navi-surface-panel">
-    <div class="navi-panel-head">
+<div class="summary-detail">
+  <section class="g-panel" aria-labelledby="trend-title">
+    <header class="g-panel-head">
       <div>
-        <h2>Toneladas por Mes</h2>
-        <p>Carga movilizada en los últimos 10 meses</p>
+        <h2 id="trend-title">Carga por mes</h2>
+        <p class="g-muted">Mayo a octubre de 2026 · Toneladas</p>
       </div>
-      <span class="year-pill">2026</span>
-    </div>
+    </header>
+    <app-gerente-grafica [points]="trend" unit="t" />
+  </section>
 
-    <div class="bars-canvas">
-      @for (bar of monthlyBars; track bar.label) {
-        <div class="bar-col">
-          <div class="bar-slot">
-            <div
-              class="bar-fill"
-              [class.is-highlight]="bar.highlight"
-              [style.height.%]="bar.heightPct"
-            ></div>
-          </div>
-          <span class="bar-label">{{ bar.label }}</span>
-        </div>
+  <section class="g-panel" aria-labelledby="summary-alerts-title">
+    <header class="g-panel-head">
+      <h2 id="summary-alerts-title">Pendientes de atención</h2>
+      <a class="g-link" routerLink="/gerente/alertas">Ver todas</a>
+    </header>
+    <ul class="summary-alerts">
+      @for (alert of alerts; track alert.code) {
+        <li>
+          <span class="g-status is-attention">{{ alert.badge }}</span>
+          <a class="g-link" routerLink="/gerente/alertas" [queryParams]="{ codigo: alert.code }">{{ alert.vessel }}</a>
+          <p class="g-muted">{{ alert.eta }}</p>
+        </li>
       }
-    </div>
-  </article>
-
-  <article class="navi-surface-panel">
-    <div class="navi-panel-head">
-      <div>
-        <h2>Estado de Viajes</h2>
-        <p>Distribución del mes actual</p>
-      </div>
-    </div>
-
-    <div class="donut-layout">
-      <div class="donut-ring">
-        <div class="donut-hole">
-          <strong>10</strong>
-          <span>Viajes</span>
-        </div>
-      </div>
-
-      <ul class="donut-legend">
-        <li><span class="dot is-blue"></span>En Ruta <strong>60%</strong></li>
-        <li><span class="dot is-sky"></span>En Puerto <strong>20%</strong></li>
-        <li><span class="dot is-red"></span>Retraso <strong>10%</strong></li>
-        <li><span class="dot is-purple"></span>Mantenimiento <strong>10%</strong></li>
-      </ul>
-    </div>
-  </article>
-</section>
-
-<article class="navi-surface-panel">
-  <div class="navi-panel-head">
-    <div>
-      <h2>Envíos y Alertas Recientes</h2>
-      <p>Últimas operaciones registradas en la flota</p>
-    </div>
-  </div>
-
-  <div class="navi-table-scroll">
-    <table class="navi-data-table">
-      <thead>
-        <tr>
-          <th>Código</th>
-          <th>Buque</th>
-          <th>Ruta</th>
-          <th>Detalle / ETA</th>
-          <th>Estado</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (row of recentAlerts; track row.code) {
-          <tr>
-            <td><strong>{{ row.code }}</strong></td>
-            <td>{{ row.vessel }}</td>
-            <td>{{ row.route }}</td>
-            <td>{{ row.eta }}</td>
-            <td>
-              <ion-badge class="navi-badge" [class]="row.tone">{{ row.badge }}</ion-badge>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
-</article>
+    </ul>
+  </section>
+</div>

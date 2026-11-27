@@ -1,64 +1,79 @@
-<ion-content class="public-page" [fullscreen]="true">
-  <header class="site-header">
-    <div class="site-header-inner page-width">
-      <a class="brand" href="servicios#inicio">
-        <span class="brand-symbol"><ion-icon name="boat-outline" aria-hidden="true"></ion-icon></span>
-        <span>NaviPort <small>OceanTrack</small></span>
-      </a>
-      <nav class="site-nav" aria-label="Navegación principal">
-        <a href="servicios#funciones">Funciones</a>
-        <a href="servicios#rutas">Rutas</a>
-      </nav>
-      <ion-button class="access-button" fill="outline" routerLink="/login">Acceder</ion-button>
-    </div>
-  </header>
+<ion-content class="site" [fullscreen]="true">
+  <a class="skip-link" href="servicios#inicio">Ir al contenido</a>
 
-  <main id="inicio" tabindex="-1" class="page-width">
+  <app-web-header />
+
+  <main id="inicio" tabindex="-1">
     <section class="hero" aria-labelledby="hero-title">
-      <div class="hero-copy">
-        <p class="eyebrow">Logística marítima</p>
-        <h1 id="hero-title">Sigue tus embarques, <span>contenedor a contenedor.</span></h1>
-        <p>Consulta el avance de tus importaciones, revisa los hitos del viaje y conoce la fecha estimada de llegada.</p>
-        <ion-button class="hero-button" routerLink="/login">
-          Acceder a la plataforma
-          <ion-icon slot="end" name="arrow-forward" aria-hidden="true"></ion-icon>
-        </ion-button>
+      <div class="hero-inner content-width">
+        <div class="hero-copy">
+          <h1 id="hero-title">Seguimiento de embarques marítimos</h1>
+          <p>Consulta el estado de tus contenedores, los eventos del trayecto y la fecha estimada de llegada a Guayaquil.</p>
+          <div class="hero-actions">
+            <a class="button primary-button" routerLink="/servicios" [queryParams]="{ acceso: 'login' }">
+              Acceder a la plataforma <ion-icon [icon]="icons.arrowForward" aria-hidden="true"></ion-icon>
+            </a>
+            <a class="hero-link" routerLink="/rutas-maritimas">Ver rutas marítimas</a>
+          </div>
+        </div>
+        <img
+          class="hero-photo"
+          src="assets/web/buque-portacontenedores.webp"
+          srcset="assets/web/buque-portacontenedores-compacta.webp 600w, assets/web/buque-portacontenedores.webp 1024w"
+          sizes="(max-width: 480px) calc(100vw - 32px), (max-width: 700px) calc(100vw - 48px), min(55vw, 704px)"
+          width="1024"
+          height="737"
+          fetchpriority="high"
+          alt="Vista aérea de un buque cargado de contenedores en mar abierto"
+        >
       </div>
-      <figure class="hero-visual">
-        <img src="assets/figma/ship-intro.png" width="350" height="350" alt="Ilustración de un buque portacontenedores">
-      </figure>
     </section>
 
-    <section id="rutas" tabindex="-1" class="routes" aria-labelledby="routes-title">
-      <div class="routes-heading">
-        <ion-icon name="compass-outline" aria-hidden="true"></ion-icon>
-        <h2 id="routes-title">Rutas de ejemplo</h2>
-      </div>
-      <ul class="route-list">
-        <li><span>Shanghái</span><ion-icon name="arrow-forward" aria-hidden="true"></ion-icon><span class="sr-only">a</span><span>Guayaquil</span></li>
-        <li><span>Miami</span><ion-icon name="arrow-forward" aria-hidden="true"></ion-icon><span class="sr-only">a</span><span>Guayaquil</span></li>
-      </ul>
-    </section>
+    <section class="content-width" aria-labelledby="features-title">
+      <div class="section-layout">
+        <div class="section-intro">
+          <h2 id="features-title">Planifica y sigue tu embarque</h2>
+        </div>
 
-    <section id="funciones" tabindex="-1" class="features" aria-labelledby="features-title">
-      <h2 id="features-title">Qué puedes hacer con NaviPort</h2>
-      <div class="feature-grid">
-        <article>
-          <ion-icon name="cube-outline" aria-hidden="true"></ion-icon>
-          <h3>Seguimiento de cargas</h3>
-          <p>Consulta el estado de tus envíos, los eventos del trayecto y su llegada estimada.</p>
-        </article>
-        <article>
-          <ion-icon name="scan-outline" aria-hidden="true"></ion-icon>
-          <h3>Inspecciones en muelle</h3>
-          <p>Revisa los escaneos del turno y registra incidentes asociados a la carga.</p>
-        </article>
-        <article>
-          <ion-icon name="stats-chart-outline" aria-hidden="true"></ion-icon>
-          <h3>Gestión de flota</h3>
-          <p>Consulta indicadores, alertas y reportes operativos desde el panel web de la empresa.</p>
-        </article>
+        <div class="feature-list">
+          <a routerLink="/contenedores">
+            <ion-icon [icon]="icons.cubeOutline" aria-hidden="true"></ion-icon>
+            <div>
+              <h3>Compara contenedores</h3>
+              <p>Revisa capacidades, altura interior y medidas de las puertas.</p>
+            </div>
+            <ion-icon [icon]="icons.arrowForward" aria-hidden="true"></ion-icon>
+          </a>
+          <a routerLink="/seguimiento-maritimo">
+            <ion-icon [icon]="icons.locateOutline" aria-hidden="true"></ion-icon>
+            <div>
+              <h3>Aprende a seguir un envío</h3>
+              <p>Identifica el último evento registrado y consulta la llegada estimada.</p>
+            </div>
+            <ion-icon [icon]="icons.arrowForward" aria-hidden="true"></ion-icon>
+          </a>
+          <a routerLink="/preparar-embarque">
+            <ion-icon [icon]="icons.clipboardOutline" aria-hidden="true"></ion-icon>
+            <div>
+              <h3>Prepara tu carga</h3>
+              <p>Revisa qué datos necesitas antes de elegir un equipo.</p>
+            </div>
+            <ion-icon [icon]="icons.arrowForward" aria-hidden="true"></ion-icon>
+          </a>
+        </div>
       </div>
     </section>
   </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner content-width">
+      <span>NaviPort · OceanTrack</span>
+      <a routerLink="/privacidad">Privacidad</a>
+      <a href="https://unsplash.com/photos/an-aerial-view-of-a-cargo-ship-in-the-ocean-0A7YwYhZhWw">Fotografía de Bent Van Aeken</a>
+    </div>
+  </footer>
+
+  @defer (when accessMode()) {
+    <app-acceso-web #access [mode]="accessMode()" (changeMode)="setAccessMode($event)" (closed)="setAccessMode(null)" />
+  }
 </ion-content>

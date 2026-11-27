@@ -1,0 +1,13 @@
+<ul class="chart" [attr.aria-label]="'Valores mensuales en ' + unit()">
+  @for (point of points(); track point.label) {
+    <li>
+      <span class="value" [attr.aria-label]="(point.value | number) + ' ' + unit()">
+        {{ labelFor(point.value) }}
+      </span>
+      <div class="track" aria-hidden="true">
+        <span class="bar" [style.height.%]="point.value * 100 / maximum()"></span>
+      </div>
+      <span class="month">{{ point.label }}</span>
+    </li>
+  }
+</ul>
