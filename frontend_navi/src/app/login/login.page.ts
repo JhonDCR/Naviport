@@ -9,7 +9,7 @@ import {
   IonIcon,
   IonInput,
 } from '@ionic/angular';
-import { UserRole } from '../../shared/mock-data';
+import { UserRole } from '../shared/mock-data';
 
 interface RoleOption {
   role: UserRole;

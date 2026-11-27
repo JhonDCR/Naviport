@@ -1,0 +1,64 @@
+<ion-content class="public-page" [fullscreen]="true">
+  <header class="site-header">
+    <div class="site-header-inner page-width">
+      <a class="brand" href="servicios#inicio">
+        <span class="brand-symbol"><ion-icon name="boat-outline" aria-hidden="true"></ion-icon></span>
+        <span>NaviPort <small>OceanTrack</small></span>
+      </a>
+      <nav class="site-nav" aria-label="Navegación principal">
+        <a href="servicios#funciones">Funciones</a>
+        <a href="servicios#rutas">Rutas</a>
+      </nav>
+      <ion-button class="access-button" fill="outline" routerLink="/login">Acceder</ion-button>
+    </div>
+  </header>
+
+  <main id="inicio" tabindex="-1" class="page-width">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">Logística marítima</p>
+        <h1 id="hero-title">Sigue tus embarques, <span>contenedor a contenedor.</span></h1>
+        <p>Consulta el avance de tus importaciones, revisa los hitos del viaje y conoce la fecha estimada de llegada.</p>
+        <ion-button class="hero-button" routerLink="/login">
+          Acceder a la plataforma
+          <ion-icon slot="end" name="arrow-forward" aria-hidden="true"></ion-icon>
+        </ion-button>
+      </div>
+      <figure class="hero-visual">
+        <img src="assets/figma/ship-intro.png" width="350" height="350" alt="Ilustración de un buque portacontenedores">
+      </figure>
+    </section>
+
+    <section id="rutas" tabindex="-1" class="routes" aria-labelledby="routes-title">
+      <div class="routes-heading">
+        <ion-icon name="compass-outline" aria-hidden="true"></ion-icon>
+        <h2 id="routes-title">Rutas de ejemplo</h2>
+      </div>
+      <ul class="route-list">
+        <li><span>Shanghái</span><ion-icon name="arrow-forward" aria-hidden="true"></ion-icon><span class="sr-only">a</span><span>Guayaquil</span></li>
+        <li><span>Miami</span><ion-icon name="arrow-forward" aria-hidden="true"></ion-icon><span class="sr-only">a</span><span>Guayaquil</span></li>
+      </ul>
+    </section>
+
+    <section id="funciones" tabindex="-1" class="features" aria-labelledby="features-title">
+      <h2 id="features-title">Qué puedes hacer con NaviPort</h2>
+      <div class="feature-grid">
+        <article>
+          <ion-icon name="cube-outline" aria-hidden="true"></ion-icon>
+          <h3>Seguimiento de cargas</h3>
+          <p>Consulta el estado de tus envíos, los eventos del trayecto y su llegada estimada.</p>
+        </article>
+        <article>
+          <ion-icon name="scan-outline" aria-hidden="true"></ion-icon>
+          <h3>Inspecciones en muelle</h3>
+          <p>Revisa los escaneos del turno y registra incidentes asociados a la carga.</p>
+        </article>
+        <article>
+          <ion-icon name="stats-chart-outline" aria-hidden="true"></ion-icon>
+          <h3>Gestión de flota</h3>
+          <p>Consulta indicadores, alertas y reportes operativos desde el panel web de la empresa.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+</ion-content>
