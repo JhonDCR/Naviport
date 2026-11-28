@@ -1,62 +1,109 @@
 <app-web-frame>
-  <header class="reference-intro">
+  <header class="catalog-intro">
     <h1>Contenedores y dimensiones</h1>
-    <p>Compara la altura útil, el espacio interior y la entrada de cada equipo antes de consultar por un embarque.</p>
+    <p>Explora los equipos según tu carga y compara sus medidas antes de preparar el embarque.</p>
   </header>
 
-  <div class="reference-stack">
-    <section class="reference-card" aria-labelledby="comparison-title">
-      <h2 id="comparison-title">Comparar dos contenedores</h2>
-      <div class="reference-filters">
-        <label>Primer equipo
-          <select #first (change)="left.set(first.value)">
-            @for (item of equipment; track item.id) {
-              <option [value]="item.id" [selected]="item.id === left()" [disabled]="item.id === right()">{{ item.title }}</option>
-            }
-          </select>
-        </label>
-        <label>Segundo equipo
-          <select #second (change)="right.set(second.value)">
-            @for (item of equipment; track item.id) {
-              <option [value]="item.id" [selected]="item.id === right()" [disabled]="item.id === left()">{{ item.title }}</option>
-            }
-          </select>
-        </label>
-      </div>
-      <div class="reference-table" role="region" aria-label="Comparación de dimensiones" tabindex="0">
-        <table class="reference-data">
-          <thead><tr><th scope="col">Medida</th>@for (item of comparison(); track item.id) { <th scope="col">{{ item.title }}</th> }</tr></thead>
-          <tbody>
-            <tr><th scope="row">Interior (largo × ancho × alto, mm)</th>@for (item of comparison(); track item.id) { <td>{{ item.space }}</td> }</tr>
-            <tr><th scope="row">Puerta (ancho × alto, mm)</th>@for (item of comparison(); track item.id) { <td>{{ item.door }}</td> }</tr>
-            <tr><th scope="row">Volumen</th>@for (item of comparison(); track item.id) { <td>{{ item.capacity }}</td> }</tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
+  @let picks = selected();
+  <div class="reference-stack catalog">
     <section aria-labelledby="equipment-title">
-      <h2 id="equipment-title">Tipos de equipo</h2>
-      <div class="reference-filters">
-        <label>Tipo de carga
-          <select #group (change)="family.set(group.value)">
-            @for (option of families; track option) { <option>{{ option }}</option> }
-          </select>
-        </label>
-        <span class="reference-muted" role="status">{{ visible().length }} equipos</span>
+      <h2 id="equipment-title">Tipos de contenedores</h2>
+      <div class="catalog-toolbar">
+        <div class="catalog-filters" role="group" aria-label="Filtrar por tipo de carga">
+          @for (filter of filters; track filter.id) {
+            <button type="button" [attr.aria-pressed]="family() === filter.id" (click)="family.set(filter.id)">
+              {{ filter.label }}
+            </button>
+          }
+        </div>
+        <div class="catalog-counts">
+          <span class="reference-muted" role="status">{{ visible().length }} de {{ total }} modelos</span>
+          @if (picks.length === 2) {
+            <button type="button" class="comparison-shortcut" (click)="showComparison(comparisonTitle)">Ver comparación (2)</button>
+          } @else if (picks.length) {
+            <span class="reference-tag">{{ picks.length }} de 2 para comparar</span>
+          }
+        </div>
       </div>
-      <div class="reference-grid">
+      <div class="reference-grid equipment-grid">
         @for (item of visible(); track item.id) {
-          <article class="reference-card">
-            <p><span class="reference-tag">{{ item.family }}</span></p>
+          @let picked = picks.includes(item);
+          <article class="reference-card equipment-card" [class.picked]="picked">
+            <div class="equipment-top">
+              <ion-icon [icon]="icons.cubeOutline" aria-hidden="true"></ion-icon>
+              <span class="reference-tag">{{ item.family }}</span>
+            </div>
             <h3>{{ item.title }}</h3>
             <p>{{ item.use }}</p>
-            <a [href]="provider + item.id + '.html'">Ficha de Hapag-Lloyd</a>
+            <dl class="equipment-measure">
+              @if (item.id === '20-flatrack') {
+                <dt>Largo × ancho de plataforma</dt><dd>{{ item.space }}</dd>
+              } @else {
+                <dt>Volumen interior</dt><dd>{{ item.capacity }}</dd>
+              }
+            </dl>
+            <div class="equipment-actions">
+              <a [href]="provider + item.id + '.html'" [attr.aria-label]="'Ficha técnica de ' + item.title">Ficha técnica</a>
+              <button type="button" [attr.aria-label]="'Comparar ' + item.title" [attr.aria-pressed]="picked"
+                [disabled]="!picked && picks.length === 2" (click)="toggle(item)">
+                @if (picked) { <ion-icon [icon]="icons.checkmarkOutline" aria-hidden="true"></ion-icon> }
+                Comparar
+              </button>
+            </div>
           </article>
         }
       </div>
     </section>
-    <p class="reference-muted reference-note">Las medidas corresponden a equipos de referencia de Hapag-Lloyd. Confirma las dimensiones y el peso admitido de la unidad asignada antes de preparar la carga.</p>
-    <div class="reference-actions"><a class="reference-button primary" routerLink="/portal-cliente">Consultar mis envíos</a></div>
+
+    <section class="reference-card comparison" aria-labelledby="comparison-title">
+      <div class="comparison-heading">
+        <h2 id="comparison-title" tabindex="-1" #comparisonTitle>Comparar contenedores</h2>
+        <span class="reference-tag" role="status">{{ picks.length }} de 2 seleccionados</span>
+      </div>
+      @if (picks.length) {
+        <ul class="comparison-picks" aria-label="Modelos seleccionados">
+          @for (item of picks; track item.id) {
+            <li>
+              <button type="button" (click)="toggle(item); comparisonTitle.focus({ preventScroll: true })"
+                [attr.aria-label]="'Quitar ' + item.title + ' de la comparación'">
+                {{ item.title }} <ion-icon [icon]="icons.closeOutline" aria-hidden="true"></ion-icon>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+      @if (picks.length === 2) {
+        <div class="reference-table">
+          <table class="comparison-table" aria-labelledby="comparison-title">
+            <thead>
+              <tr><th scope="col">Medida</th>@for (item of picks; track item.id) { <th scope="col">{{ item.title }}</th> }</tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Interior <small>Largo × ancho × alto (mm)</small></th>
+                @for (item of picks; track item.id) {
+                  <td>{{ item.space }} @if (item.id === '20-flatrack') { <small>Plataforma (largo × ancho)</small> }</td>
+                }
+              </tr>
+              <tr><th scope="row">Puerta <small>Ancho × alto (mm)</small></th>@for (item of picks; track item.id) { <td>{{ item.door }}</td> }</tr>
+              <tr><th scope="row">Volumen</th>@for (item of picks; track item.id) { <td>{{ item.capacity }}</td> }</tr>
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="reference-muted">{{ picks.length ? 'Selecciona un modelo más para ver las medidas lado a lado.' : 'Elige dos modelos del catálogo para comparar sus medidas.' }}</p>
+      }
+    </section>
+
+    <section class="catalog-guide" aria-labelledby="catalog-guide-title">
+      <h2 id="catalog-guide-title">Cómo leer las medidas</h2>
+      <dl class="reference-grid">
+        <div class="reference-card"><dt>Puerta</dt><dd>Compara el ancho y el alto de la apertura con la pieza embalada más grande.</dd></div>
+        <div class="reference-card"><dt>Espacio interior</dt><dd>Usa largo, ancho y alto para verificar cómo puedes acomodar la carga una vez dentro.</dd></div>
+        <div class="reference-card"><dt>Volumen y peso</dt><dd>Los metros cúbicos miden el espacio disponible. Confirma por separado el peso admitido de la unidad que te asignen.</dd></div>
+      </dl>
+      <p class="reference-muted reference-note">Las medidas son de referencia y provienen de las fichas de Hapag-Lloyd enlazadas en cada modelo.</p>
+      <a routerLink="/preparar-embarque">Consultar la guía para preparar la carga</a>
+    </section>
   </div>
 </app-web-frame>

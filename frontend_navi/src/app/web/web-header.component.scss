@@ -3,14 +3,14 @@
 .web-header {
   color: var(--navi-text-principal);
   background: var(--navi-surface-card);
-  border-bottom: 1px solid color-mix(in srgb, currentColor 13%, white);
+  border-bottom: 1px solid var(--web-line, color-mix(in srgb, currentColor 13%, white));
 }
 
 .header-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: min(calc(100% - 64px), 1280px);
+  width: var(--web-width, min(calc(100% - 64px), 1280px));
   margin-inline: auto;
   gap: 12px;
 }
@@ -37,6 +37,11 @@
   box-shadow: inset 0 -3px var(--navi-color-accent);
 }
 .nav-trigger[aria-expanded='true'] ion-icon { rotate: 180deg; }
+.public-header .nav-trigger[aria-expanded='true'] { box-shadow: inset 0 -3px currentColor; }
+.public-header .has-current .nav-trigger[aria-expanded='false'] {
+  color: var(--navi-color-primary);
+  box-shadow: inset 0 -2px currentColor;
+}
 
 .nav-panel {
   position: absolute;
@@ -45,33 +50,36 @@
   padding: 10px;
   gap: 5px;
   border-radius: 0 0 14px 14px;
-  border: 1px solid color-mix(in srgb, var(--navi-text-principal) 14%, white);
+  border: 1px solid var(--web-line, color-mix(in srgb, var(--navi-text-principal) 14%, white));
   background: var(--navi-surface-card);
-  box-shadow: 0 16px 32px rgb(17 24 39 / 15%);
+  box-shadow: var(--web-overlay-shadow, 0 16px 32px rgb(17 24 39 / 15%));
 }
 .nav-panel:not([hidden]) { display: grid; }
+.public-header .nav-panel { border-radius: 0 0 var(--navi-radius-container) var(--navi-radius-container); }
 .nav-panel a {
   display: grid;
   align-items: center;
   grid-template-columns: 35px minmax(0, 1fr) auto;
   gap: 10px;
   padding: 9px;
-  border-radius: 8px;
+  border-radius: var(--web-control-radius, 8px);
 }
 .nav-panel a:hover, .nav-panel .current { background: var(--navi-bg-app); }
 .nav-panel strong, .nav-panel small { display: block; }
-.nav-panel strong { font-size: 0.87rem; }
-.nav-panel small { margin-top: 2px; color: var(--navi-text-secundario); font-size: 0.77rem; }
+.nav-panel strong { font-size: var(--web-small, 0.87rem); }
+.nav-panel small { margin-top: 2px; color: var(--navi-text-secundario); font-size: var(--web-label, 0.77rem); }
 .nav-panel ion-icon { color: var(--navi-color-primary); }
-.nav-panel ion-icon:first-child { background: var(--navi-bg-app); border-radius: 8px; padding: 8px; font-size: 1.15rem; }
+.nav-panel a > ion-icon:first-child { background: var(--navi-bg-app); border-radius: var(--web-control-radius, 8px); padding: var(--web-icon-padding, 8px); font-size: var(--web-icon-size, 1.15rem); }
+.public-header .nav-panel a > ion-icon:first-child { background: var(--navi-blue-soft-bg); }
 
 .account-actions { gap: 8px; }
 .account { border: 1px solid transparent; border-radius: 7px; }
+.public-header .account { min-height: var(--web-control-height); padding: var(--web-control-padding); font-size: var(--web-small); border-radius: var(--web-control-radius); }
 .primary { background: var(--navi-color-primary); color: white; }
 .primary:hover { background: var(--ion-color-primary-shade); }
-.secondary { background: white; border-color: var(--navi-progress-track); }
+.secondary { background: var(--navi-surface-card); border-color: var(--web-line, var(--navi-progress-track)); }
 .secondary:hover { color: var(--navi-color-primary); border-color: currentColor; }
-:is(a, button):focus-visible { outline: 2px solid var(--navi-color-primary); outline-offset: -2px; }
+:is(a, button):focus-visible { outline: var(--web-focus, 2px solid var(--navi-color-primary)); outline-offset: -2px; }
 
 @media (prefers-reduced-motion: no-preference) {
   .nav-panel:not([hidden]) { animation: show-panel 150ms ease-out both; }
@@ -79,7 +87,7 @@
 }
 
 @media (max-width: 980px) {
-  .header-inner { flex-wrap: wrap; width: min(calc(100% - 32px), 720px); padding-top: 8px; gap: 4px 10px; }
+  .header-inner { flex-wrap: wrap; width: var(--web-width, min(calc(100% - 32px), 720px)); padding-top: 8px; gap: 4px 10px; }
   .primary-nav { order: 1; flex-basis: 100%; }
   .nav-trigger { min-height: 44px; }
 }
@@ -88,4 +96,14 @@
   .brand small { display: none; }
   .account-actions { gap: 4px; }
   .nav-trigger, .account { padding-inline: 5px; font-size: 0.75rem; }
+  .public-header .account { padding-inline: 5px; font-size: var(--web-label); }
+  .public-header .header-inner { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; }
+  .public-header .brand { gap: 6px; }
+  .public-header .brand ion-icon { padding: 6px; font-size: 1.125rem; }
+  .public-header .primary-nav { grid-column: 1 / -1; }
+}
+
+@media (max-width: 360px) {
+  .public-header .primary-nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .public-header .nav-trigger { width: 100%; justify-content: center; }
 }

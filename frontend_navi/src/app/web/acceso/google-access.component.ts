@@ -34,7 +34,10 @@ function loadGoogle(): Promise<GoogleIdentity> {
       if (identity) resolve(identity);
       else reject(new Error('Google Identity Services unavailable'));
     };
-    script.onerror = () => reject(new Error('Google Identity Services unavailable'));
+    script.onerror = () => {
+      script.remove();
+      reject(new Error('Google Identity Services unavailable'));
+    };
     document.head.append(script);
   }).catch((error: unknown) => {
     googleLibrary = undefined;
@@ -67,10 +70,10 @@ function loadGoogle(): Promise<GoogleIdentity> {
       padding-inline: 12px;
       border: 1px solid var(--access-line);
       border-radius: 99px;
-      background: var(--access-white);
+      background: var(--navi-bg-app);
       color: var(--access-muted);
       font: inherit;
-      font-size: 0.87rem;
+      font-size: var(--web-small);
     }
     .google-placeholder img {
       flex: none;
@@ -80,7 +83,7 @@ function loadGoogle(): Promise<GoogleIdentity> {
     p {
       margin: 6px 0 0;
       color: var(--access-muted);
-      font-size: 0.75rem;
+      font-size: var(--web-label);
     }
   `,
 })
@@ -108,7 +111,7 @@ export class GoogleAccessComponent implements AfterViewInit {
       if (this.destroy.destroyed) return;
 
       if (!data.enabled) {
-        this.status.set('Google pendiente de configuración.');
+        this.status.set('Google aún no está habilitado.');
         return;
       }
 

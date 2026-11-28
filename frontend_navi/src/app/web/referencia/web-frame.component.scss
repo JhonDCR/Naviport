@@ -1,3 +1,5 @@
+@use '../web-public-theme' as web;
+
 app-web-frame {
   display: block;
   height: 100%;
@@ -8,8 +10,13 @@ app-web-frame {
     color: var(--navi-text-principal);
   }
 
+  .web-public {
+    @include web.tokens;
+    --ref-line: var(--web-line);
+  }
+
   .reference-width {
-    width: min(calc(100% - 40px), 1120px);
+    width: var(--web-width, min(calc(100% - 40px), 1120px));
     margin-inline: auto;
   }
 
@@ -32,10 +39,12 @@ app-web-frame {
   }
 
   .reference-tabs a:hover, .reference-tabs .selected { color: var(--navi-color-primary); text-decoration: underline; }
-  .reference-main :is(a, button, select, input, summary, [tabindex]):focus-visible { outline: 2px solid var(--navi-color-primary); outline-offset: 3px; }
+  .reference-main :is(a, button, select, input, summary, [tabindex]):focus-visible { outline: var(--web-focus, 2px solid var(--navi-color-primary)); outline-offset: 3px; }
 
-  .reference-main { padding-block: clamp(22px, 5vw, 62px); }
+  .reference-main { padding-block: var(--web-section, clamp(22px, 5vw, 62px)); }
   .reference-footer { border-top: 1px solid var(--ref-line); padding-block: 16px; font-size: 0.82rem; }
+  .web-public .reference-footer { padding-block: 20px; font-size: var(--web-small); }
+  .web-public .reference-footer a { color: var(--navi-text-secundario); }
   .reference-tabs { border-bottom: 1px solid var(--ref-line); margin-bottom: 24px; }
   .reference-tabs .selected { font-weight: 600; }
 
@@ -44,23 +53,39 @@ app-web-frame {
   h2 { font-size: 1.12rem; font-weight: 600; }
   h3 { font-size: 0.95rem; font-weight: 600; }
   p { line-height: 1.6; }
+  .web-public h1 { font-size: var(--web-title); line-height: 1.1; letter-spacing: var(--web-heading-tracking); }
+  .web-public h2 { font-size: var(--web-heading); line-height: 1.18; letter-spacing: var(--web-heading-tracking); font-weight: 700; }
+  .web-public h3 { font-size: var(--web-subheading); line-height: 1.35; }
+  .web-public p { line-height: var(--web-copy-line); }
   .reference-intro { max-width: 65ch; margin-bottom: 24px; }
-  .reference-muted { color: var(--navi-text-secundario); font-size: 0.85rem; }
+  .reference-muted { color: var(--navi-text-secundario); font-size: var(--web-small, 0.85rem); }
   .reference-stack { display: grid; gap: 16px; }
-  .reference-card { min-width: 0; border: 1px solid var(--ref-line); border-radius: 9px; padding: clamp(14px, 2.5vw, 23px); background: white; }
+  .reference-card { min-width: 0; border: 1px solid var(--ref-line); border-radius: var(--web-card-radius, 9px); padding: var(--web-card-padding, clamp(14px, 2.5vw, 23px)); background: var(--navi-surface-card); }
   .reference-card > :is(h2, h3, p, dl, .reference-filters):not(:last-child) { margin-bottom: 10px; }
   .guide-card { border-top: 3px solid var(--navi-color-primary); }
-  .reference-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 12px; }
+  .reference-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: var(--web-gap, 12px); }
   .reference-date, .reference-metric { font-variant-numeric: tabular-nums; }
   .reference-metric { display: block; font-size: 1.7rem; font-weight: 700; }
   .reference-tag { display: inline-block; color: var(--navi-text-principal); background: var(--navi-bg-app); padding: 3px 7px; border-radius: 4px; font-size: 0.73rem; }
   .reference-tag.attention { background: color-mix(in srgb, var(--navi-color-accent) 38%, white); }
+  .web-public .reference-tag { padding: 4px 8px; border-radius: var(--navi-radius-badge); font-size: var(--web-label); }
 
   .reference-filters { align-items: end; margin-bottom: 12px; }
   .reference-filters label { display: grid; gap: 5px; font-size: 0.83rem; font-weight: 600; }
   .reference-filters :is(input, select), .reference-button { background: white; border: 1px solid var(--ref-line); border-radius: 5px; color: inherit; padding: 7px 10px; font: inherit; min-height: 40px; max-width: 100%; }
   .reference-button { display: inline-flex; align-items: center; gap: 8px; font-size: 0.84rem; text-decoration: none; cursor: pointer; }
   .reference-main .reference-button.primary { background: var(--navi-color-primary); border-color: var(--navi-color-primary); color: white; }
+  .web-public .reference-button {
+    min-height: var(--web-control-height);
+    border-radius: var(--web-control-radius);
+    padding: var(--web-control-padding);
+    font-size: var(--web-small);
+    font-weight: 600;
+  }
+  .web-public .reference-main .reference-button.primary:hover {
+    background: var(--ion-color-primary-shade);
+    border-color: var(--ion-color-primary-shade);
+  }
 
   .reference-table { overflow-x: auto; }
   table { border-collapse: collapse; width: 100%; font-size: 0.83rem; }

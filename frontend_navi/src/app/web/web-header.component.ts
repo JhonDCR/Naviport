@@ -49,7 +49,7 @@ export class WebHeaderComponent {
     const role = this.session()?.usuario.rol;
     return groups.filter((group) => !group.client || !role || role === 'cliente');
   });
-  readonly open = signal<string | null>(null);
+  readonly open = signal<{ name: string; preview: boolean } | null>(null);
   readonly id = `web-nav-${++nextHeaderId}`;
   readonly icons = { arrowForward, boatOutline, chevronDown };
 
@@ -61,7 +61,9 @@ export class WebHeaderComponent {
   }
 
   show(event: PointerEvent, name: string): void {
-    if (event.pointerType === 'mouse') this.open.set(name);
+    if (event.pointerType === 'mouse' && !this.host.querySelector('.nav-panel :focus')) {
+      this.open.set({ name, preview: true });
+    }
   }
 
   leave(event: PointerEvent): void {
@@ -73,7 +75,7 @@ export class WebHeaderComponent {
   }
 
   toggle(name: string): void {
-    this.open.update((active) => active === name ? null : name);
+    this.open.update((active) => active?.name === name && !active.preview ? null : { name, preview: false });
   }
 
   escape(event: Event): void {

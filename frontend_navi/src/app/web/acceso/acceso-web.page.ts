@@ -1,8 +1,8 @@
-import { Component, ElementRef, OnDestroy, effect, inject, input, output, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, afterRenderEffect, inject, input, output, signal, viewChild } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { IonIcon } from '@ionic/angular';
-import { boatOutline, closeOutline, eyeOffOutline, eyeOutline, lockClosedOutline, mailOutline, personOutline } from 'ionicons/icons';
+import { boatOutline, chevronDown, closeOutline, eyeOffOutline, eyeOutline, lockClosedOutline, mailOutline, personOutline } from 'ionicons/icons';
 import { environment } from '../../../environments/environment';
 import { GoogleAccessComponent } from './google-access.component';
 import { WebSessionService } from './web-session.service';
@@ -17,7 +17,6 @@ export type AccessMode = 'login' | 'registro';
 })
 export class AccesoWebPage implements OnDestroy {
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
   private readonly forms = inject(NonNullableFormBuilder);
   private readonly webSession = inject(WebSessionService);
   private readonly dialog = viewChild<ElementRef<HTMLDialogElement>>('dialog');
@@ -37,16 +36,21 @@ export class AccesoWebPage implements OnDestroy {
   readonly busy = signal(false);
   readonly message = signal('');
   readonly notice = signal('');
-  readonly icons = { boatOutline, closeOutline, eyeOffOutline, eyeOutline, lockClosedOutline, mailOutline, personOutline };
+  readonly icons = { boatOutline, chevronDown, closeOutline, eyeOffOutline, eyeOutline, lockClosedOutline, mailOutline, personOutline };
 
   constructor() {
-    effect(() => {
+    afterRenderEffect(() => {
       const dialog = this.dialog()?.nativeElement;
-      const mode = this.mode();
       if (!dialog) return;
 
-      if (mode && !dialog.open) dialog.showModal();
-      if (!mode && dialog.open) dialog.close();
+      if (!this.mode()) {
+        if (dialog.open) this.dismissForNavigation();
+        return;
+      }
+
+      if (!dialog.open) dialog.showModal();
+      this.formArea()?.nativeElement.scrollTo({ top: 0 });
+      dialog.querySelector<HTMLInputElement>('input[autofocus]')?.focus({ preventScroll: true });
     });
   }
 
@@ -56,7 +60,6 @@ export class AccesoWebPage implements OnDestroy {
     this.form.controls.password.reset();
     this.showPassword.set(false);
     this.form.markAsUntouched();
-    this.formArea()?.nativeElement.scrollTo({ top: 0 });
     this.changeMode.emit(mode);
   }
 
@@ -84,18 +87,23 @@ export class AccesoWebPage implements OnDestroy {
     this.message.set('');
     this.notice.set('');
 
+    const { correo: emailField, password: passwordField } = this.form.controls;
+    emailField.setValue(emailField.value.trim());
     const { nombre, correo, password } = this.form.getRawValue();
-    if (this.form.invalid || (mode === 'registro' && nombre.trim().length < 2)) {
+    const missingName = mode === 'registro' && nombre.trim().length < 2;
+    if (missingName || emailField.invalid || passwordField.invalid) {
       this.form.markAllAsTouched();
+      const first = missingName ? 'name' : emailField.invalid ? 'email' : 'password';
+      this.formArea()?.nativeElement.querySelector<HTMLInputElement>('#access-' + first)?.focus();
       return;
     }
     if (mode === 'registro' && new TextEncoder().encode(password).length > 72) {
-      this.message.set('Elige una contraseña más corta. El máximo es de 72 bytes.');
+      this.message.set('La contraseña es demasiado larga. Elige una más corta.');
       return;
     }
     const body: Record<string, string> = mode === 'registro'
-      ? { nombre: nombre.trim(), correo: correo.trim(), password }
-      : { correo: correo.trim(), password };
+      ? { nombre: nombre.trim(), correo, password }
+      : { correo, password };
     await this.send(mode, body);
   }
 
@@ -128,6 +136,7 @@ export class AccesoWebPage implements OnDestroy {
         body: JSON.stringify(body),
         signal: AbortSignal.any([request.signal, AbortSignal.timeout(10_000)]),
       });
+      request.signal.throwIfAborted();
 
       if (!response.ok) {
         this.message.set(this.errorMessage(action, response.status));
@@ -147,7 +156,7 @@ export class AccesoWebPage implements OnDestroy {
       if (request.signal.aborted) return;
       this.webSession.start(data);
       const role = data.usuario.rol;
-      const destination = this.route.snapshot.queryParamMap.get('destino') ?? '';
+      const destination = this.router.parseUrl(this.router.url).queryParamMap.get('destino') ?? '';
       const clientPage = /^\/portal-cliente(?:[/?#]|$)/.test(destination) ? destination : '/portal-cliente';
       const next = role === 'cliente' ? clientPage : role === 'gerente' ? '/gerente' : role === 'admin' ? '/admin' : null;
       if (next) {
@@ -156,7 +165,7 @@ export class AccesoWebPage implements OnDestroy {
       }
     } catch {
       if (!request.signal.aborted) {
-        this.message.set('No pudimos conectar con la API. Intenta de nuevo.');
+        this.message.set('No pudimos conectar con NaviPort. Intenta de nuevo.');
       }
     } finally {
       this.request = undefined;
