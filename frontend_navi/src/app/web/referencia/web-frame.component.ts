@@ -1,21 +1,15 @@
-import { Component, ViewEncapsulation, input } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, ViewEncapsulation, input, viewChild } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { IonContent } from '@ionic/angular';
 import { WebHeaderComponent } from '../web-header.component';
 
 @Component({
   selector: 'app-web-frame',
   template: `
-    <ion-content class="reference" [class.web-public]="!portal()">
-      <app-web-header [portal]="portal()" />
+    <ion-content class="reference" [class.web-public]="!portal()" [class.client-portal]="portal()"
+      [class.list-viewport]="portal() && listViewport()">
+      @if (!portal()) { <app-web-header /> }
       <main class="reference-width reference-main" tabindex="-1">
-        @if (portal()) {
-          <nav class="reference-tabs" aria-label="Portal del cliente">
-            <a routerLink="/portal-cliente" routerLinkActive="selected" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">Resumen</a>
-            <a routerLink="/portal-cliente/envios" routerLinkActive="selected">Mis envíos</a>
-            <a routerLink="/portal-cliente/notificaciones" routerLinkActive="selected" ariaCurrentWhenActive="page">Notificaciones</a>
-          </nav>
-        }
         <ng-content />
       </main>
       <footer class="reference-width reference-footer">
@@ -26,8 +20,14 @@ import { WebHeaderComponent } from '../web-header.component';
   `,
   styleUrl: './web-frame.component.scss',
   encapsulation: ViewEncapsulation.None,
-  imports: [IonContent, RouterLink, RouterLinkActive, WebHeaderComponent],
+  imports: [IonContent, RouterLink, WebHeaderComponent],
 })
 export class WebFrameComponent {
   readonly portal = input(false);
+  readonly listViewport = input(false);
+  private readonly viewport = viewChild.required(IonContent);
+
+  getScrollElement(): Promise<HTMLElement> {
+    return this.viewport().getScrollElement();
+  }
 }

@@ -1,0 +1,105 @@
+<header class="shipments-heading">
+  <div>
+    <h1>Mis envíos</h1>
+    <p>Estados y llegadas de tus contenedores.</p>
+  </div>
+  @if (nextArrival(); as next) {
+    <a class="next-arrival" [routerLink]="['/portal-cliente/envios', next.id]">
+      <ion-icon [icon]="icons.calendarOutline" aria-hidden="true"></ion-icon>
+      <span>
+        <small>Próxima llegada estimada</small>
+        <time [attr.datetime]="next.arrival | date:'yyyy-MM-dd':'-0500'">{{ next.arrival | date:'dd/MM/yyyy':'-0500' }}</time>
+        <span class="arrival-route">{{ next.codigoContenedor }} <span>· {{ next.route }}</span></span>
+      </span>
+      <ion-icon [icon]="icons.arrowForward" aria-hidden="true"></ion-icon>
+    </a>
+  }
+</header>
+
+<section class="envios" aria-label="Lista de envíos">
+  <div class="envios-controls">
+    <label class="envios-search" for="envios-query">
+      <ion-icon [icon]="icons.searchOutline" aria-hidden="true"></ion-icon>
+      <input id="envios-query" #query type="search" [value]="filters().search" (input)="search(query.value)"
+        aria-label="Buscar envío" placeholder="Código, buque o puerto">
+    </label>
+    @if (filtered()) {
+      <button type="button" class="clear-filters" (click)="clear(); query.focus()">Limpiar filtros</button>
+    }
+    @if (loads()?.length) {
+      <p class="envios-count" role="status">{{ visible().length }} de {{ loads()?.length }} envíos</p>
+    }
+  </div>
+  <div class="envios-filter-bar">
+    <div class="envios-filters" role="group" aria-label="Estado del envío">
+      @for (option of options; track option.value) {
+        <button type="button" [attr.aria-pressed]="filters().status === option.value" (click)="choose(option.value)">
+          {{ option.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="envios-message" role="alert">
+      <h2>No pudimos cargar tus envíos</h2>
+      <p>{{ error() }}</p>
+      <button class="retry-button" type="button" (click)="retry.emit()">Reintentar</button>
+    </div>
+  } @else if (loads() === null) {
+    <p class="envios-message" role="status">Consultando tus envíos…</p>
+  } @else if (!loads()?.length) {
+    <div class="envios-message" role="status">
+      <h2>Aún no tienes envíos asociados</h2>
+      <p>Cuando se asocie un embarque a tu cuenta, aparecerá en esta lista.</p>
+    </div>
+  } @else {
+    @if (visible().length) {
+      <div class="envios-results" data-list-scroll tabindex="0" role="region" aria-label="Resultados de envíos">
+        <table aria-label="Contenedores de tu cuenta" role="table">
+          <thead role="rowgroup">
+            <tr role="row">
+              <th scope="col" role="columnheader">Contenedor</th>
+              <th scope="col" role="columnheader">Ruta</th>
+              <th scope="col" role="columnheader">Estado</th>
+              <th scope="col" role="columnheader">Llegada estimada</th>
+            </tr>
+          </thead>
+          <tbody role="rowgroup">
+            @for (load of visible(); track load.id) {
+              <tr role="row">
+                <th scope="row" role="rowheader">
+                  <a [routerLink]="['/portal-cliente/envios', load.id]"
+                    [attr.aria-label]="'Ver detalle de ' + load.codigoContenedor">{{ load.codigoContenedor }}</a>
+                  @if (load.tipo) { <small>{{ load.tipo }}</small> }
+                </th>
+                <td role="cell">
+                  <span class="envios-label" aria-hidden="true">Ruta</span>
+                  <span class="shipment-route">{{ load.route }}</span>
+                  @if (load.vessel) { <small>{{ load.vessel }}</small> }
+                </td>
+                <td role="cell">
+                  <span class="envios-label" aria-hidden="true">Estado</span>
+                  <span class="envios-state" [class.delayed]="load.delayed" [class.complete]="load.completed" [class.sailing]="load.sailing">{{ load.state }}</span>
+                </td>
+                <td role="cell">
+                  <span class="envios-label" aria-hidden="true">Llegada estimada</span>
+                  @if (load.arrival !== null) {
+                    <time [attr.datetime]="load.arrival | date:'yyyy-MM-dd':'-0500'">{{ load.arrival | date:'dd/MM/yyyy':'-0500' }}</time>
+                  } @else {
+                    <span class="unknown-date">Por confirmar</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <div class="envios-message">
+        <h2>No encontramos envíos con estos filtros</h2>
+        <p>Prueba otro término o limpia los filtros para ver todos tus embarques.</p>
+      </div>
+    }
+  }
+</section>

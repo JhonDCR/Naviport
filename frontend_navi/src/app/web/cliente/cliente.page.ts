@@ -1,37 +1,18 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { IonIcon } from '@ionic/angular';
+import { arrowForward, boatOutline, notificationsOutline } from 'ionicons/icons';
 import { environment } from '../../../environments/environment';
 import { WebSessionService } from '../acceso/web-session.service';
-import { WebFrameComponent } from '../referencia/web-frame.component';
-
-interface Viaje {
-  codigo: string;
-  buque: string;
-  origen: string;
-  destino: string;
-  estado: string;
-}
-
-interface Carga {
-  id: string;
-  codigoContenedor: string;
-  tipo: string;
-  pesoToneladas: number;
-  viaje: Viaje & { llegadaEstimada: string | null };
-}
+import { DetalleEnvioComponent, type DetalleEnvio } from './detalle-envio.component';
+import { MisEnviosComponent, portCity, shipmentDate, shipmentState, type EnvioWeb } from './mis-envios.component';
 
 interface Resumen {
   totalContenedores: number;
   enCurso: number;
   completados: number;
-  cargaDestacada: Carga | null;
-}
-
-interface Detalle extends Omit<Carga, 'viaje'> {
-  viaje: (Viaje & { fechas?: { llegadaEstimada?: string; llegadaReal?: string } }) | null;
-  numeroPrecinto: string | null;
-  eventos: { estado: string; fecha: string; ubicacion: string; descripcion: string | null; completado: boolean }[];
+  cargaDestacada: EnvioWeb | null;
 }
 
 interface Aviso {
@@ -44,14 +25,15 @@ interface Aviso {
 
 type Vista =
   | { tipo: 'resumen'; data: Resumen }
-  | { tipo: 'envios'; data: Carga[] }
-  | { tipo: 'detalle'; data: Detalle }
+  | { tipo: 'envios'; data: EnvioWeb[] }
+  | { tipo: 'detalle'; data: DetalleEnvio }
   | { tipo: 'notificaciones'; data: Aviso[] };
 
 @Component({
   selector: 'app-portal-cliente',
   templateUrl: './cliente.page.html',
-  imports: [DatePipe, DecimalPipe, RouterLink, WebFrameComponent],
+  styleUrl: './cliente.page.scss',
+  imports: [DatePipe, DetalleEnvioComponent, IonIcon, MisEnviosComponent, RouterLink],
 })
 export class ClientePage {
   private readonly session = inject(WebSessionService);
@@ -62,23 +44,22 @@ export class ClientePage {
   readonly id = input('');
   readonly vista = signal<Vista | null>(null);
   readonly error = signal('');
+  readonly ready = computed(() => this.vista() !== null || !!this.error());
   readonly avisoError = signal('');
   readonly pendingAviso = signal<string | null>(null);
-  readonly search = signal('');
-  readonly filter = signal('todos');
-
-  readonly envios = computed(() => {
+  readonly onlyUnread = signal(false);
+  readonly portCity = portCity;
+  readonly shipmentDate = shipmentDate;
+  readonly shipmentState = shipmentState;
+  readonly icons = { arrowForward, boatOutline, notificationsOutline };
+  readonly notifications = computed(() => {
     const view = this.vista();
-    if (view?.tipo !== 'envios') return [];
-
-    const term = this.search().trim().toLocaleLowerCase('es-EC');
-    const filter = this.filter();
-    return view.data.filter(({ codigoContenedor, viaje }) =>
-      (filter === 'todos' || (viaje.estado === 'finalizado') === (filter === 'completados')) &&
-      [codigoContenedor, viaje.buque, viaje.origen, viaje.destino].some((value) =>
-        value.toLocaleLowerCase('es-EC').includes(term),
-      ),
-    );
+    return view?.tipo === 'notificaciones' ? view.data : [];
+  });
+  readonly unread = computed(() => this.notifications().filter((item) => !item.leida));
+  readonly cargas = computed(() => {
+    const view = this.vista();
+    return view?.tipo === 'envios' ? view.data : null;
   });
 
   constructor() {
@@ -107,10 +88,6 @@ export class ClientePage {
     this.retry.update((attempt) => attempt + 1);
   }
 
-  estado(value: string): string {
-    return value.replaceAll('_', ' ');
-  }
-
   async leer(aviso: Aviso): Promise<void> {
     const active = this.session.session();
     if (!active || aviso.leida || this.pendingAviso()) return;
@@ -132,8 +109,8 @@ export class ClientePage {
   private async load(section: Vista['tipo'], id: string, token: string, signal: AbortSignal): Promise<Vista> {
     switch (section) {
       case 'resumen': return { tipo: section, data: await this.api<Resumen>('resumen-cliente', token, signal) };
-      case 'envios': return { tipo: section, data: await this.api<Carga[]>('mis-cargas', token, signal) };
-      case 'detalle': return { tipo: section, data: await this.api<Detalle>(encodeURIComponent(id), token, signal) };
+      case 'envios': return { tipo: section, data: await this.api<EnvioWeb[]>('mis-cargas', token, signal) };
+      case 'detalle': return { tipo: section, data: await this.api<DetalleEnvio>(encodeURIComponent(id), token, signal) };
       case 'notificaciones': return { tipo: section, data: await this.api<Aviso[]>('notificaciones', token, signal) };
     }
   }

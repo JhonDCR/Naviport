@@ -72,6 +72,7 @@
 .nav-panel a > ion-icon:first-child { background: var(--navi-bg-app); border-radius: var(--web-control-radius, 8px); padding: var(--web-icon-padding, 8px); font-size: var(--web-icon-size, 1.15rem); }
 .public-header .nav-panel a > ion-icon:first-child { background: var(--navi-blue-soft-bg); }
 
+
 .account-actions { gap: 8px; }
 .account { border: 1px solid transparent; border-radius: 7px; }
 .public-header .account { min-height: var(--web-control-height); padding: var(--web-control-padding); font-size: var(--web-small); border-radius: var(--web-control-radius); }
@@ -91,6 +92,7 @@
   .primary-nav { order: 1; flex-basis: 100%; }
   .nav-trigger { min-height: 44px; }
 }
+
 
 @media (max-width: 480px) {
   .brand small { display: none; }

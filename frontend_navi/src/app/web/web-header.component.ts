@@ -1,4 +1,4 @@
-import { Component, ElementRef, computed, inject, input, signal } from '@angular/core';
+import { Component, ElementRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationStart, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { IonIcon } from '@ionic/angular';
@@ -36,14 +36,16 @@ const groups = [
   imports: [IonIcon, RouterLink, RouterLinkActive],
   templateUrl: './web-header.component.html',
   styleUrl: './web-header.component.scss',
-  host: { '(document:keydown.escape)': 'escape($event)', '(document:click)': 'dismissOutside($event)' },
+  host: {
+    '(document:keydown.escape)': 'escape($event)',
+    '(document:click)': 'dismissOutside($event)',
+  },
 })
 export class WebHeaderComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly router = inject(Router);
   private readonly account = inject(WebSessionService);
 
-  readonly portal = input(false);
   readonly session = this.account.session;
   readonly groups = computed(() => {
     const role = this.session()?.usuario.rol;
@@ -91,9 +93,4 @@ export class WebHeaderComponent {
     if (this.open() && !this.host.contains(event.target as Node)) this.open.set(null);
   }
 
-  async signOut(): Promise<void> {
-    this.open.set(null);
-    await this.account.signOut().catch(() => undefined);
-    await this.router.navigateByUrl('/servicios');
-  }
 }

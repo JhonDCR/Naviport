@@ -43,7 +43,8 @@
               }
             </dl>
             <div class="equipment-actions">
-              <a [href]="provider + item.id + '.html'" [attr.aria-label]="'Ficha técnica de ' + item.title">Ficha técnica</a>
+              <a [href]="provider + item.id + '.html'" target="_blank" rel="noopener noreferrer"
+                [attr.aria-label]="'Ficha técnica de ' + item.title + ' (abre en otra pestaña)'">Ficha técnica</a>
               <button type="button" [attr.aria-label]="'Comparar ' + item.title" [attr.aria-pressed]="picked"
                 [disabled]="!picked && picks.length === 2" (click)="toggle(item)">
                 @if (picked) { <ion-icon [icon]="icons.checkmarkOutline" aria-hidden="true"></ion-icon> }
