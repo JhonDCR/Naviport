@@ -1,4 +1,4 @@
-<header class="web-header">
+<header class="web-header" [class.public-header]="!portal()">
   <div class="header-inner">
     <a class="brand" routerLink="/servicios" (click)="open.set(null)" aria-label="NaviPort OceanTrack, inicio">
       <ion-icon [icon]="icons.boatOutline" aria-hidden="true"></ion-icon>
@@ -7,12 +7,12 @@
 
     <nav class="primary-nav" aria-label="Navegación principal" (pointerleave)="leave($event)" (focusout)="leaveFocus($event)">
       @for (group of groups(); track group.name; let index = $index) {
-        <div (pointerenter)="show($event, group.name)">
-          <button class="nav-trigger" type="button" [attr.aria-expanded]="open() === group.name"
+        <div routerLinkActive="has-current" [routerLinkActiveOptions]="{ exact: true }" (pointerenter)="show($event, group.name)">
+          <button class="nav-trigger" type="button" [attr.aria-expanded]="open()?.name === group.name"
             [attr.aria-controls]="id + '-' + index" (click)="toggle(group.name)">
             {{ group.name }} <ion-icon [icon]="icons.chevronDown" aria-hidden="true"></ion-icon>
           </button>
-          <div class="nav-panel" [id]="id + '-' + index" [hidden]="open() !== group.name">
+          <div class="nav-panel" [id]="id + '-' + index" [hidden]="open()?.name !== group.name">
             @for (link of group.links; track link.path) {
               <a [routerLink]="link.path" routerLinkActive="current" [routerLinkActiveOptions]="{ exact: true }"
                 ariaCurrentWhenActive="page" (click)="open.set(null)">

@@ -6,7 +6,7 @@ import { WebHeaderComponent } from '../web-header.component';
 @Component({
   selector: 'app-web-frame',
   template: `
-    <ion-content class="reference">
+    <ion-content class="reference" [class.web-public]="!portal()">
       <app-web-header [portal]="portal()" />
       <main class="reference-width reference-main" tabindex="-1">
         @if (portal()) {

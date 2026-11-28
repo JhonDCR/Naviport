@@ -1,0 +1,53 @@
+.guide-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.5fr);
+  align-items: center;
+  overflow: hidden;
+  border-radius: var(--navi-radius-container);
+  background: var(--navi-navbar-dark);
+  color: white;
+}
+
+.guide-hero-copy { padding: var(--web-panel-padding); }
+.guide-hero p { max-width: 53ch; }
+.guide-hero .guide-cta { margin-top: var(--web-gap); }
+.guide-hero .guide-cta:focus-visible { outline-color: var(--navi-blue-soft-bg); }
+.guide-highlight {
+  display: grid;
+  gap: 8px;
+  margin-inline-end: clamp(20px, 4vw, 44px);
+  padding: var(--web-card-padding);
+  border: 1px solid var(--navi-text-secundario);
+  border-radius: var(--web-card-radius);
+}
+.guide-highlight ion-icon { color: var(--navi-blue-soft-bg); font-size: var(--web-icon-size); }
+.guide-highlight p { font-size: var(--web-small); }
+
+.guide-body { display: grid; gap: var(--web-section); margin-top: var(--web-section); }
+.guide-body h2 { margin-bottom: var(--web-gap); }
+.guide-feature { display: grid; align-content: start; gap: 8px; }
+.guide-body .guide-feature h3 { margin: 0; }
+.guide-feature-top { display: flex; min-height: 36px; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
+.guide-feature-top ion-icon { padding: var(--web-icon-padding); border-radius: var(--web-control-radius); background: var(--navi-blue-soft-bg); color: var(--navi-color-primary); font-size: var(--web-icon-size); }
+
+.guide-example { border-inline-start: 4px solid var(--navi-color-primary); }
+.guide-example dl { margin: 0; }
+.guide-example dl div { display: grid; grid-template-columns: minmax(140px, 0.45fr) minmax(0, 1fr); gap: 8px 18px; border-top: 1px solid var(--ref-line); padding: 12px 0; }
+.guide-example dl div:last-child { padding-bottom: 0; }
+.guide-example dt { font-weight: 600; }
+.guide-example dd { margin: 0; line-height: var(--web-copy-line); }
+
+.guide-faq details { border-top: 1px solid var(--ref-line); }
+.guide-faq details:last-child { border-bottom: 1px solid var(--ref-line); }
+.guide-faq summary { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 15px 0; cursor: pointer; font-weight: 600; color: inherit; }
+.guide-faq summary::-webkit-details-marker { display: none; }
+.guide-faq summary:hover { color: var(--navi-color-primary); }
+.guide-faq summary ion-icon { flex: none; color: var(--navi-color-primary); }
+.guide-faq details[open] ion-icon { rotate: 180deg; }
+.guide-faq p { max-width: 74ch; padding-bottom: 14px; }
+.guide-next { display: inline-flex; align-items: center; justify-self: start; gap: 10px; font-weight: 600; text-underline-offset: 4px; }
+
+@media (max-width: 700px) {
+  .guide-hero, .guide-example dl div { grid-template-columns: minmax(0, 1fr); }
+  .guide-highlight { margin: 0 var(--web-panel-padding) var(--web-panel-padding); }
+}

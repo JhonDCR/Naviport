@@ -1,5 +1,6 @@
 <dialog #dialog class="access-dialog" aria-labelledby="access-title" (cancel)="close()">
   @if (mode(); as currentMode) {
+    @let active = session();
     <div class="access-layout">
       <div class="access-visual">
         <img src="assets/web/terminal-maritime-login.jpg" width="800" height="1000" alt="" loading="lazy" decoding="async">
@@ -14,11 +15,22 @@
           <ion-icon [icon]="icons.closeOutline" aria-hidden="true"></ion-icon>
         </button>
 
-        @if (session(); as active) {
-          <header class="form-header">
-            <h2 id="access-title">Mi cuenta</h2>
+        <header class="form-header">
+          <h2 id="access-title">{{ active ? 'Mi cuenta' : currentMode === 'registro' ? 'Crear cuenta' : 'Iniciar sesión' }}</h2>
+          @if (active) {
             <p>{{ active.usuario.nombre }} · {{ active.usuario.correo }}</p>
-          </header>
+          } @else {
+            <p>{{ currentMode === 'registro' ? 'Crea tu cuenta de cliente para consultar tus embarques.' : 'Usa el correo asociado a tu cuenta.' }}</p>
+          }
+        </header>
+
+        @if (message()) {
+          <p class="login-message" role="alert">{{ message() }}</p>
+        } @else if (notice()) {
+          <p class="login-message" role="status">{{ notice() }}</p>
+        }
+
+        @if (active) {
           @if (active.usuario.rol === 'gerente' || active.usuario.rol === 'admin') {
             <a class="text-link" [routerLink]="active.usuario.rol === 'gerente' ? '/gerente' : '/admin'">Abrir mi panel</a>
           } @else if (active.usuario.rol === 'cliente') {
@@ -28,11 +40,6 @@
           }
           <button type="button" class="submit-button account-button" (click)="signOut()">Cerrar sesión</button>
         } @else {
-          <header class="form-header">
-            <h2 id="access-title">{{ currentMode === 'registro' ? 'Crear cuenta' : 'Iniciar sesión' }}</h2>
-            <p>{{ currentMode === 'registro' ? 'Regístrate como cliente.' : 'Accede a tu cuenta.' }}</p>
-          </header>
-
           <form [formGroup]="form" (ngSubmit)="submit()" [attr.aria-busy]="busy()">
             @let nombreInvalido = form.controls.nombre.touched && form.controls.nombre.value.trim().length < 2;
             @let correoInvalido = form.controls.correo.touched && form.controls.correo.invalid;
@@ -44,12 +51,12 @@
                   <div class="field-control">
                     <ion-icon [icon]="icons.personOutline" aria-hidden="true"></ion-icon>
                     <input id="access-name" type="text" autocomplete="name" formControlName="nombre"
-                      maxlength="120" aria-required="true"
+                      maxlength="120" aria-required="true" autofocus
                       [attr.aria-invalid]="nombreInvalido ? 'true' : null"
                       [attr.aria-describedby]="nombreInvalido ? 'access-name-error' : null">
                   </div>
                   <p class="field-message" id="access-name-error" aria-live="polite">
-                    @if (nombreInvalido) { Falta nombre. }
+                    @if (nombreInvalido) { Escribe tu nombre. }
                   </p>
                 </div>
               }
@@ -59,12 +66,12 @@
                 <div class="field-control">
                   <ion-icon [icon]="icons.mailOutline" aria-hidden="true"></ion-icon>
                   <input id="access-email" type="email" autocomplete="username" formControlName="correo"
-                    maxlength="254" required
+                    maxlength="254" required [attr.autofocus]="currentMode === 'login' ? '' : null"
                     [attr.aria-invalid]="correoInvalido ? 'true' : null"
                     [attr.aria-describedby]="correoInvalido ? 'access-email-error' : null">
                 </div>
                 <p class="field-message" id="access-email-error" aria-live="polite">
-                  @if (correoInvalido) { Correo no válido. }
+                  @if (correoInvalido) { Escribe un correo válido. }
                 </p>
               </div>
             </div>
@@ -94,9 +101,6 @@
             </button>
           </form>
 
-          <div class="form-divider"><span>o continúa con</span></div>
-          <app-google-access [busy]="busy()" (credential)="signInWithGoogle($event)" />
-
           <p class="switch-mode">
             <span>{{ currentMode === 'registro' ? '¿Ya tienes cuenta?' : '¿Aún sin cuenta?' }}</span>
             <button type="button" class="text-link"
@@ -104,20 +108,18 @@
               {{ currentMode === 'registro' ? 'Iniciar sesión' : 'Registrarme' }}
             </button>
           </p>
+
+          <div class="form-divider">o</div>
+          <app-google-access [busy]="busy()" (credential)="signInWithGoogle($event)" />
         }
 
-        @if (message()) {
-          <p class="login-message" role="alert">{{ message() }}</p>
-        }
-        @if (notice()) {
-          <p class="login-message" role="status">{{ notice() }}</p>
-        }
-
-        <nav class="demo-access" aria-label="Accesos de demostración">
-          <span>Vista de demostración</span>
-          <a routerLink="/gerente">Gerencia</a>
-          <a routerLink="/admin">Administración</a>
-        </nav>
+        <details class="demo-access">
+          <summary>Ver paneles de demostración <ion-icon [icon]="icons.chevronDown" aria-hidden="true"></ion-icon></summary>
+          <nav aria-label="Accesos de demostración">
+            <a routerLink="/gerente">Gerencia</a>
+            <a routerLink="/admin">Administración</a>
+          </nav>
+        </details>
       </section>
     </div>
   }

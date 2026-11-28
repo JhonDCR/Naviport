@@ -8,10 +8,10 @@
       <div class="hero-inner content-width">
         <div class="hero-copy">
           <h1 id="hero-title">Seguimiento de embarques marítimos</h1>
-          <p>Consulta el estado de tus contenedores, los eventos del trayecto y la fecha estimada de llegada a Guayaquil.</p>
+          <p>Consulta dónde se registró el último movimiento de tu contenedor y cuándo se estima que llegue a Guayaquil.</p>
           <div class="hero-actions">
             <a class="button primary-button" routerLink="/servicios" [queryParams]="{ acceso: 'login' }">
-              Acceder a la plataforma <ion-icon [icon]="icons.arrowForward" aria-hidden="true"></ion-icon>
+              Acceder a NaviPort <ion-icon [icon]="icons.arrowForward" aria-hidden="true"></ion-icon>
             </a>
             <a class="hero-link" routerLink="/rutas-maritimas">Ver rutas marítimas</a>
           </div>
@@ -29,37 +29,78 @@
       </div>
     </section>
 
-    <section class="content-width" aria-labelledby="features-title">
-      <div class="section-layout">
-        <div class="section-intro">
-          <h2 id="features-title">Planifica y sigue tu embarque</h2>
-        </div>
+    <section class="content-width section-space" aria-labelledby="tasks-title">
+      <h2 id="tasks-title">Planifica y sigue tu embarque</h2>
+      <div class="task-grid">
+        @for (task of tasks; track task.path) {
+          <a class="task" [routerLink]="task.path">
+            <div class="task-icons">
+              <ion-icon class="task-icon" [icon]="task.icon" aria-hidden="true"></ion-icon>
+              <ion-icon [icon]="icons.arrowForward" aria-hidden="true"></ion-icon>
+            </div>
+            <h3>{{ task.title }}</h3>
+            <p>{{ task.text }}</p>
+          </a>
+        }
+      </div>
+    </section>
 
-        <div class="feature-list">
-          <a routerLink="/contenedores">
-            <ion-icon [icon]="icons.cubeOutline" aria-hidden="true"></ion-icon>
-            <div>
-              <h3>Compara contenedores</h3>
-              <p>Revisa capacidades, altura interior y medidas de las puertas.</p>
-            </div>
-            <ion-icon [icon]="icons.arrowForward" aria-hidden="true"></ion-icon>
+    <section class="routes" aria-labelledby="routes-title">
+      <div class="content-width section-space split">
+        <div class="section-intro">
+          <h2 id="routes-title">Rutas marítimas hacia Guayaquil</h2>
+          <p>Explora los dos trayectos de ejemplo del proyecto y qué revisar en cada etapa.</p>
+          <a class="text-action" routerLink="/rutas-maritimas">
+            Explorar rutas <ion-icon [icon]="icons.arrowForward" aria-hidden="true"></ion-icon>
           </a>
-          <a routerLink="/seguimiento-maritimo">
-            <ion-icon [icon]="icons.locateOutline" aria-hidden="true"></ion-icon>
-            <div>
-              <h3>Aprende a seguir un envío</h3>
-              <p>Identifica el último evento registrado y consulta la llegada estimada.</p>
-            </div>
-            <ion-icon [icon]="icons.arrowForward" aria-hidden="true"></ion-icon>
-          </a>
-          <a routerLink="/preparar-embarque">
-            <ion-icon [icon]="icons.clipboardOutline" aria-hidden="true"></ion-icon>
-            <div>
-              <h3>Prepara tu carga</h3>
-              <p>Revisa qué datos necesitas antes de elegir un equipo.</p>
-            </div>
-            <ion-icon [icon]="icons.arrowForward" aria-hidden="true"></ion-icon>
-          </a>
+        </div>
+        <ul class="route-list" role="list">
+          <li>
+            <ion-icon class="route-icon" [icon]="icons.mapOutline" aria-hidden="true"></ion-icon>
+            <div><strong>Shanghái</strong><small>China</small></div>
+            <ion-icon class="route-arrow" [icon]="icons.arrowForward" aria-hidden="true"></ion-icon>
+            <div><strong>Guayaquil</strong><small>Ecuador</small></div>
+          </li>
+          <li>
+            <ion-icon class="route-icon" [icon]="icons.mapOutline" aria-hidden="true"></ion-icon>
+            <div><strong>Miami</strong><small>Estados Unidos</small></div>
+            <ion-icon class="route-arrow" [icon]="icons.arrowForward" aria-hidden="true"></ion-icon>
+            <div><strong>Guayaquil</strong><small>Ecuador</small></div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="content-width section-space split" aria-labelledby="tracking-title">
+      <div class="section-intro">
+        <h2 id="tracking-title">Consulta un envío en tres pasos</h2>
+        <a class="text-action" routerLink="/portal-cliente/envios">
+          Abrir Mis envíos <ion-icon [icon]="icons.arrowForward" aria-hidden="true"></ion-icon>
+        </a>
+      </div>
+      <ol class="tracking-steps" role="list">
+        <li><h3>Entra con tu cuenta</h3><p>Inicia sesión y abre Mis envíos.</p></li>
+        <li><h3>Encuentra el contenedor</h3><p>Busca por código, buque o puerto. Usa el filtro de estado para acotar la lista.</p></li>
+        <li><h3>Abre el detalle</h3><p>Revisa el historial y la fecha estimada de llegada si ya está disponible.</p></li>
+      </ol>
+    </section>
+
+    <section class="home-faq" aria-labelledby="questions-title">
+      <div class="content-width section-space split">
+        <h2 id="questions-title">Preguntas frecuentes</h2>
+        <div class="questions">
+          <details>
+            <summary>¿Necesito una cuenta para comparar contenedores? <ion-icon [icon]="icons.chevronDown" aria-hidden="true"></ion-icon></summary>
+            <p>El catálogo y las guías son públicos. La cuenta te permite consultar tus embarques y notificaciones.</p>
+          </details>
+          <details>
+            <summary>¿Puedo buscar un envío sin el código del contenedor? <ion-icon [icon]="icons.chevronDown" aria-hidden="true"></ion-icon></summary>
+            <p>Sí. También puedes buscar por el nombre del buque o por un puerto.</p>
+          </details>
+          <details>
+            <summary>¿Dónde están los paneles de la empresa? <ion-icon [icon]="icons.chevronDown" aria-hidden="true"></ion-icon></summary>
+            <p>Accede con tu cuenta de Gerencia o Administración. NaviPort abre el panel correspondiente a tu rol.</p>
+          </details>
         </div>
       </div>
     </section>

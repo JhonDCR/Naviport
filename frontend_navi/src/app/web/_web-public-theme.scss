@@ -1,0 +1,23 @@
+@mixin tokens {
+  --web-width: min(calc(100% - clamp(32px, 7vw, 96px)), 1200px);
+  --web-section: clamp(32px, 5vw, 64px);
+  --web-gap: clamp(14px, 2vw, 20px);
+  --web-line: color-mix(in srgb, var(--navi-text-secundario) 25%, var(--navi-surface-card));
+  --web-title: clamp(1.95rem, 4.5vw, 3.8rem);
+  --web-heading: clamp(1.4rem, 2.8vw, 1.95rem);
+  --web-subheading: 1.05rem;
+  --web-small: 0.875rem;
+  --web-label: 0.75rem;
+  --web-copy-line: 1.6;
+  --web-heading-tracking: -0.04em;
+  --web-control-radius: 8px;
+  --web-card-radius: 12px;
+  --web-card-padding: clamp(16px, 2.5vw, 24px);
+  --web-panel-padding: clamp(22px, 4.5vw, 48px);
+  --web-control-height: 44px;
+  --web-control-padding: 8px 14px;
+  --web-icon-size: 1.125rem;
+  --web-icon-padding: 8px;
+  --web-focus: 2px solid var(--navi-color-primary);
+  --web-overlay-shadow: 0 12px 32px rgb(17 24 39 / 20%);
+}

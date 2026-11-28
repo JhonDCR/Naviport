@@ -1,0 +1,17 @@
+.policy-intro {
+  padding: var(--web-panel-padding);
+  background: var(--navi-navbar-dark);
+  color: white;
+  border-radius: var(--navi-radius-container);
+}
+
+.policy-intro .reference-tag { margin-bottom: 12px; background: var(--navi-warning-bg); }
+.policy-intro p { max-width: 60ch; }
+.policy-sections { display: grid; gap: var(--web-section); max-width: 860px; margin-top: var(--web-section); }
+.policy-sections h2 { margin-bottom: var(--web-gap); }
+.policy-sections :is(dl, ul) { margin: 0; }
+.policy-sections ul { padding-inline-start: 1.2em; }
+.policy-sections li + li { margin-top: 8px; }
+.policy-sections :is(dd, li) { line-height: var(--web-copy-line); }
+.policy-sections dt { font-weight: 600; }
+.policy-sections dd { margin: 6px 0 0; }

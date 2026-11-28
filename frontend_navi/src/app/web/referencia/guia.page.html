@@ -1,0 +1,61 @@
+<app-web-frame>
+  @let page = guide();
+  <header class="guide-hero">
+    <div class="guide-hero-copy">
+      <h1>{{ page.title }}</h1>
+      <p>{{ page.intro }}</p>
+      <a class="reference-button primary guide-cta" [routerLink]="page.action.path">
+        {{ page.action.label }} <ion-icon [icon]="icons.arrowForward" aria-hidden="true"></ion-icon>
+      </a>
+    </div>
+    <aside class="guide-highlight" [attr.aria-label]="page.highlight.title">
+      <ion-icon [icon]="page.highlight.icon" aria-hidden="true"></ion-icon>
+      <strong>{{ page.highlight.title }}</strong>
+      <p>{{ page.highlight.text }}</p>
+    </aside>
+  </header>
+
+  <div class="guide-body">
+    <section aria-labelledby="guide-section">
+      <h2 id="guide-section">{{ page.section }}</h2>
+      <div class="reference-grid">
+        @for (card of page.cards; track card.title) {
+          <article class="reference-card guide-feature">
+            <div class="guide-feature-top">
+              <ion-icon [icon]="card.icon" aria-hidden="true"></ion-icon>
+              <span class="reference-tag">{{ card.label }}</span>
+            </div>
+            <h3>{{ card.title }}</h3>
+            <p>{{ card.text }}</p>
+          </article>
+        }
+      </div>
+    </section>
+
+    <section class="reference-card guide-example" aria-labelledby="guide-example">
+      <h2 id="guide-example">{{ page.example.title }}</h2>
+      <dl>
+        @for (item of page.example.items; track item.title) {
+          <div>
+            <dt>{{ item.title }}</dt>
+            <dd>{{ item.text }}</dd>
+          </div>
+        }
+      </dl>
+    </section>
+
+    <section class="guide-faq" aria-labelledby="guide-questions">
+      <h2 id="guide-questions">Preguntas frecuentes</h2>
+      @for (question of page.questions; track question.title) {
+        <details>
+          <summary>{{ question.title }} <ion-icon [icon]="icons.chevronDown" aria-hidden="true"></ion-icon></summary>
+          <p>{{ question.text }}</p>
+        </details>
+      }
+    </section>
+
+    <a class="guide-next" [routerLink]="page.next.path">
+      {{ page.next.label }} <ion-icon [icon]="icons.arrowForward" aria-hidden="true"></ion-icon>
+    </a>
+  </div>
+</app-web-frame>
