@@ -1,9 +1,19 @@
-@if (seccion() === 'detalle' && vista()?.tipo !== 'detalle') {
+@let current = vista();
+@if (seccion() === 'detalle' && current?.tipo !== 'detalle') {
   <header class="reference-intro">
     <h1>Detalle del envío</h1><a routerLink="/portal-cliente/envios">Volver a Mis envíos</a>
   </header>
 } @else if (seccion() === 'resumen') {
-  <header class="summary-heading"><h1>Resumen</h1></header>
+  <header class="client-view-heading summary-heading">
+    <h1>Resumen</h1>
+    @if (current?.tipo === 'resumen') {
+      <dl class="summary-counts" aria-label="Estado general de los envíos">
+        <div><dt>Contenedores</dt><dd>{{ current.data.totalContenedores }}</dd></div>
+        <div><dt>En curso</dt><dd>{{ current.data.enCurso }}</dd></div>
+        <div><dt>Completados</dt><dd>{{ current.data.completados }}</dd></div>
+      </dl>
+    }
+  </header>
 } @else if (seccion() === 'notificaciones') {
   <header class="client-view-heading">
     <div>
@@ -23,15 +33,9 @@
     <p role="alert">{{ error() }}</p>
     <button type="button" class="reference-button" (click)="reload()">Reintentar</button>
   </section>
-} @else if (vista(); as view) {
+} @else if (current; as view) {
   @switch (view.tipo) {
     @case ('resumen') {
-      <dl class="summary-counts" aria-label="Estado general de los envíos">
-        <div><dt>Contenedores</dt><dd>{{ view.data.totalContenedores }}</dd></div>
-        <div><dt>En curso</dt><dd>{{ view.data.enCurso }}</dd></div>
-        <div><dt>Completados</dt><dd>{{ view.data.completados }}</dd></div>
-      </dl>
-
       @if (view.data.cargaDestacada; as carga) {
         @let voyage = carga.viaje;
         @let eta = shipmentDate(voyage.llegadaEstimada);
@@ -39,30 +43,26 @@
           <div class="summary-trip-head">
             <div>
               <h2 id="summary-shipment-title">Envío destacado</h2>
-              <p class="summary-code">{{ carga.codigoContenedor }}</p>
+              <p class="summary-code">
+                <strong>{{ carga.codigoContenedor }}</strong>
+                @if (carga.tipo) { <span>{{ carga.tipo }}</span> }
+              </p>
             </div>
             <a class="client-link" [routerLink]="['/portal-cliente/envios', carga.id]">
               Ver detalle <ion-icon [icon]="icons.arrowForward" aria-hidden="true"></ion-icon>
             </a>
           </div>
-          <div class="summary-journey">
-            <div class="summary-port">
-              <span>Origen</span>
-              <strong>{{ portCity(voyage.origen) || 'Por confirmar' }}</strong>
-            </div>
-            <div class="summary-vessel">
-              <ion-icon [icon]="icons.boatOutline" aria-hidden="true"></ion-icon>
-              <span>Embarcación</span>
-              <strong>{{ voyage.buque && voyage.buque !== 'N/A' ? voyage.buque : 'Por confirmar' }}</strong>
-            </div>
-            <div class="summary-port">
-              <span>Destino</span>
-              <strong>{{ portCity(voyage.destino) || 'Por confirmar' }}</strong>
-            </div>
-          </div>
           <dl class="summary-facts">
-            <div><dt>Llegada estimada</dt><dd>{{ (eta | date:'dd/MM/yyyy':'-0500') || 'Por confirmar' }}</dd></div>
-            <div><dt>Estado</dt><dd>{{ shipmentState(voyage) }}</dd></div>
+            <div><dt>Ruta</dt><dd>{{ shipmentRoute(voyage) }}</dd></div>
+            <div>
+              <dt>Llegada estimada</dt>
+              <dd>
+                @if (eta !== null) {
+                  <time [attr.datetime]="eta | date:'yyyy-MM-dd':'-0500'">{{ eta | date:'dd/MM/yyyy':'-0500' }}</time>
+                } @else { Por confirmar }
+              </dd>
+            </div>
+            <div><dt>Estado</dt><dd class="summary-state" [attr.data-state]="voyage.estado">{{ shipmentState(voyage) }}</dd></div>
           </dl>
         </section>
       } @else {

@@ -2,11 +2,11 @@ import { DatePipe } from '@angular/common';
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { IonIcon } from '@ionic/angular';
-import { arrowForward, boatOutline, notificationsOutline } from 'ionicons/icons';
+import { arrowForward, notificationsOutline } from 'ionicons/icons';
 import { environment } from '../../../environments/environment';
 import { WebSessionService } from '../acceso/web-session.service';
 import { DetalleEnvioComponent, type DetalleEnvio } from './detalle-envio.component';
-import { MisEnviosComponent, portCity, shipmentDate, shipmentState, type EnvioWeb } from './mis-envios.component';
+import { MisEnviosComponent, shipmentDate, shipmentRoute, shipmentState, type EnvioWeb } from './mis-envios.component';
 
 interface Resumen {
   totalContenedores: number;
@@ -48,10 +48,10 @@ export class ClientePage {
   readonly avisoError = signal('');
   readonly pendingAviso = signal<string | null>(null);
   readonly onlyUnread = signal(false);
-  readonly portCity = portCity;
   readonly shipmentDate = shipmentDate;
+  readonly shipmentRoute = shipmentRoute;
   readonly shipmentState = shipmentState;
-  readonly icons = { arrowForward, boatOutline, notificationsOutline };
+  readonly icons = { arrowForward, notificationsOutline };
   readonly notifications = computed(() => {
     const view = this.vista();
     return view?.tipo === 'notificaciones' ? view.data : [];
