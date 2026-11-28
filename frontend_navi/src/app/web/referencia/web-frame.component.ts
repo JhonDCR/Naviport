@@ -12,10 +12,12 @@ import { WebHeaderComponent } from '../web-header.component';
       <main class="reference-width reference-main" tabindex="-1">
         <ng-content />
       </main>
-      <footer class="reference-width reference-footer">
-        <a routerLink="/servicios">NaviPort · OceanTrack</a>
-        <a routerLink="/privacidad">Privacidad</a>
-      </footer>
+      @if (!portal()) {
+        <footer class="reference-width reference-footer">
+          <a routerLink="/servicios">NaviPort · OceanTrack</a>
+          <a routerLink="/privacidad">Privacidad</a>
+        </footer>
+      }
     </ion-content>
   `,
   styleUrl: './web-frame.component.scss',

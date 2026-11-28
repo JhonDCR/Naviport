@@ -116,8 +116,9 @@ tbody tr:focus-within { background: var(--navi-bg-app); }
 @media (hover: hover) {
   tbody tr:hover { background: var(--navi-bg-app); }
 }
-tbody th a { display: inline-flex; min-height: 24px; align-items: center; font-size: var(--web-small); }
-tbody small { display: block; margin-top: 3px; font-weight: 400; }
+tbody th a { display: inline-flex; min-height: 28px; align-items: center; gap: 6px; font-size: var(--web-small); }
+tbody th a ion-icon { flex: none; font-size: 0.9rem; }
+tbody small { display: block; margin-top: 2px; font-weight: 400; }
 .shipment-route { font-weight: 500; }
 .envios-label { display: none; }
 .envios-state { display: inline-flex; align-items: center; gap: 8px; font-size: var(--web-small); font-weight: 500; }

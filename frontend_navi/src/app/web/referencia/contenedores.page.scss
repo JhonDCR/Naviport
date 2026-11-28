@@ -51,8 +51,8 @@
 .catalog .equipment-measure { margin: 4px 0; padding: var(--web-control-padding); border-radius: var(--web-control-radius); background: var(--navi-bg-app); }
 .equipment-measure dt { font-size: var(--web-label); }
 .equipment-measure dd { margin: 2px 0 0; font-size: var(--web-subheading); font-weight: 700; font-variant-numeric: tabular-nums; }
-.equipment-actions a { font-size: var(--web-small); }
-.equipment-actions button { display: inline-flex; align-items: center; gap: 5px; }
+.equipment-actions :is(a, button) { display: inline-flex; align-items: center; gap: 5px; }
+.equipment-actions a { min-height: var(--web-control-height); font-size: var(--web-small); }
 .equipment-actions ion-icon { color: var(--navi-color-primary); font-size: 1rem; }
 .comparison { display: grid; gap: 12px; }
 .comparison-heading h2 { scroll-margin-block-start: 20px; }

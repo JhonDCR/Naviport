@@ -1,7 +1,7 @@
 import { Component, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { IonIcon } from '@ionic/angular';
-import { checkmarkOutline, closeOutline, cubeOutline } from 'ionicons/icons';
+import { checkmarkOutline, closeOutline, cubeOutline, openOutline } from 'ionicons/icons';
 import { WebFrameComponent } from './web-frame.component';
 
 const provider = 'https://www.hapag-lloyd.com/en/services-information/cargo-fleet/container/';
@@ -31,7 +31,7 @@ type Equipment = (typeof equipment)[number];
 })
 export class ContenedoresPage {
   readonly provider = provider;
-  readonly icons = { checkmarkOutline, closeOutline, cubeOutline };
+  readonly icons = { checkmarkOutline, closeOutline, cubeOutline, openOutline };
   readonly filters = filters;
   readonly total = equipment.length;
   readonly family = signal<(typeof filters)[number]['id']>('Todos');

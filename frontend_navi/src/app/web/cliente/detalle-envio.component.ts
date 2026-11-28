@@ -2,8 +2,8 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { IonIcon } from '@ionic/angular';
-import { arrowBack, calendarOutline } from 'ionicons/icons';
-import { shipmentDate, shipmentRoute, shipmentState, type EnvioWeb, type Viaje } from './mis-envios.component';
+import { arrowBack, boatOutline, calendarOutline } from 'ionicons/icons';
+import { portCity, shipmentDate, shipmentState, type EnvioWeb, type Viaje } from './mis-envios.component';
 
 export interface DetalleEnvio extends Omit<EnvioWeb, 'viaje'> {
   pesoToneladas: number;
@@ -20,8 +20,8 @@ export interface DetalleEnvio extends Omit<EnvioWeb, 'viaje'> {
 })
 export class DetalleEnvioComponent {
   readonly load = input.required<DetalleEnvio>();
-  readonly icons = { arrowBack, calendarOutline };
-  readonly route = shipmentRoute;
+  readonly icons = { arrowBack, boatOutline, calendarOutline };
+  readonly portCity = portCity;
   readonly status = shipmentState;
   readonly arrival = computed(() => {
     const dates = this.load().viaje?.fechas;

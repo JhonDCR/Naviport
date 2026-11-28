@@ -34,9 +34,8 @@ app-web-frame {
   .reference-main :is(a, button, select, input, summary, [tabindex]):focus-visible { outline: var(--web-focus, 2px solid var(--navi-color-primary)); outline-offset: 3px; }
 
   .reference-main { padding-block: var(--web-section, clamp(22px, 5vw, 62px)); }
-  .reference-footer { border-top: 1px solid var(--ref-line); padding-block: 16px; font-size: 0.82rem; }
-  .web-public .reference-footer { padding-block: 20px; font-size: var(--web-small); }
-  .web-public .reference-footer a { color: var(--navi-text-secundario); }
+  .reference-footer { border-top: 1px solid var(--ref-line); padding-block: 20px; font-size: var(--web-small); }
+  .reference-footer a { color: var(--navi-text-secundario); }
   .client-portal .reference-main { padding-block: clamp(20px, 3vw, 36px); }
   .client-portal::part(scroll) { overflow-anchor: none; scrollbar-gutter: stable; }
 
@@ -49,7 +48,6 @@ app-web-frame {
       min-height: 0;
     }
     .client-portal.list-viewport .reference-main { padding-block: clamp(14px, 2vw, 28px) 12px; }
-    .list-viewport .reference-footer { flex: none; padding-block: 10px; }
   }
 
   :where(.reference-main) :is(h1, h2, h3, p) { margin: 0; }

@@ -1,28 +1,44 @@
 @let shipment = load();
 @let eta = arrival();
-@let vessel = shipment.viaje?.buque;
 <a class="detail-back" routerLink="/portal-cliente/envios">
   <ion-icon [icon]="icons.arrowBack" aria-hidden="true"></ion-icon> Volver a Mis envíos
 </a>
 
 <header class="detail-heading">
-  <div>
-    <p class="detail-label">Detalle del envío</p>
-    <h1>{{ shipment.codigoContenedor }}</h1>
-    <p>{{ shipment.viaje ? route(shipment.viaje) : 'Ruta por confirmar' }}</p>
-    <span class="detail-state" [class.delayed]="shipment.viaje?.estado === 'retrasado'"
-      [class.complete]="shipment.viaje?.estado === 'finalizado'">{{ status(shipment.viaje) }}</span>
+  <div class="detail-heading-row">
+    <div>
+      <p class="detail-label">Detalle del envío</p>
+      <h1>{{ shipment.codigoContenedor }}</h1>
+    </div>
+    <strong class="detail-state" [class.delayed]="shipment.viaje?.estado === 'retrasado'"
+      [class.complete]="shipment.viaje?.estado === 'finalizado'">{{ status(shipment.viaje) }}</strong>
   </div>
+  @if (shipment.viaje; as voyage) {
+    <div class="detail-route" aria-label="Trayecto del envío">
+      <div>
+        <span>Origen</span>
+        <strong>{{ portCity(voyage.origen) || 'Por confirmar' }}</strong>
+      </div>
+      <div class="route-track">
+        <span class="route-line" aria-hidden="true"><ion-icon [icon]="icons.boatOutline"></ion-icon></span>
+        @if (voyage.buque && voyage.buque !== 'N/A') {
+          <span class="route-vessel">{{ voyage.buque }}</span>
+        }
+      </div>
+      <div class="route-destination">
+        <span>Destino</span>
+        <strong>{{ portCity(voyage.destino) || 'Por confirmar' }}</strong>
+      </div>
+    </div>
+  }
   <div class="detail-arrival">
     <ion-icon [icon]="icons.calendarOutline" aria-hidden="true"></ion-icon>
-    <div>
-      <p>{{ eta.label }}</p>
-      @if (eta.date !== null) {
-        <time [attr.datetime]="eta.date | date:'yyyy-MM-dd':'-0500'">{{ eta.date | date:'dd/MM/yyyy':'-0500' }}</time>
-      } @else {
-        <strong>Por confirmar</strong>
-      }
-    </div>
+    <p>{{ eta.label }}</p>
+    @if (eta.date !== null) {
+      <time [attr.datetime]="eta.date | date:'yyyy-MM-dd':'-0500'">{{ eta.date | date:'dd/MM/yyyy':'-0500' }}</time>
+    } @else {
+      <strong>Por confirmar</strong>
+    }
   </div>
 </header>
 
@@ -31,15 +47,20 @@
     <h2 id="detail-events-title">Historial del envío</h2>
     <ol>
       @for (event of timeline(); track $index) {
-        <li [class.pending]="!event.completado">
-          <div class="event-heading">
-            <h3>{{ event.name }}</h3>
-            <span>{{ event === latest() ? 'Último registrado' : event.completado ? 'Registrado' : 'Pendiente' }}</span>
+        <li [class.pending]="!event.completado" [class.latest]="event === latest()">
+          <div class="event-description">
+            <div class="event-heading">
+              <h3>{{ event.name }}</h3>
+              @if (event === latest()) { <span>Último registrado</span> }
+              @else if (!event.completado) { <span>Pendiente</span> }
+            </div>
+            <p>{{ event.ubicacion }}</p>
+            @if (event.descripcion) { <p class="event-note">{{ event.descripcion }}</p> }
           </div>
-          <p class="event-location">{{ event.ubicacion }}</p>
-          @if (event.descripcion) { <p>{{ event.descripcion }}</p> }
           @if (event.date !== null) {
-            <time [attr.datetime]="event.fecha">{{ event.date | date:'dd/MM/yyyy HH:mm':'-0500' }}</time>
+            <time [attr.datetime]="event.fecha">
+              {{ event.date | date:'dd/MM/yyyy':'-0500' }} <span>{{ event.date | date:'HH:mm':'-0500' }}</span>
+            </time>
           } @else { <small>Fecha por confirmar</small> }
         </li>
       } @empty {
@@ -51,7 +72,6 @@
   <section class="detail-facts" aria-labelledby="detail-facts-title">
     <h2 id="detail-facts-title">Datos del contenedor</h2>
     <dl>
-      <div><dt>Embarcación</dt><dd>{{ vessel && vessel !== 'N/A' ? vessel : 'Por confirmar' }}</dd></div>
       <div><dt>Tipo</dt><dd>{{ shipment.tipo }}</dd></div>
       <div><dt>Peso</dt><dd>{{ shipment.pesoToneladas | number }} t</dd></div>
       <div><dt>Precinto</dt><dd>{{ shipment.numeroPrecinto || 'Por confirmar' }}</dd></div>

@@ -70,7 +70,9 @@
               <tr role="row">
                 <th scope="row" role="rowheader">
                   <a [routerLink]="['/portal-cliente/envios', load.id]"
-                    [attr.aria-label]="'Ver detalle de ' + load.codigoContenedor">{{ load.codigoContenedor }}</a>
+                    [attr.aria-label]="'Ver detalle de ' + load.codigoContenedor">
+                    {{ load.codigoContenedor }} <ion-icon [icon]="icons.arrowForward" aria-hidden="true"></ion-icon>
+                  </a>
                   @if (load.tipo) { <small>{{ load.tipo }}</small> }
                 </th>
                 <td role="cell">
