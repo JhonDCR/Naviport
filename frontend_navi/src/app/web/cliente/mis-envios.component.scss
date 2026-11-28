@@ -1,0 +1,161 @@
+@use '../web-public-theme' as web;
+
+:host {
+  @include web.tokens;
+  display: block;
+  color: var(--navi-text-principal);
+}
+
+.shipments-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px 32px;
+  margin-bottom: var(--web-gap);
+  padding: clamp(16px, 3vw, 32px);
+  border-radius: var(--navi-radius-container);
+  background: var(--navi-navbar-dark);
+  color: var(--navi-surface-card);
+}
+.shipments-heading h1 { margin: 0; font-size: clamp(1.75rem, 4vw, 2.75rem); }
+.shipments-heading p { margin-top: 5px; color: var(--navi-bg-app); }
+.shipments-heading .next-arrival {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
+  min-width: min(100%, 304px);
+  padding: 12px 14px;
+  border: 1px solid var(--web-line);
+  border-inline-start: 3px solid var(--navi-color-primary);
+  border-radius: var(--web-control-radius);
+  background: var(--navi-surface-card);
+  color: var(--navi-text-principal);
+  text-decoration: none;
+}
+.next-arrival:hover { background: var(--navi-blue-soft-bg); }
+.next-arrival > ion-icon { color: var(--navi-color-primary); font-size: var(--web-icon-size); }
+.next-arrival > span { display: grid; gap: 2px; min-width: 0; }
+.arrival-route { overflow-wrap: anywhere; }
+.next-arrival time { font-size: 1.05rem; }
+.next-arrival small, .arrival-route { font-size: var(--web-label); color: var(--navi-text-secundario); }
+
+.envios {
+  border: 1px solid var(--web-line);
+  border-radius: var(--web-card-radius);
+  background: var(--navi-surface-card);
+}
+.envios-controls, .envios-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding-inline: clamp(12px, 2vw, 22px);
+  border-bottom: 1px solid var(--web-line);
+}
+.envios-controls { padding-block: 12px; }
+.envios-search {
+  display: flex;
+  align-items: center;
+  flex: 1 1 210px;
+  gap: 9px;
+  max-width: 460px;
+  min-width: 0;
+  padding-inline: 12px;
+  border: 1px solid var(--web-line);
+  border-radius: var(--web-control-radius);
+  color: var(--navi-text-secundario);
+}
+.envios-search ion-icon { flex: none; }
+.envios-search input {
+  width: 100%;
+  min-width: 0;
+  min-height: calc(var(--web-control-height) - 2px);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--navi-text-principal);
+  font: inherit;
+  font-size: var(--web-small);
+}
+.envios-search:focus-within { outline: var(--web-focus); }
+.envios-search input:focus-visible { outline: none; }
+.envios-controls .envios-count { margin: 0 0 0 auto; font-size: var(--web-small); color: var(--navi-text-secundario); }
+.envios-filters { display: flex; flex-wrap: wrap; gap: 4px; }
+.envios button {
+  min-height: var(--web-control-height);
+  padding: var(--web-control-padding);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--navi-text-secundario);
+  font: inherit;
+  font-size: var(--web-small);
+  font-weight: 600;
+  cursor: pointer;
+}
+.envios button:hover, .envios button[aria-pressed='true'], .envios .clear-filters { color: var(--navi-color-primary); }
+.envios button[aria-pressed='true'] { border-block-end: 2px solid currentColor; }
+.envios :is(button, a):focus-visible, .next-arrival:focus-visible { outline: var(--web-focus); outline-offset: 2px; }
+.envios small, .envios-label { color: var(--navi-text-secundario); font-size: var(--web-label); }
+.envios-message { padding: clamp(20px, 5vw, 44px); }
+.envios-message h2 { font-size: var(--web-subheading); }
+.envios-message p { margin-top: 6px; }
+.envios-message .retry-button { margin-top: 12px; border-radius: var(--web-control-radius); background: var(--navi-color-primary); color: white; }
+.envios-message .retry-button:hover { background: var(--ion-color-primary-shade); }
+
+table { table-layout: fixed; }
+table :is(th, td) { padding: 13px clamp(12px, 2vw, 22px); vertical-align: middle; overflow-wrap: anywhere; }
+thead th { color: var(--navi-text-secundario); font-size: var(--web-label); font-weight: 600; }
+table th:first-child { width: 24%; }
+table th:nth-child(2) { width: 34%; }
+table th:nth-child(3) { width: 20%; }
+tbody tr:last-child :is(th, td) { border-bottom: 0; }
+tbody tr:focus-within { background: var(--navi-bg-app); }
+@media (hover: hover) {
+  tbody tr:hover { background: var(--navi-bg-app); }
+}
+tbody th a { display: inline-flex; min-height: 24px; align-items: center; font-size: var(--web-small); }
+tbody small { display: block; margin-top: 3px; font-weight: 400; }
+.shipment-route { font-weight: 500; }
+.envios-label { display: none; }
+.envios-state { display: inline-flex; align-items: center; gap: 8px; font-size: var(--web-small); font-weight: 500; }
+.envios-state::before { content: ''; flex: none; width: 8px; aspect-ratio: 1; border-radius: 2px; background: var(--state-color, var(--navi-text-secundario)); }
+.envios-state.delayed { --state-color: var(--navi-color-accent); }
+.envios-state.complete { --state-color: var(--navi-good-text); }
+.envios-state.sailing { --state-color: var(--navi-color-primary); }
+time { font-variant-numeric: tabular-nums; font-weight: 600; }
+.envios-results time { font-size: 0.95rem; }
+.unknown-date { color: var(--navi-text-secundario); }
+.envios-results:focus-visible { outline-offset: -3px; }
+
+@media (min-height: 540px) {
+  :host { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; }
+  .shipments-heading, .envios-controls, .envios-filter-bar { flex: none; }
+  .envios { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  .envios-results { min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; }
+}
+
+@media (min-width: 701px) and (min-height: 540px) {
+  thead { position: sticky; inset-block-start: 0; z-index: 1; }
+}
+
+@media (max-width: 700px) {
+  .shipments-heading { gap: 10px; margin-bottom: 16px; }
+  .shipments-heading p { font-size: var(--web-small); }
+  .shipments-heading .next-arrival { width: 100%; min-width: 0; padding: 8px 10px; gap: 8px; }
+  .arrival-route span { display: none; }
+  .envios-controls { padding-block: 10px; }
+  .envios-filters { display: grid; grid-template-columns: 0.8fr 0.95fr 1.25fr; flex: 1; gap: 0; }
+  .envios-filters button { padding-inline: 4px; font-size: var(--web-label); white-space: nowrap; }
+  table { display: block; }
+  thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  tbody { display: grid; }
+  tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 9px 12px; padding: 14px; }
+  tbody tr + tr { border-top: 1px solid var(--web-line); }
+  tbody tr :is(th, td) { display: block; width: auto; padding: 0; border-bottom: 0; }
+  tbody td:nth-child(2), tbody td:nth-child(3) { grid-column: 1 / -1; }
+  tbody td:last-child { grid-column: 2; grid-row: 1; text-align: end; }
+  .envios-label { display: block; margin-bottom: 3px; }
+}

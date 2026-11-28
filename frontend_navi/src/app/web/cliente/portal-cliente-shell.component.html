@@ -1,0 +1,25 @@
+<aside #sidebar id="portal-sidebar" class="portal-sidebar" [attr.popover]="compact() ? 'auto' : null"
+  aria-label="Menú del cliente">
+  <a class="sidebar-brand" routerLink="/servicios">
+    <ion-icon [icon]="icons.boatOutline" aria-hidden="true"></ion-icon>
+    <span>NaviPort <small>OceanTrack</small></span>
+  </a>
+  <nav class="portal-nav" aria-label="Portal del cliente">
+    @for (item of navigation; track item.path) {
+      <a [routerLink]="item.path" routerLinkActive="current" [routerLinkActiveOptions]="{ exact: item.exact }"
+        ariaCurrentWhenActive="location" (click)="closeSidebar()">
+        <ion-icon [icon]="item.icon" aria-hidden="true"></ion-icon> {{ item.label }}
+      </a>
+    }
+  </nav>
+  <button class="sidebar-logout" type="button" (click)="signOut()">
+    <ion-icon [icon]="icons.logOutOutline" aria-hidden="true"></ion-icon> Cerrar sesión
+  </button>
+</aside>
+
+<app-web-frame [portal]="true" [listViewport]="listViewport()">
+  <button type="button" class="sidebar-trigger" popovertarget="portal-sidebar">
+    <ion-icon [icon]="icons.menuOutline" aria-hidden="true"></ion-icon> Menú
+  </button>
+  <div #view class="workspace-view"><router-outlet (activate)="activeView.set($event)" /></div>
+</app-web-frame>

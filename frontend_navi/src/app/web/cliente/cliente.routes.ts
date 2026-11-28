@@ -11,8 +11,15 @@ const cliente: CanActivateFn = (_route, state) =>
 const loadComponent = () => import('./cliente.page').then((m) => m.ClientePage);
 
 export const clienteRoutes: Routes = [
-  { path: '', pathMatch: 'full', title: 'NaviPort | Mi resumen', data: { seccion: 'resumen' }, canActivate: [cliente], loadComponent },
-  { path: 'envios', title: 'NaviPort | Mis envíos', data: { seccion: 'envios' }, canActivate: [cliente], loadComponent },
-  { path: 'envios/:id', title: 'NaviPort | Detalle del envío', data: { seccion: 'detalle' }, canActivate: [cliente], loadComponent },
-  { path: 'notificaciones', title: 'NaviPort | Notificaciones', data: { seccion: 'notificaciones' }, canActivate: [cliente], loadComponent },
+  {
+    path: '',
+    canActivateChild: [cliente],
+    loadComponent: () => import('./portal-cliente-shell.component').then((m) => m.PortalClienteShellComponent),
+    children: [
+      { path: '', pathMatch: 'full', title: 'NaviPort | Mi resumen', data: { seccion: 'resumen' }, loadComponent },
+      { path: 'envios', title: 'NaviPort | Mis envíos', data: { seccion: 'envios' }, loadComponent },
+      { path: 'envios/:id', title: 'NaviPort | Detalle del envío', data: { seccion: 'detalle' }, loadComponent },
+      { path: 'notificaciones', title: 'NaviPort | Notificaciones', data: { seccion: 'notificaciones' }, loadComponent },
+    ],
+  },
 ];

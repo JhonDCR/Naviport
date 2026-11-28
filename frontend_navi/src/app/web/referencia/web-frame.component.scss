@@ -20,7 +20,7 @@ app-web-frame {
     margin-inline: auto;
   }
 
-  .reference-footer, .reference-tabs, .reference-actions, .reference-filters {
+  .reference-footer, .reference-actions, .reference-filters {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -31,22 +31,26 @@ app-web-frame {
 
   :is(.reference-main, .reference-footer) a, .reference-link, summary { color: var(--navi-color-primary); text-underline-offset: 3px; }
 
-  .reference-tabs a {
-    padding-block: 10px;
-    color: var(--navi-text-principal);
-    font-size: 0.86rem;
-    text-decoration: none;
-  }
-
-  .reference-tabs a:hover, .reference-tabs .selected { color: var(--navi-color-primary); text-decoration: underline; }
   .reference-main :is(a, button, select, input, summary, [tabindex]):focus-visible { outline: var(--web-focus, 2px solid var(--navi-color-primary)); outline-offset: 3px; }
 
   .reference-main { padding-block: var(--web-section, clamp(22px, 5vw, 62px)); }
   .reference-footer { border-top: 1px solid var(--ref-line); padding-block: 16px; font-size: 0.82rem; }
   .web-public .reference-footer { padding-block: 20px; font-size: var(--web-small); }
   .web-public .reference-footer a { color: var(--navi-text-secundario); }
-  .reference-tabs { border-bottom: 1px solid var(--ref-line); margin-bottom: 24px; }
-  .reference-tabs .selected { font-weight: 600; }
+  .client-portal .reference-main { padding-block: clamp(20px, 3vw, 36px); }
+  .client-portal::part(scroll) { overflow-anchor: none; scrollbar-gutter: stable; }
+
+  @media (min-height: 540px) {
+    .client-portal.list-viewport::part(scroll) { display: flex; flex-direction: column; overflow-y: hidden; }
+    .list-viewport :is(.reference-main, .workspace-view, app-portal-cliente) {
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .client-portal.list-viewport .reference-main { padding-block: clamp(14px, 2vw, 28px) 12px; }
+    .list-viewport .reference-footer { flex: none; padding-block: 10px; }
+  }
 
   :where(.reference-main) :is(h1, h2, h3, p) { margin: 0; }
   h1 { margin-bottom: 10px; font-size: clamp(1.85rem, 5vw, 3.6rem); line-height: 1.1; font-weight: 700; letter-spacing: -0.045em; }

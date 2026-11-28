@@ -1,134 +1,120 @@
-<app-web-frame [portal]="true">
+@if (seccion() === 'detalle' && vista()?.tipo !== 'detalle') {
   <header class="reference-intro">
-    @switch (seccion()) {
-      @case ('resumen') { <h1>Mi resumen</h1><p>Consulta el estado de tus embarques y revisa tus próximas llegadas.</p> }
-      @case ('envios') { <h1>Mis envíos</h1><p>Busca por código de contenedor, buque o puerto.</p> }
-      @case ('detalle') { <h1>Detalle del envío</h1><a routerLink="/portal-cliente/envios">Volver a Mis envíos</a> }
-      @case ('notificaciones') { <h1>Notificaciones</h1><p>Revisa las novedades de tus contenedores.</p> }
+    <h1>Detalle del envío</h1><a routerLink="/portal-cliente/envios">Volver a Mis envíos</a>
+  </header>
+} @else if (seccion() === 'resumen') {
+  <header class="summary-heading"><h1>Resumen</h1></header>
+} @else if (seccion() === 'notificaciones') {
+  <header class="client-view-heading">
+    <div>
+      <h1>Notificaciones</h1>
+      <p>Avisos sobre tus embarques.</p>
+    </div>
+    @if (unread().length) {
+      <span class="unread-total" role="status">{{ unread().length }} sin leer</span>
     }
   </header>
+}
 
-  @if (error()) {
-    <section class="reference-card" aria-label="Error de consulta">
-      <p role="alert">{{ error() }}</p>
-      <button type="button" class="reference-button" (click)="reload()">Reintentar</button>
-    </section>
-  } @else if (vista(); as view) {
-    @switch (view.tipo) {
-      @case ('resumen') {
-        <div class="reference-stack">
-          <section class="reference-grid" aria-label="Estado de los envíos">
-            <article class="reference-card"><span class="reference-metric">{{ view.data.totalContenedores }}</span>Contenedores</article>
-            <article class="reference-card"><span class="reference-metric">{{ view.data.enCurso }}</span>En curso</article>
-            <article class="reference-card"><span class="reference-metric">{{ view.data.completados }}</span>Completados</article>
-          </section>
-          <section class="reference-card">
-            @if (view.data.cargaDestacada; as carga) {
-              <h2>Envío destacado</h2>
-              <p><strong>{{ carga.codigoContenedor }}</strong> · {{ carga.viaje.buque }}</p>
-              <p>{{ carga.viaje.origen }} → {{ carga.viaje.destino }}</p>
-              <p class="reference-muted">Llegada estimada {{ (carga.viaje.llegadaEstimada | date:'dd/MM/yyyy':'-0500') || 'por confirmar' }}</p>
-              <a [routerLink]="['/portal-cliente/envios', carga.id]">Ver detalle del contenedor</a>
-            } @else {
-              <h2>Todavía no tienes contenedores asignados</h2>
-              <p>Cuando tu cuenta tenga un envío asociado, podrás seguirlo aquí.</p>
-              <a routerLink="/contenedores">Explorar tipos de contenedores</a>
-            }
-          </section>
-          <div class="reference-actions"><a class="reference-button primary" routerLink="/portal-cliente/envios">Ver todos mis envíos</a></div>
-        </div>
-      }
-      @case ('envios') {
-        <section class="reference-card" aria-label="Lista de envíos">
-          <div class="reference-filters">
-            <label>Buscar <input type="search" #query [value]="search()" (input)="search.set(query.value)" placeholder="Código, buque o puerto"></label>
-            <label>Estado
-              <select #status (change)="filter.set(status.value)">
-                <option value="todos" [selected]="filter() === 'todos'">Todos</option>
-                <option value="curso" [selected]="filter() === 'curso'">En curso</option>
-                <option value="completados" [selected]="filter() === 'completados'">Completados</option>
-              </select>
-            </label>
-            <span class="reference-muted" role="status">{{ envios().length }} envíos</span>
-          </div>
-          @if (envios().length) {
-            <div class="reference-table" role="region" aria-label="Tabla de envíos" tabindex="0">
-              <table>
-                <thead><tr><th scope="col">Contenedor</th><th scope="col">Ruta</th><th scope="col">Estado</th><th scope="col">Llegada estimada</th></tr></thead>
-                <tbody>
-                  @for (carga of envios(); track carga.id) {
-                    <tr>
-                      <th scope="row"><a [routerLink]="['/portal-cliente/envios', carga.id]">{{ carga.codigoContenedor }}</a><br><small>{{ carga.tipo }}</small></th>
-                      <td>{{ carga.viaje.origen }} → {{ carga.viaje.destino }}</td>
-                      <td><span class="reference-tag" [class.attention]="carga.viaje.estado === 'retrasado'">{{ estado(carga.viaje.estado) }}</span></td>
-                      <td class="reference-date">{{ (carga.viaje.llegadaEstimada | date:'dd/MM/yyyy':'-0500') || 'Por confirmar' }}</td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
+@if (seccion() === 'envios') {
+  <app-mis-envios [loads]="cargas()" [error]="error()" (retry)="reload()" />
+} @else if (error()) {
+  <section class="reference-card" aria-label="Error de consulta">
+    <p role="alert">{{ error() }}</p>
+    <button type="button" class="reference-button" (click)="reload()">Reintentar</button>
+  </section>
+} @else if (vista(); as view) {
+  @switch (view.tipo) {
+    @case ('resumen') {
+      <dl class="summary-counts" aria-label="Estado general de los envíos">
+        <div><dt>Contenedores</dt><dd>{{ view.data.totalContenedores }}</dd></div>
+        <div><dt>En curso</dt><dd>{{ view.data.enCurso }}</dd></div>
+        <div><dt>Completados</dt><dd>{{ view.data.completados }}</dd></div>
+      </dl>
+
+      @if (view.data.cargaDestacada; as carga) {
+        @let voyage = carga.viaje;
+        @let eta = shipmentDate(voyage.llegadaEstimada);
+        <section class="summary-sheet" aria-labelledby="summary-shipment-title">
+          <div class="summary-trip-head">
+            <div>
+              <h2 id="summary-shipment-title">Envío destacado</h2>
+              <p class="summary-code">{{ carga.codigoContenedor }}</p>
             </div>
-          } @else {
-            <p>{{ view.data.length ? 'No hay envíos que coincidan con la búsqueda.' : 'Tu cuenta aún no tiene envíos asociados.' }}</p>
-            @if (view.data.length) {
-              <button type="button" class="reference-button" (click)="search.set(''); filter.set('todos')">Limpiar filtros</button>
-            }
-          }
+            <a class="client-link" [routerLink]="['/portal-cliente/envios', carga.id]">
+              Ver detalle <ion-icon [icon]="icons.arrowForward" aria-hidden="true"></ion-icon>
+            </a>
+          </div>
+          <div class="summary-journey">
+            <div class="summary-port">
+              <span>Origen</span>
+              <strong>{{ portCity(voyage.origen) || 'Por confirmar' }}</strong>
+            </div>
+            <div class="summary-vessel">
+              <ion-icon [icon]="icons.boatOutline" aria-hidden="true"></ion-icon>
+              <span>Embarcación</span>
+              <strong>{{ voyage.buque && voyage.buque !== 'N/A' ? voyage.buque : 'Por confirmar' }}</strong>
+            </div>
+            <div class="summary-port">
+              <span>Destino</span>
+              <strong>{{ portCity(voyage.destino) || 'Por confirmar' }}</strong>
+            </div>
+          </div>
+          <dl class="summary-facts">
+            <div><dt>Llegada estimada</dt><dd>{{ (eta | date:'dd/MM/yyyy':'-0500') || 'Por confirmar' }}</dd></div>
+            <div><dt>Estado</dt><dd>{{ shipmentState(voyage) }}</dd></div>
+          </dl>
         </section>
-      }
-      @case ('detalle') {
-        <div class="reference-stack">
-          <section class="reference-card">
-            <h2>{{ view.data.codigoContenedor }}</h2>
-            <dl class="reference-facts">
-              <div><dt>Tipo</dt><dd>{{ view.data.tipo }}</dd></div>
-              <div><dt>Peso</dt><dd>{{ view.data.pesoToneladas | number }} t</dd></div>
-              <div><dt>Precinto</dt><dd>{{ view.data.numeroPrecinto || 'Por confirmar' }}</dd></div>
-              @if (view.data.viaje; as viaje) {
-                <div><dt>Buque</dt><dd>{{ viaje.buque }}</dd></div>
-                <div><dt>Estado</dt><dd>{{ estado(viaje.estado) }}</dd></div>
-                <div><dt>Llegada estimada</dt><dd>{{ (viaje.fechas?.llegadaEstimada | date:'dd/MM/yyyy':'-0500') || 'Por confirmar' }}</dd></div>
-                <div><dt>Origen</dt><dd>{{ viaje.origen }}</dd></div>
-                <div><dt>Destino</dt><dd>{{ viaje.destino }}</dd></div>
-              }
-            </dl>
-            <a routerLink="/contenedores">Consultar tamaños de referencia</a>
-          </section>
-          <section class="reference-card">
-            <h2>Historial del envío</h2>
-            <ol class="reference-list">
-              @for (event of view.data.eventos; track $index) {
-                <li>
-                  <span class="reference-tag" [class.attention]="!event.completado">{{ event.completado ? 'Registrado' : 'Pendiente' }}</span>
-                  <h3>{{ estado(event.estado) }} · {{ event.ubicacion }}</h3>
-                  @if (event.descripcion) { <p>{{ event.descripcion }}</p> }
-                  <time class="reference-muted" [attr.datetime]="event.fecha">{{ event.fecha | date:'dd/MM/yyyy HH:mm':'-0500' }}</time>
-                </li>
-              } @empty { <li>Aún no se registran eventos para este contenedor.</li> }
-            </ol>
-          </section>
-        </div>
-      }
-      @case ('notificaciones') {
-        <section class="reference-card" aria-label="Notificaciones de seguimiento">
-          @if (avisoError()) { <p role="alert">{{ avisoError() }}</p> }
-          <ul class="reference-list">
-            @for (aviso of view.data; track aviso.id) {
-              <li>
-                <span class="reference-tag" [class.attention]="!aviso.leida">{{ aviso.leida ? 'Leída' : 'Nueva' }}</span>
-                <h3>{{ aviso.titulo }}</h3><p>{{ aviso.mensaje }}</p>
-                <time class="reference-muted" [attr.datetime]="aviso.fecha">{{ aviso.fecha | date:'dd/MM/yyyy HH:mm':'-0500' }}</time>
-                @if (!aviso.leida) {
-                  <button class="reference-button" type="button" [disabled]="!!pendingAviso()" (click)="leer(aviso)">
-                    {{ pendingAviso() === aviso.id ? 'Guardando…' : 'Marcar como leída' }}
-                  </button>
-                }
-              </li>
-            } @empty { <li>Todavía no tienes notificaciones.</li> }
-          </ul>
+      } @else {
+        <section class="reference-card" aria-labelledby="summary-empty-title">
+          <h2 id="summary-empty-title">Todavía no tienes contenedores asignados</h2>
+          <p>Los envíos asociados a tu cuenta aparecerán aquí.</p>
+          <a class="client-link" routerLink="/contenedores">Explorar tipos de contenedores</a>
         </section>
       }
     }
-  } @else {
-    <p class="reference-card" role="status">Cargando información…</p>
+    @case ('detalle') {
+      <app-detalle-envio [load]="view.data" />
+    }
+    @case ('notificaciones') {
+      <section class="notification-sheet" aria-label="Avisos de seguimiento">
+        @if (view.data.length) {
+          <div class="notification-filters" role="group" aria-label="Filtrar avisos">
+            <button type="button" [attr.aria-pressed]="!onlyUnread()" (click)="onlyUnread.set(false)">Todas</button>
+            <button type="button" [attr.aria-pressed]="onlyUnread()" (click)="onlyUnread.set(true)">Sin leer</button>
+          </div>
+        }
+        @if (avisoError()) { <p class="notification-empty" role="alert">{{ avisoError() }}</p> }
+        @if ((onlyUnread() ? unread() : view.data); as items) {
+          @if (items.length) {
+            <div class="notification-results" data-list-scroll tabindex="0" role="region" aria-label="Lista de notificaciones">
+            <ul class="notifications">
+              @for (aviso of items; track aviso.id) {
+                <li [class.notification-unread]="!aviso.leida">
+                  <ion-icon [icon]="icons.notificationsOutline" aria-hidden="true"></ion-icon>
+                  <div class="notification-body">
+                    <h3>{{ aviso.titulo }}</h3>
+                    <p>{{ aviso.mensaje }}</p>
+                  </div>
+                  <div class="notification-meta">
+                    <time [attr.datetime]="aviso.fecha">{{ aviso.fecha | date:'dd/MM/yyyy HH:mm':'-0500' }}</time>
+                    @if (!aviso.leida) {
+                      <button type="button" [disabled]="!!pendingAviso()" (click)="leer(aviso)" [attr.aria-label]="'Marcar como leída: ' + aviso.titulo">
+                        {{ pendingAviso() === aviso.id ? 'Guardando…' : 'Marcar como leída' }}
+                      </button>
+                    }
+                  </div>
+                </li>
+              }
+            </ul>
+            </div>
+          } @else {
+            <p class="notification-empty" role="status">{{ onlyUnread() ? 'Estás al día con tus avisos.' : 'Todavía no tienes notificaciones.' }}</p>
+          }
+        }
+      </section>
+    }
   }
-</app-web-frame>
+} @else {
+  <p class="reference-card" role="status">Cargando información…</p>
+}

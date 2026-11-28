@@ -1,4 +1,4 @@
-<header class="web-header" [class.public-header]="!portal()">
+<header class="web-header public-header">
   <div class="header-inner">
     <a class="brand" routerLink="/servicios" (click)="open.set(null)" aria-label="NaviPort OceanTrack, inicio">
       <ion-icon [icon]="icons.boatOutline" aria-hidden="true"></ion-icon>
@@ -27,14 +27,10 @@
     </nav>
 
     <div class="account-actions">
-      @if (portal()) {
-        <button class="account secondary" type="button" (click)="signOut()">Cerrar sesión</button>
-      } @else {
-        @if (!session()) {
-          <a class="account secondary" routerLink="/servicios" [queryParams]="{ acceso: 'registro' }" (click)="open.set(null)">Registrarse</a>
-        }
-        <a class="account primary" routerLink="/servicios" [queryParams]="{ acceso: 'login' }" (click)="open.set(null)">{{ session() ? 'Mi cuenta' : 'Acceder' }}</a>
+      @if (!session()) {
+        <a class="account secondary" routerLink="/servicios" [queryParams]="{ acceso: 'registro' }" (click)="open.set(null)">Registrarse</a>
       }
+      <a class="account primary" routerLink="/servicios" [queryParams]="{ acceso: 'login' }" (click)="open.set(null)">{{ session() ? 'Mi cuenta' : 'Acceder' }}</a>
     </div>
   </div>
 </header>
